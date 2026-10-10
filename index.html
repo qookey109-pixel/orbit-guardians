@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜One-Screen Edition V0.7</title>
+<title>ORBIT // CODE — 軌道守護者｜One-Screen Ambient V0.7.1</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -218,7 +218,7 @@ input[type=range]{margin:0 0 4px}
 </style>
 </head>
 <body><div class="shell">
-<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">ONE SCREEN / V0.7</span></div></header>
+<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">ONE SCREEN / V0.7.1</span></div></header>
 <section class="intro"><div><div class="eyebrow">ORBITAL PUZZLE — SIX MISSIONS</div><h1>讓軌道，<span>剛好經過。</span></h1><p>調整最多三個圓的半徑與方向，讓軌跡經過所有訊號，避開危險區。</p></div><div class="intro-flag">最多三個圓 · 拖曳半徑 · 正反轉<br><b>6 個任務 · 無限種路線</b></div></section>
 <main class="layout"><section class="left" aria-label="遊戲畫面與關卡">
 <div class="board"><div class="board-header"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div></div><div class="board-top-right"><div class="state-chip" id="stateChip">準備開始</div></div></div>
@@ -277,30 +277,51 @@ function drawStation(g,x,y,s){g.save();g.translate(x,y);g.scale(s,s);g.fillStyle
 function drawAsteroid(g,x,y,size,seed){const r=rng(seed);g.save();g.translate(x,y);g.fillStyle='#060c1e';g.fillRect(-size*.55,-size*.45,size*1.2,size);g.fillStyle='#3c456a';for(let i=0;i<15;i++){const a=r()*TAU,radius=r()*size*.38;g.fillRect(Math.round(Math.cos(a)*radius),Math.round(Math.sin(a)*radius),2+r()*size*.22,2+r()*size*.12)}g.fillStyle='#76758a';for(let i=0;i<4;i++)g.fillRect(-size*.3+r()*size*.6,-size*.3+r()*size*.6,Math.max(2,size*.12),Math.max(2,size*.09));g.restore()}
 function rebuildScenery(){
  if(!W||!H)return;
- const key=`${Math.round(W)}:${Math.round(H)}:pure-061`;
+ const key=`${Math.round(W)}:${Math.round(H)}:${state.showScenery}:ambient-071`;
  if(key===sceneryKey&&sceneryCache)return;
  sceneryKey=key;
  const c=document.createElement('canvas'),g=c.getContext('2d');
  c.width=Math.max(1,Math.ceil(W));c.height=Math.max(1,Math.ceil(H));
- g.fillStyle='#090e16';g.fillRect(0,0,W,H);
- // One restrained pool of diffuse light behind the origin; no stars, grain, nebula or decorative rings.
- const h=g.createRadialGradient(OX,OY,1,OX,OY,Math.min(W,H)*.50);
- h.addColorStop(0,'rgba(37,52,67,.30)');
- h.addColorStop(.43,'rgba(21,32,44,.11)');
- h.addColorStop(1,'rgba(9,14,22,0)');
- g.fillStyle=h;g.fillRect(0,0,W,H);
- // The abstract center is a neutral anchor, not a planet.
+ // Deliberately restrained depth: dark-blue space, a pair of quiet atmospheric glows.
+ g.fillStyle='#080d17';g.fillRect(0,0,W,H);
+ const base=g.createRadialGradient(OX,OY,4,OX,OY,Math.max(W,H)*.69);
+ base.addColorStop(0,'#172637');base.addColorStop(.27,'#0d1a2a');base.addColorStop(.68,'#09111e');base.addColorStop(1,'#050a12');
+ g.fillStyle=base;g.fillRect(0,0,W,H);
+ if(state.showScenery){
+  const washes=[
+   {x:W*.22,y:H*.26,r:Math.max(W,H)*.44,color:'rgba(86,112,169,.17)'},
+   {x:W*.82,y:H*.78,r:Math.max(W,H)*.38,color:'rgba(49,119,132,.13)'}
+  ];
+  for(const v of washes){
+   const glow=g.createRadialGradient(v.x,v.y,0,v.x,v.y,v.r);
+   glow.addColorStop(0,v.color);glow.addColorStop(1,'rgba(0,0,0,0)');
+   g.fillStyle=glow;g.fillRect(0,0,W,H);
+  }
+  // Sparse depth stars, deterministic and subtle. No particle fields or scanlines.
+  const rand=rng(71802);
+  for(let i=0;i<38;i++){
+   const x=(.028+.944*rand())*W,y=(.035+.93*rand())*H;
+   if(Math.hypot(x-OX,y-OY)<Math.min(W,H)*.18)continue;
+   const a=.19+rand()*.38,r=.45+rand()*.8;
+   g.beginPath();g.arc(x,y,r,0,TAU);
+   g.fillStyle=`rgba(201,218,235,${a})`;g.fill();
+  }
+  // One distant arc hints at celestial scale without competing with the player's circles.
+  g.save();g.translate(W*.78,H*.42);g.rotate(-.33);
+  g.beginPath();g.ellipse(0,0,W*.33,H*.26,0,Math.PI*.64,Math.PI*1.54);
+  g.lineWidth=1;g.strokeStyle='rgba(154,185,204,.10)';g.stroke();g.restore();
+ }
+ // Abstract origin core — not a gameplay collider.
  const radius=Math.max(10,14*worldScale);
- g.beginPath();g.arc(OX,OY,radius,0,TAU);
- g.fillStyle='#1a2734';g.fill();
- g.lineWidth=1;g.strokeStyle='#7a91a255';g.stroke();
- g.beginPath();g.arc(OX-radius*.23,OY-radius*.23,Math.max(1.8,radius*.18),0,TAU);
- g.fillStyle='#c0cfda';g.fill();
+ const core=g.createRadialGradient(OX-radius*.30,OY-radius*.35,1,OX,OY,radius*1.45);
+ core.addColorStop(0,'#b6c7d5');core.addColorStop(.23,'#637f97');core.addColorStop(.63,'#263d53');core.addColorStop(1,'#10202c');
+ g.beginPath();g.arc(OX,OY,radius,0,TAU);g.fillStyle=core;g.fill();
+ g.beginPath();g.arc(OX,OY,radius+4,0,TAU);g.lineWidth=.8;g.strokeStyle='rgba(152,183,206,.24)';g.stroke();
  sceneryCache=c;
 }
 function bg(){
- rebuildScenery();ctx.drawImage(sceneryCache,0,0,W,H);
- // No particles, reticles, animation, skyline, asteroid or decorative light ribbons.
+ rebuildScenery();
+ ctx.drawImage(sceneryCache,0,0,W,H);
 }
 function drawGoals(){
  const l=levels[state.level];
@@ -341,17 +362,23 @@ function drawWheels(){
   ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(tx,ty);ctx.lineWidth=selected?1.2:1;
   ctx.strokeStyle=col+'8f';ctx.stroke();
   ctx.beginPath();ctx.arc(cx,cy,2,0,TAU);ctx.fillStyle=col;ctx.fill();
-  ctx.beginPath();ctx.arc(tx,ty,selected?6:4.5,0,TAU);
-  ctx.fillStyle=col;ctx.fill();
-  ctx.beginPath();ctx.arc(tx,ty,selected?2.8:2,0,TAU);ctx.fillStyle='#101923';ctx.fill();
+  // Endpoints remain draggable; the final endpoint is rendered as the circular spacecraft.
+  if(i<rings.length-1){
+   ctx.beginPath();ctx.arc(tx,ty,selected?6:4.5,0,TAU);ctx.fillStyle=col;ctx.fill();
+   ctx.beginPath();ctx.arc(tx,ty,selected?2.8:2,0,TAU);ctx.fillStyle='#101923';ctx.fill();
+  }
  });
  if(state.trail.length>1)drawLine(state.trail,'#ded1b4ba',1.8,0);
  const tip=pointAt(state.t,state.wheels),tx=sx(tip.x),ty=sy(tip.y);
  ctx.save();ctx.translate(tx,ty);
- const a=state.t*BASE*(state.wheels.length)*(state.wheels.at(-1)?.d||1);
- ctx.rotate(a+Math.PI/2);
- ctx.beginPath();ctx.moveTo(0,-9);ctx.lineTo(5.5,6);ctx.lineTo(0,3);ctx.lineTo(-5.5,6);ctx.closePath();
- ctx.fillStyle='#eff3f4';ctx.fill();
+ // Round spacecraft: a luminous pearl with a narrow guidance halo, no triangle or exhaust.
+ ctx.shadowColor='#b6e3f3';ctx.shadowBlur=12;
+ const orb=ctx.createRadialGradient(-2.3,-2.7,.7,0,0,9);
+ orb.addColorStop(0,'#ffffff');orb.addColorStop(.33,'#e4f3fa');orb.addColorStop(.77,'#93c2d7');orb.addColorStop(1,'#4d8199');
+ ctx.beginPath();ctx.arc(0,0,7.5,0,TAU);ctx.fillStyle=orb;ctx.fill();ctx.shadowBlur=0;
+ ctx.beginPath();ctx.arc(0,0,11.5,0,TAU);
+ ctx.lineWidth=1;ctx.strokeStyle='rgba(195,226,242,.63)';ctx.stroke();
+ ctx.beginPath();ctx.arc(-2.5,-2.8,1.6,0,TAU);ctx.fillStyle='rgba(255,255,255,.93)';ctx.fill();
  ctx.restore();
 }
 function draw(){if(!W)return;ctx.clearRect(0,0,W,H);bg();drawPrediction();drawGoals();drawWheels();if(state.flash>0){ctx.fillStyle=`rgba(255,113,108,${state.flash*.13})`;ctx.fillRect(0,0,W,H)}}
@@ -389,6 +416,6 @@ syncMobilePanels();
 
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&mobilePane){const prior=mobilePane;mobilePane='';syncMobilePanels();(prior==='settings'?$('dockSettings'):$('dockLevels')).focus();return}if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(document.activeElement?.tagName))return;if(e.code==='Space'){e.preventDefault();start()}else if(e.key.toLowerCase()==='r')resetRun()});
 new ResizeObserver(resize).observe($('boardArea'));setLevel(0);requestAnimationFrame(tick);
-window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance};
+window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,visual:{ship:'circle',background:'ambient'}};
 })();
 </script></body></html>
