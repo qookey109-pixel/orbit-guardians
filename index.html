@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b0e13">
-<title>ORBIT // CODE — 軌道守護者｜Pixel Edition V0.5</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
+<title>ORBIT // CODE — 軌道守護者｜Luminous Edition V0.6</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 :root{color-scheme:dark;--bg:#0b0e13;--panel:#121822;--elev:#1a222d;--border:#2b3543;--white:#f2f6f3;--muted:#8796a4;--lime:#c4ff85;--pink:#ff7faf;--cyan:#90dcf1;--gold:#f7c67a;--red:#ff716b}
@@ -28,7 +28,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;ba
 .board,.panel,.game-message,.wheel,.level-btn,.result{border-radius:3px;border-width:2px;box-shadow:5px 5px 0 #030614}.board{border-color:#506ac1}.board-header,.metrics,.panel,.panel-pad,.panel-footer,.game-message{background:#0b1537}.board-canvas{background:#030a24}.btn,.step,.dir,.num,.state-chip,.nav-link,.status-pill,.count-row,.live-readout,.canvas-hint{border-radius:3px}.btn{box-shadow:3px 3px 0 #020515;border-color:#5772bb}.btn.primary{background:#40eaff;border-color:#a1faff;color:#08112c;box-shadow:3px 3px 0 #12627b}.btn.primary:hover{background:#a4faff}.btn.active{color:#59ffb0;border-color:#59ffb0;background:#102c39}.wheel{background:#0a1030;border-color:#364b8e}.wheel-title{background:#172455}.wheel-swatch{border-radius:0}.level-btn.selected{background:#122d50;border-color:var(--cyan)}.level-tag,.eyebrow,.metric strong.lime{color:var(--cyan)}.result{background:#0a163c;border-color:var(--cyan)}.panel h2,.levels-head h2{color:#c9edff}.time-fill{background:linear-gradient(90deg,#4beeff,#7cffab)}
 @media(max-width:510px){.brand b{font-size:12px}.intro h1{font-size:28px}.board-overtext{max-width:70%}}
 
-/* PIXEL EDITION V0.5 — visual system refinement only */
+/* LUMINOUS EDITION V0.6 — visual system refinement only */
 :root{--bg:#05091e;--panel:#07132c;--elev:#14264a;--border:#31528a;--white:#eaf6ff;--muted:#8fadd1;--lime:#70ffb0;--cyan:#50e8ff;--pink:#ff70e2}
 body{background:radial-gradient(ellipse 90% 45% at 70% 4%,#23346d 0%,transparent 85%),linear-gradient(160deg,#030719,#0b1641 58%,#060d26);min-height:100vh}
 body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.24;background:repeating-linear-gradient(0deg,transparent 0 3px,#020510 3px 4px);z-index:30;mix-blend-mode:multiply}
@@ -56,10 +56,19 @@ header{position:relative;height:82px;border-color:#264879}.brand b{font-size:18p
 .wheel.selected{border-color:var(--wheel);box-shadow:inset 3px 0 var(--wheel),0 0 0 1px #344451}
 .wheel-title{cursor:pointer}
 @media(max-width:510px){.radius-readout{top:48px;right:8px;font-size:9px;padding:5px 7px}.canvas-hint{max-width:45%;font-size:9px}}
+
+/* V0.6 — Minimal abstract light / gold + ice blue */
+:root{--bg:#050a14;--panel:#0b1321;--elev:#122035;--border:#304258;--white:#edf6ff;--muted:#8fa5bc;--lime:#e6c78b;--pink:#7eafea;--cyan:#84e4ff;--gold:#e6c78b;--red:#ff817e;color-scheme:dark}
+body{background:radial-gradient(ellipse 78% 58% at 48% -18%,#183047 0%,transparent 80%),#050a14}
+header{border-bottom-color:#27384c}.logo{background:radial-gradient(circle at 30% 25%,#28415a,#0a1628);border-color:#d8b978;color:#efd7a6;box-shadow:0 0 22px #dfbd6b22}.brand b{letter-spacing:.16em}.brand small{color:#93aec5}.status-pill{background:#142331;border-color:#4b6478;color:#d6c28c}.nav-link{background:#101b2b;border-color:#40556c}.intro h1 span{color:#edcf97}.eyebrow{color:#e7c889}.intro p{color:#b3c7d6}
+.board{border-color:#43546a;background:#050b16;box-shadow:0 25px 90px #0009,0 0 35px #b9a36b0c}.board-header{background:linear-gradient(110deg,#0b1829,#101a29);border-bottom-color:#344b5d}.board-canvas{background:#050a14}.board-overtext{color:#9db3c7}.live-readout{background:#091321dc;border-color:#496176;color:#d5e3f1}.radius-readout{background:#091321d9!important;border-color:#5c7390!important;color:#d9e9fa!important}.space-caption{opacity:.66}.space-caption b{color:#dbc28c!important}.hud-corners{opacity:.55}.canvas-hint{background:#091521dd;border-color:#46637b;color:#b9d3e5}
+.metrics{background:#0d1726;border-top-color:#2c4056}.metric{border-right-color:#2b3c4f}.metric strong.lime{color:#e7d09b}.metric strong.pink{color:#89c5ff}.time-track{background:#233247}.time-fill{background:linear-gradient(90deg,#77d7ef,#e7c68a)}
+.btn{background:#15253a;border-color:#3c5870;color:#e5effb}.btn:hover{background:#213851;border-color:#8acde8}.btn.primary{background:linear-gradient(110deg,#f2dca8,#cfac6e);border-color:#f2dca8;color:#172235;box-shadow:0 4px 24px #c5a66e29}.btn.primary:hover{background:#f6e3bb}.btn.active{color:#f2d59b;border-color:#c5a873;background:#2b2a2a}.game-message,.panel{background:#0d1726;border-color:#344b60}.message-icon{color:#e8c88d}.panel h2{color:#f3f6fc}.count-row,.wheel{background:#0a1422;border-color:#334a62}.count-stepper output{color:#efd49d}.step,.num{background:#15263b;border-color:#47637b}.dir{background:#152338;border-color:#425c75}.dir.on{background:#1c3045}.level-btn{background:#0f1b2b;border-color:#344d64}.level-btn.selected{background:#2b2b2b;border-color:#d4b679}.level-btn .check{color:#f1d5a4}.result{background:linear-gradient(150deg,#14243a,#0a1423);border-color:#d7b77d;box-shadow:0 20px 85px #000b,0 0 65px #d8b57c18}.result-kicker,.result-stars{color:#e7c88f}
+@media(prefers-reduced-motion:no-preference){.board{animation:orbitEnter .75s ease both}@keyframes orbitEnter{from{opacity:.2;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}}
 </style>
 </head>
 <body><div class="shell">
-<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PIXEL ORBIT · SAVE THE COLONY</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">PIXEL EDITION V0.5</span></div></header>
+<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>LUMINOUS ORBIT · SAVE THE COLONY</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">PIXEL EDITION V0.5</span></div></header>
 <section class="intro"><div><div class="eyebrow">01 — ENGINEER THE MOTION</div><h1>設計你的軌道，<span>守護家園。</span></h1><p>你是艾瑞斯殖民地的軌道工程師。拖曳圓周調整半徑、選擇順逆轉，派出太空船自由收集沿途物資訊號、避開危險區。</p></div><div class="intro-flag">最多三個圓 · 拖曳半徑 · 正反轉<br><b>6 個任務 · 無限種路線</b></div></section>
 <main class="layout"><section class="left" aria-label="遊戲畫面與關卡">
 <div class="board"><div class="board-header"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div></div><div class="board-top-right"><div class="state-chip" id="stateChip">準備開始</div></div></div>
@@ -77,7 +86,7 @@ header{position:relative;height:82px;border-color:#264879}.brand b{font-size:18p
 (()=>{'use strict';
 const $=id=>document.getElementById(id),PI=Math.PI,TAU=PI*2,BASE=TAU/8;
 const MAX_WHEELS=3;
-const COLORS=['#50edff','#ff78dd','#ffe083'];
+const COLORS=['#86d9f4','#c1a8f3','#e9c688'];
 const initial=[{r:138,d:1}];
 const levels=[
  {start:[{r:90,d:1}],name:'第一次接觸',desc:'一個圓，就能畫出一條穩定的軌道。',tip:'試著將半徑調到約 138；圓太小就碰不到訊號。',max:17,refs:[{r:138,d:1}],times:[1.8,5.2],radius:21,hazards:[]},
@@ -115,39 +124,120 @@ function rng(seed){return()=>{seed=(1664525*seed+1013904223)>>>0;return seed/429
 function spritePlanet(g,x,y,r,light,dark){g.save();g.beginPath();g.arc(x,y,r,0,TAU);g.clip();g.fillStyle=dark;g.fillRect(x-r,y-r,r*2,r*2);const rr=rng(Math.round(x*123+y*113+r*19));for(let i=0;i<96;i++){const xx=x+(rr()*2-1)*r,yy=y+(rr()*2-1)*r;if((xx-x)**2+(yy-y)**2>=r*r)continue;const z=Math.max(2,Math.floor(rr()*6+2));g.fillStyle=rr()<.25?'#96d5c2':rr()<.6?light:'#23527d';g.fillRect(Math.floor(xx/3)*3,Math.floor(yy/3)*3,z*1.5,z)}g.fillStyle='#06133399';g.beginPath();g.ellipse(x+r*.5,y,r*.75,r,0,0,TAU);g.fill();g.restore();g.strokeStyle='#63c7ff66';g.lineWidth=1;g.beginPath();g.arc(x,y,r+.7,0,TAU);g.stroke()}
 function drawStation(g,x,y,s){g.save();g.translate(x,y);g.scale(s,s);g.fillStyle='#0b1d38';g.fillRect(-85,-10,170,36);g.fillStyle='#1c4571';for(let i=0;i<8;i++){const bx=-82+i*21,bh=18+(i*11)%44;g.fillRect(bx,-bh,16,bh+31);g.fillStyle=i%2?'#439bc2':'#244c81';g.fillRect(bx+3,-bh+4,10,3);g.fillStyle='#c4f9f0';g.fillRect(bx+5,-bh+10,3,3);g.fillStyle='#1c4571'}g.fillStyle='#f6b75d';for(let i=0;i<20;i++)g.fillRect(-77+i*8,-3,3,3);g.fillStyle='#3a82a0';g.fillRect(-104,7,208,5);g.fillRect(-73,17,146,5);g.fillStyle='#ffdb82';g.fillRect(-100,11,201,2);g.fillStyle='#83dfff';g.fillRect(-3,-85,6,66);g.fillRect(-15,-51,30,5);g.fillRect(-25,-20,50,5);g.fillStyle='#ff9b6a';g.fillRect(-1,-91,2,6);g.restore()}
 function drawAsteroid(g,x,y,size,seed){const r=rng(seed);g.save();g.translate(x,y);g.fillStyle='#060c1e';g.fillRect(-size*.55,-size*.45,size*1.2,size);g.fillStyle='#3c456a';for(let i=0;i<15;i++){const a=r()*TAU,radius=r()*size*.38;g.fillRect(Math.round(Math.cos(a)*radius),Math.round(Math.sin(a)*radius),2+r()*size*.22,2+r()*size*.12)}g.fillStyle='#76758a';for(let i=0;i<4;i++)g.fillRect(-size*.3+r()*size*.6,-size*.3+r()*size*.6,Math.max(2,size*.12),Math.max(2,size*.09));g.restore()}
-function rebuildScenery(){if(!W||!H)return;const key=`${Math.round(W)}:${Math.round(H)}:${state.level}:${state.showScenery}`;if(key===sceneryKey&&sceneryCache)return;sceneryKey=key;const c=document.createElement('canvas'),g=c.getContext('2d');c.width=Math.max(1,Math.ceil(W/2));c.height=Math.max(1,Math.ceil(H/2));g.scale(c.width/W,c.height/H);g.imageSmoothingEnabled=false;
-const grd=g.createLinearGradient(0,0,W,H);grd.addColorStop(0,'#050c28');grd.addColorStop(.45,'#091539');grd.addColorStop(1,'#03071c');g.fillStyle=grd;g.fillRect(0,0,W,H);
-if(state.showScenery){const rand=rng(31337+state.level*777),px=Math.max(3,Math.min(7,Math.round(W/170)));
-// Broad layered nebula, block-rendered to keep the illustrated pixel look.
-for(let j=0;j<3;j++){let cx=W*[.76,.23,.45][j],cy=H*[.25,.73,.47][j],rx=W*[.30,.24,.29][j],ry=H*[.37,.29,.18][j];for(let k=0;k<1050;k++){const x=cx+(rand()+rand()+rand()-1.5)*rx*1.5,y=cy+(rand()+rand()+rand()-1.5)*ry*1.5;const spread=((x-cx)/rx)**2+((y-cy)/ry)**2;if(spread>1.55)continue;g.fillStyle=[`rgba(92,65,187,${.032*(1.6-spread)})`,`rgba(41,125,173,${.035*(1.6-spread)})`,`rgba(156,57,128,${.022*(1.6-spread)})`][j];g.fillRect(Math.round(x/px)*px,Math.round(y/px)*px,px*(1+Math.floor(rand()*3)),px*(1+Math.floor(rand()*2)))}}
-// Distant satellite worlds and a galaxy visible above the navigation plot.
-spritePlanet(g,W*.83,H*.16,Math.max(10,W*.037),'#4366b1','#16214b');spritePlanet(g,W*.13,H*.17,Math.max(8,W*.022),'#bd765f','#362146');
-const gx=W*.68,gy=H*.16;g.save();g.translate(gx,gy);g.rotate(-.32);for(let i=0;i<65;i++){const a=i*.31,rad=Math.sqrt(i/65)*Math.min(W*.11,H*.18),x=Math.cos(a)*rad*1.7,y=Math.sin(a)*rad*.52;g.fillStyle=i%4===0?'#f5b8c8':i%3===0?'#bb8bff':'#655bc1';g.globalAlpha=.10+i/170;g.fillRect(Math.round(x),Math.round(y),2+(i%3)*2,2)}g.restore();g.globalAlpha=1;
-// Far-side colony architecture and tiny foreground drifting asteroids.
-g.fillStyle='#07162e';g.fillRect(0,H*.90,W,H*.10);g.fillStyle='#0b1e45';for(let i=0;i<20;i++){let x=i*W/19;g.fillRect(x,H*(.89+(i%4)*.009),W/17,H*.13)}
-drawStation(g,W*.22,H*.93,Math.max(.30,Math.min(.85,W/780)));
-for(let i=0;i<18;i++){const x=(.05+rand()*.9)*W,y=(.09+rand()*.79)*H;if(Math.hypot(x-W/2,y-H/2)<Math.min(W,H)*.22)continue;drawAsteroid(g,x,y,4+rand()*Math.max(8,W*.022),171+i*718)}
-// Quiet stars, two brightness populations, plus a few cross stars.
-for(let i=0;i<265;i++){const x=Math.floor(rand()*W/px)*px,y=Math.floor(rand()*H/px)*px,bright=rand();g.fillStyle=bright>.93?'#d1f7ff':bright>.65?'#679bd4':'#304b8c';g.fillRect(x,y,bright>.95?2.4:1.5,bright>.95?2.4:1.5)}
-for(let i=0;i<12;i++){const x=rand()*W,y=rand()*H,a=2+rand()*4;g.fillStyle='#85cffcaa';g.fillRect(x-a,y,2*a+1,1);g.fillRect(x,y-a,1,2*a+1);g.fillStyle='#eefaff';g.fillRect(x,y,2,2)}
+function rebuildScenery(){
+ if(!W||!H)return;
+ const key=`${Math.round(W)}:${Math.round(H)}:${state.level}:${state.showScenery}:luminous6`;
+ if(key===sceneryKey&&sceneryCache)return;
+ sceneryKey=key;
+ const c=document.createElement('canvas'),g=c.getContext('2d');
+ c.width=Math.max(1,Math.ceil(W));c.height=Math.max(1,Math.ceil(H));
+ const back=g.createRadialGradient(W*.48,H*.44,4,W*.5,H*.48,Math.max(W,H)*.76);
+ back.addColorStop(0,'#10243a');back.addColorStop(.43,'#081628');back.addColorStop(1,'#02060f');
+ g.fillStyle=back;g.fillRect(0,0,W,H);
+ // Abstract luminous filaments; subdued so the actual epicycle remains legible.
+ const rand=rng(60110+state.level*177);
+ if(state.showScenery){
+  for(let k=0;k<4;k++){
+   const cx=W*[.70,.23,.72,.31][k],cy=H*[.29,.68,.74,.25][k];
+   const rad=Math.min(W,H)*[.52,.38,.29,.31][k];
+   g.save();g.translate(cx,cy);g.rotate([-.34,.65,.16,-.85][k]);
+   for(let j=0;j<28;j++){
+    const rr=rad*(.42+j*.025);
+    g.beginPath();g.ellipse(0,0,rr,rr*(.20+j*.002),0,-Math.PI*.92,Math.PI*.82);
+    g.strokeStyle=k%2===0?`rgba(115,190,238,${.018+j*.0013})`:`rgba(235,193,125,${.014+j*.0011})`;
+    g.lineWidth=j%7===0?1.2:.55;g.stroke();
+   }
+   g.restore();
+  }
+  for(let i=0;i<165;i++){
+   const x=rand()*W,y=rand()*H,r=rand()*1.1+.25;
+   g.beginPath();g.arc(x,y,r,0,TAU);g.fillStyle=rand()>.86?'#d8c9aa':'#78a7c6';g.globalAlpha=.14+rand()*.46;g.fill();
+  }
+  g.globalAlpha=1;
+ }
+ // Precision drafting rings, abstract central pearl and concentric atmospheric halos.
+ for(let i=0;i<5;i++){
+  const rad=Math.min(W,H)*(.16+i*.092);
+  g.beginPath();g.arc(OX,OY,rad,0,TAU);
+  g.strokeStyle=i%2===0?'#b9d5e413':'#d6b98312';g.lineWidth=1;g.stroke();
+ }
+ const radius=Math.max(15,26*worldScale);
+ g.save();g.shadowColor='#7ac3ef';g.shadowBlur=26;
+ const core=g.createRadialGradient(OX-radius*.34,OY-radius*.36,1,OX,OY,radius*1.12);
+ core.addColorStop(0,'#b7d4e7');core.addColorStop(.23,'#658cab');core.addColorStop(.58,'#243e5e');core.addColorStop(1,'#081528');
+ g.beginPath();g.arc(OX,OY,radius,0,TAU);g.fillStyle=core;g.fill();g.restore();
+ g.beginPath();g.arc(OX,OY,radius*1.42,0,TAU);g.strokeStyle='#c5d9ed45';g.lineWidth=.8;g.stroke();
+ g.beginPath();g.ellipse(OX,OY,radius*1.8,radius*.42,-.35,0,TAU);g.strokeStyle='#e5c8906c';g.lineWidth=1.1;g.stroke();
+ sceneryCache=c;
 }
-// Core planet remains centered on the exact model origin (not a gameplay collider).
-const r=Math.max(14,26*worldScale);spritePlanet(g,OX,OY,r,'#48a98f','#0b3065');
-g.strokeStyle='#69d7e58a';g.lineWidth=1;g.beginPath();g.ellipse(OX,OY,r*1.7,r*.43,-.29,0,TAU);g.stroke();
-g.fillStyle='#f7b972';for(let i=0;i<10;i++){let a=TAU*i/10,x=OX+Math.cos(a)*(r*.84),y=OY+Math.sin(a)*(r*.84);if(i%3===0)g.fillRect(Math.round(x),Math.round(y),2.5,2.5)}
-sceneryCache=c}
-function bg(){rebuildScenery();ctx.imageSmoothingEnabled=false;ctx.drawImage(sceneryCache,0,0,W,H);ctx.imageSmoothingEnabled=true;
-// Tiny animated particles are purely decorative and respect reduced-motion.
-if(state.showScenery&&!reducedMotion){const now=performance.now()*.001;for(let i=0;i<14;i++){const x=((i*173+27)%997)/997*W,y=((i*347+45)%991)/991*H,alpha=.18+.35*(.5+.5*Math.sin(now*(.8+i*.11)+i));ctx.fillStyle=`rgba(210,244,255,${alpha})`;ctx.fillRect(Math.round(x),Math.round(y),i%5===0?2:1,i%5===0?2:1)}}
-// Subtle cockpit targeting reticle and axial markers.
-ctx.strokeStyle='#3675a02f';ctx.lineWidth=1;ctx.setLineDash([3,7]);ctx.beginPath();ctx.moveTo(OX,12);ctx.lineTo(OX,H-12);ctx.moveTo(12,OY);ctx.lineTo(W-12,OY);ctx.stroke();ctx.setLineDash([]);
+function bg(){
+ rebuildScenery();ctx.drawImage(sceneryCache,0,0,W,H);
+ if(state.showScenery&&!reducedMotion){
+  const t=performance.now()*.001;
+  for(let i=0;i<18;i++){
+   const x=((i*173+27)%997)/997*W,y=((i*347+45)%991)/991*H;
+   const a=.16+.26*(.5+.5*Math.sin(t*(.55+i*.075)+i));
+   ctx.beginPath();ctx.arc(x,y,i%5===0?1.35:.75,0,TAU);
+   ctx.fillStyle=`rgba(219,229,246,${a})`;ctx.fill();
+  }
+ }
+ ctx.strokeStyle='#9cbcd81b';ctx.lineWidth=.8;ctx.setLineDash([2,9]);ctx.beginPath();ctx.moveTo(OX,12);ctx.lineTo(OX,H-12);ctx.moveTo(12,OY);ctx.lineTo(W-12,OY);ctx.stroke();ctx.setLineDash([]);
 }
-function drawGoals(){const l=levels[state.level],now=performance.now()/1000;for(let i=0;i<l.goals.length;i++){const p=l.goals[i],x=sx(p.x),y=sy(p.y),r=Math.max(9,l.radius*worldScale),hitR=l.captureRadius*worldScale;const complete=state.collected.has(i);ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=complete?'#254b3d99':'#79d6a013';ctx.fill();ctx.lineWidth=complete?1.3:1;ctx.strokeStyle=complete?'#52977b':'#7fffa872';ctx.stroke();if(!complete){const pulse=1.4+Math.sin(now*3.3+i)*1.1;ctx.beginPath();ctx.arc(x,y,r+pulse,0,TAU);ctx.strokeStyle='#b0ff992b';ctx.lineWidth=1;ctx.stroke();ctx.beginPath();ctx.arc(x,y,Math.max(2.5,hitR),0,TAU);ctx.strokeStyle='#ceff8f';ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.arc(x,y,Math.max(2,hitR*.27),0,TAU);ctx.fillStyle='#d5ff8b';ctx.fill()}else{ctx.font=`bold ${Math.max(11,13*worldScale)}px ui-monospace,monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#b6edc5';ctx.fillText('✓',x,y)}ctx.restore()}
-for(const h of l.hazards){const x=sx(h.x),y=sy(h.y),r=h.r*worldScale;ctx.shadowBlur=14;ctx.shadowColor='#ff716b88';ctx.beginPath();ctx.arc(x,y,Math.max(6,r),0,TAU);ctx.fillStyle='#ff716b2c';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#ff716b';ctx.stroke();ctx.shadowBlur=0;ctx.beginPath();ctx.moveTo(x-4,y-4);ctx.lineTo(x+4,y+4);ctx.moveTo(x+4,y-4);ctx.lineTo(x-4,y+4);ctx.strokeStyle='#ffbbb8';ctx.lineWidth=1.4;ctx.stroke()}}
-function drawPrediction(){if(!state.showPrediction)return;const pts=[],origin=state.t,max=levels[state.level].max;const secs=Math.min(max,Math.max(8,state.remaining));for(let i=0;i<=460;i++)pts.push(pointAt(origin+secs*i/460,state.wheels));drawLine(pts,'#80ced977',1.35,0,[2,6]);const near=pts.slice(0,120);drawLine(near,'#8ff3dc66',1.6,0,[4,6])}
+function drawGoals(){
+ const l=levels[state.level],now=performance.now()/1000;
+ for(let i=0;i<l.goals.length;i++){
+  const p=l.goals[i],x=sx(p.x),y=sy(p.y),r=Math.max(9,l.radius*worldScale),hitR=l.captureRadius*worldScale;
+  const complete=state.collected.has(i);ctx.save();
+  if(!complete){
+   const pulse=reducedMotion?0:Math.sin(now*2.2+i)*1.3;
+   ctx.shadowColor='#f5d49a';ctx.shadowBlur=15;
+   ctx.beginPath();ctx.arc(x,y,Math.max(4,hitR),0,TAU);ctx.strokeStyle='#f2d49a';ctx.lineWidth=1.35;ctx.stroke();
+   ctx.shadowBlur=0;ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);
+   ctx.beginPath();ctx.rect(-4.4-pulse*.15,-4.4-pulse*.15,8.8+pulse*.3,8.8+pulse*.3);
+   ctx.fillStyle='#f7e2b2';ctx.fill();ctx.restore();
+   ctx.beginPath();ctx.arc(x,y,r+2+pulse,0,TAU);ctx.strokeStyle='#d7c79d4f';ctx.lineWidth=.9;ctx.stroke();
+  }else{
+   ctx.beginPath();ctx.arc(x,y,Math.max(4,hitR*.7),0,TAU);ctx.fillStyle='#9cc9d477';ctx.fill();
+   ctx.font='12px ui-monospace,monospace';ctx.fillStyle='#e7d3a6';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✓',x,y);
+  }
+  ctx.restore();
+ }
+ for(const h of l.hazards){
+  const x=sx(h.x),y=sy(h.y),r=Math.max(6,h.r*worldScale);ctx.save();
+  ctx.shadowColor='#ff827e';ctx.shadowBlur=13;
+  ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.strokeStyle='#ff8e89';ctx.lineWidth=1.7;ctx.stroke();ctx.shadowBlur=0;
+  ctx.beginPath();ctx.arc(x,y,r*.66,0,TAU);ctx.strokeStyle='#ff8e894e';ctx.lineWidth=.9;ctx.stroke();
+  for(let k=0;k<4;k++){const a=k*Math.PI/2+Math.PI/4;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*r*.74,y+Math.sin(a)*r*.74);ctx.lineTo(x+Math.cos(a)*r*1.15,y+Math.sin(a)*r*1.15);ctx.strokeStyle='#ffb4ad';ctx.stroke()}
+  ctx.restore();
+ }
+}
+function drawPrediction(){if(!state.showPrediction)return;const pts=[],origin=state.t,max=levels[state.level].max;const secs=Math.min(max,Math.max(8,state.remaining));for(let i=0;i<=460;i++)pts.push(pointAt(origin+secs*i/460,state.wheels));drawLine(pts,'#a9d9f28a',1.25,0,[2,6]);const near=pts.slice(0,120);drawLine(near,'#e8d1a888',1.7,0,[4,6])}
 function wheelGeometry(){let x=0,y=0;const rings=[];state.wheels.forEach((w,i)=>{const a=state.t*BASE*(i+1)*w.d,px=x,py=y;x+=w.r*Math.cos(a);y+=w.r*Math.sin(a);rings.push({cx:sx(px),cy:sy(py),tx:sx(x),ty:sy(y),r:w.r*worldScale,angle:a})});return rings}
-function drawWheels(){const rings=wheelGeometry();rings.forEach((ring,i)=>{const w=state.wheels[i],col=COLORS[i],selected=i===state.selectedWheel;const {cx,cy,tx,ty,r}=ring;if(r>1){ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.lineWidth=selected?2:1.2;ctx.strokeStyle=selected?col+'cf':col+'77';ctx.stroke()}ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(tx,ty);ctx.lineWidth=selected?3:2;ctx.strokeStyle=col;ctx.stroke();ctx.beginPath();ctx.arc(cx,cy,2.5,0,TAU);ctx.fillStyle=col;ctx.fill();if(r>13){ctx.font='10px ui-monospace,monospace';ctx.fillStyle=col;ctx.fillText(String(i+1),cx+7,cy-7)}ctx.save();ctx.shadowColor=col;ctx.shadowBlur=selected?16:8;ctx.beginPath();ctx.arc(tx,ty,selected?8.5:6.5,0,TAU);ctx.fillStyle=col;ctx.fill();ctx.shadowBlur=0;ctx.beginPath();ctx.arc(tx,ty,selected?4.5:3.5,0,TAU);ctx.fillStyle='#0a1723';ctx.fill();ctx.restore()});if(state.trail.length>1){drawLine(state.trail,'#ff86b478',7,10);drawLine(state.trail,'#ff88b8',2.5,6)}const tip=pointAt(state.t,state.wheels),tx=sx(tip.x),ty=sy(tip.y);ctx.save();ctx.translate(tx,ty);const a=state.t*BASE*(state.wheels.length)*(state.wheels.at(-1)?.d||1);ctx.rotate(a+Math.PI/2);ctx.imageSmoothingEnabled=false;ctx.shadowColor='#ff59e5';ctx.shadowBlur=10;ctx.fillStyle='#ff65df';ctx.fillRect(-3,6,6,9);ctx.shadowBlur=0;ctx.fillStyle='#f7fbff';ctx.fillRect(-3,-10,6,17);ctx.fillRect(-8,0,16,5);ctx.fillStyle='#45eaff';ctx.fillRect(-2,-6,4,5);ctx.fillStyle='#f76fa9';ctx.fillRect(-9,4,4,5);ctx.fillRect(5,4,4,5);ctx.restore()}
-function draw(){if(!W)return;ctx.clearRect(0,0,W,H);bg();drawPrediction();drawGoals();drawWheels();if(state.flash>0){ctx.fillStyle=`rgba(255,93,90,${state.flash*.13})`;ctx.fillRect(0,0,W,H)}}
+function drawWheels(){
+ const rings=wheelGeometry();
+ rings.forEach((ring,i)=>{
+  const col=COLORS[i],selected=i===state.selectedWheel;
+  const {cx,cy,tx,ty,r}=ring;
+  if(r>1){ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.lineWidth=selected?1.8:1.05;ctx.strokeStyle=selected?col+'d9':col+'77';ctx.stroke()}
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(tx,ty);ctx.lineWidth=selected?1.6:1;ctx.strokeStyle=col+'a6';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,2.1,0,TAU);ctx.fillStyle=col;ctx.fill();
+  if(r>13){ctx.font='10px ui-monospace,monospace';ctx.fillStyle=col;ctx.fillText(String(i+1),cx+7,cy-7)}
+  ctx.save();ctx.shadowColor=col;ctx.shadowBlur=selected?17:11;
+  ctx.beginPath();ctx.arc(tx,ty,selected?7.4:5.7,0,TAU);ctx.fillStyle=col;ctx.fill();ctx.shadowBlur=0;
+  ctx.beginPath();ctx.arc(tx,ty,selected?3.2:2.5,0,TAU);ctx.fillStyle='#071625';ctx.fill();ctx.restore();
+ });
+ if(state.trail.length>1){drawLine(state.trail,'#dfbd7c4b',6,9);drawLine(state.trail,'#f3d5a7',1.9,8)}
+ const tip=pointAt(state.t,state.wheels),tx=sx(tip.x),ty=sy(tip.y);
+ ctx.save();ctx.translate(tx,ty);
+ const a=state.t*BASE*(state.wheels.length)*(state.wheels.at(-1)?.d||1);
+ ctx.rotate(a+Math.PI/2);ctx.shadowColor='#91dcff';ctx.shadowBlur=18;
+ ctx.beginPath();ctx.moveTo(0,-13);ctx.lineTo(7,8);ctx.lineTo(0,5);ctx.lineTo(-7,8);ctx.closePath();
+ ctx.fillStyle='#e5f3ff';ctx.fill();ctx.shadowBlur=0;
+ ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(2,4);ctx.lineTo(-2,4);ctx.closePath();ctx.fillStyle='#559fd4';ctx.fill();
+ if(state.mode==='running'&&!reducedMotion){ctx.beginPath();ctx.moveTo(-2,8);ctx.lineTo(0,16+Math.sin(performance.now()*.025)*3);ctx.lineTo(2,8);ctx.closePath();ctx.fillStyle='#d8b77a';ctx.fill()}
+ ctx.restore();
+}
+function draw(){if(!W)return;ctx.clearRect(0,0,W,H);bg();drawPrediction();drawGoals();drawWheels();if(state.flash>0){ctx.fillStyle=`rgba(255,113,108,${state.flash*.13})`;ctx.fillRect(0,0,W,H)}}
 function segmentDistance(a,b,p){const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;const u=l?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1):0;return Math.hypot(a.x+u*dx-p.x,a.y+u*dy-p.y)}
 function collision(a,b){const l=levels[state.level];for(let i=0;i<l.goals.length;i++){if(!state.collected.has(i)&&segmentDistance(a,b,l.goals[i])<=l.captureRadius){state.collected.add(i);state.done=state.collected.size;state.flash=0;if(state.done===l.goals.length){finish(true);return}}}if(state.hazardCooldown<=0){for(const h of l.hazards){if(segmentDistance(a,b,h)<=h.r+4){state.hits++;state.remaining=Math.max(0,state.remaining-4);state.hazardCooldown=.9;state.flash=1;msg('注意：碰到紅色禁區！','扣除 4 秒。調整半徑或反轉方向，讓下一輪避開障礙。');break}}}}
 function finish(win){if(state.mode!=='running')return;setMode(win?'won':'lost');const idx=state.level,l=levels[idx];const overlay=$('resultOverlay');overlay.hidden=false;$('resultKicker').textContent=win?'MISSION COMPLETE':'SIGNAL LOST';$('resultTitle').textContent=win?'物資成功送達':'航道任務未完成';if(win){state.complete[idx]=true;state.unlocked=Math.max(state.unlocked,Math.min(idx+2,levels.length));save();renderLevels();const points=Math.max(100,Math.round(800+state.remaining*18-state.hits*95-Math.min(state.edits,20)*10-(state.assisted?150:0)));$('resultStars').textContent=state.hits===0&&state.edits===0&&!state.assisted?'✦ ✦ ✦':state.hits<=1?'✦ ✦':'✦';$('resultBody').textContent=`不分順序收齊 ${l.goals.length} 個訊號，剩餘 ${state.remaining.toFixed(1)} 秒。得分 ${points}。${state.assisted?'本次使用了示範參數。':'艾瑞斯殖民地已收到物資！'}`;$('nextResult').hidden=idx===levels.length-1;$('nextResult').textContent='下一關 →';msg('挑戰成功：'+l.name,'下一關已解鎖，你可以挑戰更複雜的傅立葉路線。')}else{$('resultStars').textContent='✦';$('resultBody').textContent=`已收集 ${state.done} / ${l.goals.length} 個訊號。試著調整圓周設定，讓光點更快到達目標。`;$('nextResult').hidden=true;msg('時間結束，試試另一種配置',l.tip)}syncHUD()}
