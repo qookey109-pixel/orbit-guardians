@@ -1,4 +1,4 @@
-name: Orbit one-screen ambient visual QA
+name: Orbit Classic Cosmos one-screen QA
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/One-Screen Ambient V0\.7\.1/);
+          assert.match(await page.title(),/Classic Cosmos V0\.7\.2/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -40,7 +40,7 @@ jobs:
           assert.deepEqual(checks.stages,6);
           assert.deepEqual(checks.max,3);
           assert.equal(checks.visual.ship,'circle');
-          assert.equal(checks.visual.background,'ambient');
+          assert.equal(checks.visual.background,'classic-cosmos');
           assert.deepEqual(checks.styleCount,1);
           assert.equal(checks.hiddenDecor,true);
           assert.equal(checks.noOldScanline,true);
@@ -53,8 +53,25 @@ jobs:
             const a=sample(.06,.06),b=sample(.87,.78);
             return {a,b,distance:a.reduce((sum,v,i)=>sum+Math.abs(v-b[i]),0)};
           });
-          assert.ok(pixelRange.distance>1,'Ambient background has no depth: '+JSON.stringify(pixelRange));
-          await page.screenshot({path:'desktop-v071.png',fullPage:true});
+          assert.ok(pixelRange.distance>1,'Classic cosmic background has no depth: '+JSON.stringify(pixelRange));
+          // Verify restored cosmic scene is visible and user can switch to minimal mode.
+          assert.equal(await page.locator('#sceneBtn').isVisible(),true,'Desktop background toggle hidden');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
+          const classicPixels=await page.evaluate(()=>{
+            const c=document.querySelector('#gameCanvas'),g=c.getContext('2d');
+            return [[.22,.93],[.83,.16],[.13,.17]].map(([x,y])=>Array.from(g.getImageData(Math.round(x*c.width),Math.round(y*c.height),1,1).data).slice(0,3));
+          });
+          await page.locator('#sceneBtn').click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),false);
+          const minimalPixels=await page.evaluate(()=>{
+            const c=document.querySelector('#gameCanvas'),g=c.getContext('2d');
+            return [[.22,.93],[.83,.16],[.13,.17]].map(([x,y])=>Array.from(g.getImageData(Math.round(x*c.width),Math.round(y*c.height),1,1).data).slice(0,3));
+          });
+          const sceneDifference=classicPixels.flat().reduce((sum,value,i)=>sum+Math.abs(value-minimalPixels.flat()[i]),0);
+          assert.ok(sceneDifference>65,'Original space scene absent: difference '+sceneDifference);
+          await page.locator('#sceneBtn').click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
+          await page.screenshot({path:'desktop-v072.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -108,6 +125,11 @@ jobs:
           await page.locator('#dockSettings').click();
           assert.equal(await page.locator('#settingsPanel').isVisible(),true);
           assert.equal(await page.locator('#dockSettings').getAttribute('aria-expanded'),'true');
+          assert.equal(await page.locator('#sceneBtn').isVisible(),true,'Mobile background toggle hidden');
+          await page.locator('#sceneBtn').click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),false);
+          await page.locator('#sceneBtn').click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#minusCircle').click();
           await page.locator('#plusCircle').click();
           const wheelCount=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length);
@@ -118,7 +140,7 @@ jobs:
           assert.equal(await page.locator('#levelList .level-btn').count(),6);
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v071.png',fullPage:true});
+          await page.screenshot({path:'mobile-v072.png',fullPage:true});
           await page.locator('#startBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running');
           await page.locator('#startBtn').click();
@@ -126,15 +148,15 @@ jobs:
           await page.locator('#resetBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready');
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
-          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts}));
+          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference}));
           await browser.close();
           NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v071-ambient-circle-qa
+          name: orbit-v072-classic-cosmos-qa
           path: |
-            desktop-v071.png
-            mobile-v071.png
+            desktop-v072.png
+            mobile-v072.png
           if-no-files-found: ignore
