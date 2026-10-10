@@ -1,4 +1,4 @@
-name: Orbit visual and gameplay smoke
+name: Orbit one-screen game QA
 
 on:
   push:
@@ -32,10 +32,10 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Pure Minimal Abstract V0\.6\.1/);
+          assert.match(await page.title(),/One-Screen Edition V0\.7/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
-            return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',overflow:document.documentElement.scrollWidth-innerWidth};
+            return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
           });
           assert.deepEqual(checks.stages,6);
           assert.deepEqual(checks.max,3);
@@ -43,7 +43,9 @@ jobs:
           assert.equal(checks.hiddenDecor,true);
           assert.equal(checks.noOldScanline,true);
           assert.ok(checks.overflow<2,'Desktop horizontal overflow '+checks.overflow);
-          await page.screenshot({path:'desktop-v061.png',fullPage:true});
+          assert.ok(checks.verticalOverflow<2,'Desktop vertical overflow '+checks.verticalOverflow);
+          assert.ok(checks.canvasHeight>200,'Desktop canvas too small '+checks.canvasHeight);
+          await page.screenshot({path:'desktop-v07.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -73,20 +75,56 @@ jobs:
             return out;
           });
           for(const r of results){assert.equal(r.hit,r.goals,r.name+' missed goal');assert.equal(r.collision,false,r.name+' hit hazard')}
+          const sizes=[{width:1440,height:900},{width:1366,height:768},{width:1024,height:720},{width:820,height:900},{width:390,height:844},{width:375,height:667},{width:320,height:568},{width:844,height:390}];
+          const layouts=[];
+          for(const size of sizes){
+            await page.setViewportSize(size);
+            await page.waitForTimeout(100);
+            const fit=await page.evaluate(()=>{
+              const board=document.getElementById('boardArea').getBoundingClientRect();
+              const dock=document.querySelector('.mobile-dock').getBoundingClientRect();
+              const start=document.getElementById('startBtn').getBoundingClientRect();
+              return {vw:innerWidth,vh:innerHeight,w:document.documentElement.scrollWidth,h:document.documentElement.scrollHeight,boardH:board.height,boardW:board.width,dockBottom:dock.bottom,startBottom:start.bottom};
+            });
+            assert.ok(fit.w<=size.width+1,'Horizontal scroll at '+size.width+'x'+size.height+': '+JSON.stringify(fit));
+            assert.ok(fit.h<=size.height+1,'Vertical scroll at '+size.width+'x'+size.height+': '+JSON.stringify(fit));
+            assert.ok(fit.boardH>=110,'Canvas too small at '+size.width+'x'+size.height+': '+JSON.stringify(fit));
+            assert.ok(fit.startBottom<=size.height,'Start button outside screen '+JSON.stringify(fit));
+            if(size.width<=860)assert.ok(fit.dockBottom<=size.height+1,'Mobile dock not visible: '+JSON.stringify(fit));
+            layouts.push(fit);
+          }
           await page.setViewportSize({width:390,height:844});
-          await page.screenshot({path:'mobile-v061.png',fullPage:true});
-          const mobile=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth-innerWidth,display:getComputedStyle(document.querySelector('#gameCanvas')).display}));
-          assert.ok(mobile.overflow<2,'Mobile horizontal overflow '+mobile.overflow);
-          assert.equal(mobile.display,'block');
+          await page.waitForTimeout(100);
+          assert.equal(await page.locator('#settingsPanel').isVisible(),false);
+          await page.locator('#dockSettings').click();
+          assert.equal(await page.locator('#settingsPanel').isVisible(),true);
+          assert.equal(await page.locator('#dockSettings').getAttribute('aria-expanded'),'true');
+          await page.locator('#minusCircle').click();
+          await page.locator('#plusCircle').click();
+          const wheelCount=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length);
+          assert.equal(wheelCount,3,'Mobile circle control broken');
+          await page.locator('#dockLevels').click();
+          assert.equal(await page.locator('#levelsSection').isVisible(),true);
+          assert.equal(await page.locator('#settingsPanel').isVisible(),false);
+          assert.equal(await page.locator('#levelList .level-btn').count(),6);
+          await page.keyboard.press('Escape');
+          assert.equal(await page.locator('#levelsSection').isVisible(),false);
+          await page.screenshot({path:'mobile-v07.png',fullPage:true});
+          await page.locator('#startBtn').click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running');
+          await page.locator('#startBtn').click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'paused');
+          await page.locator('#resetBtn').click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready');
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
-          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,mobile}));
+          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts}));
           await browser.close();
           NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v061-visual-qa
+          name: orbit-v07-one-screen-qa
           path: |
             desktop-v061.png
             mobile-v061.png
