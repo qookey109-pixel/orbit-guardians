@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜One-Screen Ambient V0.7.1</title>
+<title>ORBIT // CODE — 軌道守護者｜Classic Cosmos V0.7.2</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -215,10 +215,19 @@ input[type=range]{margin:0 0 4px}
  .dock-btn{height:36px;min-height:36px}
 }
 
+
+/* V0.7.2 — Classic Cosmos restoration within the unchanged single-screen shell */
+body{background:radial-gradient(ellipse 85% 65% at 52% -12%,rgba(55,72,132,.34),transparent 72%),radial-gradient(ellipse 75% 68% at 95% 80%,rgba(18,57,86,.26),transparent 78%),#080e1c}
+.board{border-color:#35527a}
+.board-canvas{background:#050c23}
+.panel-footer .scene-toggle{display:inline-flex;max-width:none;width:100%;min-height:38px;border-color:#567c98;background:#172338;color:#cae6f2}
+.panel-footer .scene-toggle:not(.active){background:#101924;border-color:#334759;color:#8ea3b2}
+.panel-footer .scene-toggle:hover{background:#22364f;border-color:#8ebbd3}
+@media(max-width:860px){body[data-mobile-pane=settings] .panel-footer .scene-toggle{display:inline-flex}}
 </style>
 </head>
 <body><div class="shell">
-<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">ONE SCREEN / V0.7.1</span></div></header>
+<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">CLASSIC COSMOS / V0.7.2</span></div></header>
 <section class="intro"><div><div class="eyebrow">ORBITAL PUZZLE — SIX MISSIONS</div><h1>讓軌道，<span>剛好經過。</span></h1><p>調整最多三個圓的半徑與方向，讓軌跡經過所有訊號，避開危險區。</p></div><div class="intro-flag">最多三個圓 · 拖曳半徑 · 正反轉<br><b>6 個任務 · 無限種路線</b></div></section>
 <main class="layout"><section class="left" aria-label="遊戲畫面與關卡">
 <div class="board"><div class="board-header"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div></div><div class="board-top-right"><div class="state-chip" id="stateChip">準備開始</div></div></div>
@@ -226,10 +235,10 @@ input[type=range]{margin:0 0 4px}
 <div class="overlay" id="resultOverlay" hidden><div class="result" role="dialog" aria-modal="true" aria-labelledby="resultTitle"><div class="result-kicker" id="resultKicker">MISSION COMPLETE</div><h2 id="resultTitle">物資成功送達</h2><div class="result-stars" id="resultStars">✦ ✦ ✦</div><p id="resultBody"></p><div class="result-actions"><button class="btn" id="retryResult">重新挑戰</button><button class="btn primary" id="nextResult">下一關 →</button></div></div></div></div>
 <div class="time-track"><div class="time-fill" id="timeFill"></div></div>
 <div class="metrics"><div class="metric"><span>剩餘秒數</span><strong class="lime" id="timerMetric">17.0<small>s</small></strong></div><div class="metric"><span>已收集訊號</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞次數</span><strong id="hazardMetric">0</strong></div><div class="metric"><span>調整參數</span><strong class="pink" id="editMetric">0</strong></div></div></div>
-<div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn">↻ 重設試跑</button><button class="btn active" id="previewBtn" aria-pressed="true">⌁ 預測路線</button><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">環境光：開</button></div>
+<div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn">↻ 重設試跑</button><button class="btn active" id="previewBtn" aria-pressed="true">⌁ 預測路線</button></div>
 <div class="game-message" aria-live="polite"><div class="message-icon">✳</div><div><b id="missionTitle">任務：收集物資訊號</b><p id="missionTip">調整第一個圓的半徑。預測線會即時顯示運行路線。</p></div></div>
 <div class="levels-section" id="levelsSection"><div class="levels-head"><h2>任務選擇</h2><span id="levelProgress">已解鎖 1 / 6</span></div><div class="level-list" id="levelList"></div></div></section>
-<aside class="panel" id="settingsPanel" aria-label="軌道控制台"><div class="panel-pad"><h2>軌道控制台 <small>／即時生效</small></h2><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><p class="mini-notice">最多使用 3 個圓。圓 1、2、3 固定以 1×、2×、3× 節奏旋轉；你只要控制半徑及方向。</p><div class="wheels-header"><span>每個圓的設定</span><small>半徑 · 順時針 / 逆時針</small></div><div id="wheelControls" class="wheels"></div></div><div class="panel-footer"><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳畫面中的彩色圓點即可調整半徑，也可在此輸入數字。每層圓周會自動使用固定旋轉節奏。</div></div></aside></main>
+<aside class="panel" id="settingsPanel" aria-label="軌道控制台"><div class="panel-pad"><h2>軌道控制台 <small>／即時生效</small></h2><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><p class="mini-notice">最多使用 3 個圓。圓 1、2、3 固定以 1×、2×、3× 節奏旋轉；你只要控制半徑及方向。</p><div class="wheels-header"><span>每個圓的設定</span><small>半徑 · 順時針 / 逆時針</small></div><div id="wheelControls" class="wheels"></div></div><div class="panel-footer"><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">✦ 背景：經典宇宙</button><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳畫面中的彩色圓點即可調整半徑，也可在此輸入數字。每層圓周會自動使用固定旋轉節奏。</div></div></aside></main>
 <nav class="mobile-dock" aria-label="手機遊戲工具列"><button class="dock-btn" id="dockSettings" aria-controls="settingsPanel" aria-expanded="false" type="button">◯ 軌道設定</button><button class="dock-btn" id="dockLevels" aria-controls="levelsSection" aria-expanded="false" type="button">▤ 選擇關卡</button></nav>
 <footer><span>ORBIT // CODE — 2026 · 靜態網頁，完全在你的裝置運算</span><span><span>不需帳號或 API</span></span></footer>
 </div>
@@ -275,53 +284,52 @@ function rng(seed){return()=>{seed=(1664525*seed+1013904223)>>>0;return seed/429
 function spritePlanet(g,x,y,r,light,dark){g.save();g.beginPath();g.arc(x,y,r,0,TAU);g.clip();g.fillStyle=dark;g.fillRect(x-r,y-r,r*2,r*2);const rr=rng(Math.round(x*123+y*113+r*19));for(let i=0;i<96;i++){const xx=x+(rr()*2-1)*r,yy=y+(rr()*2-1)*r;if((xx-x)**2+(yy-y)**2>=r*r)continue;const z=Math.max(2,Math.floor(rr()*6+2));g.fillStyle=rr()<.25?'#96d5c2':rr()<.6?light:'#23527d';g.fillRect(Math.floor(xx/3)*3,Math.floor(yy/3)*3,z*1.5,z)}g.fillStyle='#06133399';g.beginPath();g.ellipse(x+r*.5,y,r*.75,r,0,0,TAU);g.fill();g.restore();g.strokeStyle='#63c7ff66';g.lineWidth=1;g.beginPath();g.arc(x,y,r+.7,0,TAU);g.stroke()}
 function drawStation(g,x,y,s){g.save();g.translate(x,y);g.scale(s,s);g.fillStyle='#0b1d38';g.fillRect(-85,-10,170,36);g.fillStyle='#1c4571';for(let i=0;i<8;i++){const bx=-82+i*21,bh=18+(i*11)%44;g.fillRect(bx,-bh,16,bh+31);g.fillStyle=i%2?'#439bc2':'#244c81';g.fillRect(bx+3,-bh+4,10,3);g.fillStyle='#c4f9f0';g.fillRect(bx+5,-bh+10,3,3);g.fillStyle='#1c4571'}g.fillStyle='#f6b75d';for(let i=0;i<20;i++)g.fillRect(-77+i*8,-3,3,3);g.fillStyle='#3a82a0';g.fillRect(-104,7,208,5);g.fillRect(-73,17,146,5);g.fillStyle='#ffdb82';g.fillRect(-100,11,201,2);g.fillStyle='#83dfff';g.fillRect(-3,-85,6,66);g.fillRect(-15,-51,30,5);g.fillRect(-25,-20,50,5);g.fillStyle='#ff9b6a';g.fillRect(-1,-91,2,6);g.restore()}
 function drawAsteroid(g,x,y,size,seed){const r=rng(seed);g.save();g.translate(x,y);g.fillStyle='#060c1e';g.fillRect(-size*.55,-size*.45,size*1.2,size);g.fillStyle='#3c456a';for(let i=0;i<15;i++){const a=r()*TAU,radius=r()*size*.38;g.fillRect(Math.round(Math.cos(a)*radius),Math.round(Math.sin(a)*radius),2+r()*size*.22,2+r()*size*.12)}g.fillStyle='#76758a';for(let i=0;i<4;i++)g.fillRect(-size*.3+r()*size*.6,-size*.3+r()*size*.6,Math.max(2,size*.12),Math.max(2,size*.09));g.restore()}
-function rebuildScenery(){
- if(!W||!H)return;
- const key=`${Math.round(W)}:${Math.round(H)}:${state.showScenery}:ambient-071`;
- if(key===sceneryKey&&sceneryCache)return;
- sceneryKey=key;
- const c=document.createElement('canvas'),g=c.getContext('2d');
- c.width=Math.max(1,Math.ceil(W));c.height=Math.max(1,Math.ceil(H));
- // Deliberately restrained depth: dark-blue space, a pair of quiet atmospheric glows.
- g.fillStyle='#080d17';g.fillRect(0,0,W,H);
- const base=g.createRadialGradient(OX,OY,4,OX,OY,Math.max(W,H)*.69);
- base.addColorStop(0,'#172637');base.addColorStop(.27,'#0d1a2a');base.addColorStop(.68,'#09111e');base.addColorStop(1,'#050a12');
- g.fillStyle=base;g.fillRect(0,0,W,H);
- if(state.showScenery){
-  const washes=[
-   {x:W*.22,y:H*.26,r:Math.max(W,H)*.44,color:'rgba(86,112,169,.17)'},
-   {x:W*.82,y:H*.78,r:Math.max(W,H)*.38,color:'rgba(49,119,132,.13)'}
-  ];
-  for(const v of washes){
-   const glow=g.createRadialGradient(v.x,v.y,0,v.x,v.y,v.r);
-   glow.addColorStop(0,v.color);glow.addColorStop(1,'rgba(0,0,0,0)');
-   g.fillStyle=glow;g.fillRect(0,0,W,H);
-  }
-  // Sparse depth stars, deterministic and subtle. No particle fields or scanlines.
-  const rand=rng(71802);
-  for(let i=0;i<38;i++){
-   const x=(.028+.944*rand())*W,y=(.035+.93*rand())*H;
-   if(Math.hypot(x-OX,y-OY)<Math.min(W,H)*.18)continue;
-   const a=.19+rand()*.38,r=.45+rand()*.8;
-   g.beginPath();g.arc(x,y,r,0,TAU);
-   g.fillStyle=`rgba(201,218,235,${a})`;g.fill();
-  }
-  // One distant arc hints at celestial scale without competing with the player's circles.
-  g.save();g.translate(W*.78,H*.42);g.rotate(-.33);
-  g.beginPath();g.ellipse(0,0,W*.33,H*.26,0,Math.PI*.64,Math.PI*1.54);
-  g.lineWidth=1;g.strokeStyle='rgba(154,185,204,.10)';g.stroke();g.restore();
- }
- // Abstract origin core — not a gameplay collider.
- const radius=Math.max(10,14*worldScale);
- const core=g.createRadialGradient(OX-radius*.30,OY-radius*.35,1,OX,OY,radius*1.45);
- core.addColorStop(0,'#b6c7d5');core.addColorStop(.23,'#637f97');core.addColorStop(.63,'#263d53');core.addColorStop(1,'#10202c');
- g.beginPath();g.arc(OX,OY,radius,0,TAU);g.fillStyle=core;g.fill();
- g.beginPath();g.arc(OX,OY,radius+4,0,TAU);g.lineWidth=.8;g.strokeStyle='rgba(152,183,206,.24)';g.stroke();
- sceneryCache=c;
+function rebuildScenery(){if(!W||!H)return;const key=`${Math.round(W)}:${Math.round(H)}:${state.level}:${state.showScenery}:classic072`;if(key===sceneryKey&&sceneryCache)return;sceneryKey=key;const c=document.createElement('canvas'),g=c.getContext('2d');c.width=Math.max(1,Math.ceil(W/2));c.height=Math.max(1,Math.ceil(H/2));g.scale(c.width/W,c.height/H);g.imageSmoothingEnabled=false;
+// Minimal setting retains an uncluttered abstract environment.
+if(!state.showScenery){
+ g.fillStyle='#0a101b';g.fillRect(0,0,W,H);
+ const haze=g.createRadialGradient(OX,OY,5,OX,OY,Math.min(W,H)*.6);
+ haze.addColorStop(0,'rgba(60,89,116,.26)');haze.addColorStop(1,'rgba(0,0,0,0)');
+ g.fillStyle=haze;g.fillRect(0,0,W,H);
+ const r=Math.max(13,24*worldScale);spritePlanet(g,OX,OY,r,'#6aa9a8','#112c4a');
+ sceneryCache=c;return;
 }
+const grd=g.createLinearGradient(0,0,W,H);grd.addColorStop(0,'#050c28');grd.addColorStop(.45,'#091539');grd.addColorStop(1,'#03071c');g.fillStyle=grd;g.fillRect(0,0,W,H);
+if(state.showScenery){const rand=rng(31337+state.level*777),px=Math.max(3,Math.min(7,Math.round(W/170)));
+// Broad layered nebula, block-rendered to keep the illustrated pixel look.
+for(let j=0;j<3;j++){let cx=W*[.76,.23,.45][j],cy=H*[.25,.73,.47][j],rx=W*[.30,.24,.29][j],ry=H*[.37,.29,.18][j];for(let k=0;k<750;k++){const x=cx+(rand()+rand()+rand()-1.5)*rx*1.5,y=cy+(rand()+rand()+rand()-1.5)*ry*1.5;const spread=((x-cx)/rx)**2+((y-cy)/ry)**2;if(spread>1.55)continue;g.fillStyle=[`rgba(92,65,187,${.032*(1.6-spread)})`,`rgba(41,125,173,${.035*(1.6-spread)})`,`rgba(156,57,128,${.022*(1.6-spread)})`][j];g.fillRect(Math.round(x/px)*px,Math.round(y/px)*px,px*(1+Math.floor(rand()*3)),px*(1+Math.floor(rand()*2)))}}
+// Distant satellite worlds and a galaxy visible above the navigation plot.
+spritePlanet(g,W*.83,H*.16,Math.max(10,W*.037),'#4366b1','#16214b');spritePlanet(g,W*.13,H*.17,Math.max(8,W*.022),'#bd765f','#362146');
+const gx=W*.68,gy=H*.16;g.save();g.translate(gx,gy);g.rotate(-.32);for(let i=0;i<65;i++){const a=i*.31,rad=Math.sqrt(i/65)*Math.min(W*.11,H*.18),x=Math.cos(a)*rad*1.7,y=Math.sin(a)*rad*.52;g.fillStyle=i%4===0?'#f5b8c8':i%3===0?'#bb8bff':'#655bc1';g.globalAlpha=.10+i/170;g.fillRect(Math.round(x),Math.round(y),2+(i%3)*2,2)}g.restore();g.globalAlpha=1;
+// Far-side colony architecture and tiny foreground drifting asteroids.
+g.fillStyle='#07162e';g.fillRect(0,H*.90,W,H*.10);g.fillStyle='#0b1e45';for(let i=0;i<20;i++){let x=i*W/19;g.fillRect(x,H*(.89+(i%4)*.009),W/17,H*.13)}
+drawStation(g,W*.22,H*.93,Math.max(.30,Math.min(.85,W/780)));
+for(let i=0;i<13;i++){const x=(.05+rand()*.9)*W,y=(.09+rand()*.79)*H;if(Math.hypot(x-W/2,y-H/2)<Math.min(W,H)*.22)continue;drawAsteroid(g,x,y,4+rand()*Math.max(8,W*.022),171+i*718)}
+// Quiet stars, two brightness populations, plus a few cross stars.
+for(let i=0;i<190;i++){const x=Math.floor(rand()*W/px)*px,y=Math.floor(rand()*H/px)*px,bright=rand();g.fillStyle=bright>.93?'#d1f7ff':bright>.65?'#679bd4':'#304b8c';g.fillRect(x,y,bright>.95?2.4:1.5,bright>.95?2.4:1.5)}
+for(let i=0;i<8;i++){const x=rand()*W,y=rand()*H,a=2+rand()*4;g.fillStyle='#85cffcaa';g.fillRect(x-a,y,2*a+1,1);g.fillRect(x,y-a,1,2*a+1);g.fillStyle='#eefaff';g.fillRect(x,y,2,2)}
+}
+// Core planet remains centered on the exact model origin (not a gameplay collider).
+const r=Math.max(14,26*worldScale);spritePlanet(g,OX,OY,r,'#48a98f','#0b3065');
+g.strokeStyle='#69d7e58a';g.lineWidth=1;g.beginPath();g.ellipse(OX,OY,r*1.7,r*.43,-.29,0,TAU);g.stroke();
+g.fillStyle='#f7b972';for(let i=0;i<10;i++){let a=TAU*i/10,x=OX+Math.cos(a)*(r*.84),y=OY+Math.sin(a)*(r*.84);if(i%3===0)g.fillRect(Math.round(x),Math.round(y),2.5,2.5)}
+sceneryCache=c}
+
 function bg(){
  rebuildScenery();
+ ctx.imageSmoothingEnabled=!state.showScenery;
  ctx.drawImage(sceneryCache,0,0,W,H);
+ ctx.imageSmoothingEnabled=true;
+ // Faint twinkles, not decorative reticles or scanlines.
+ if(state.showScenery&&!reducedMotion){
+  const t=performance.now()*.001;
+  for(let i=0;i<9;i++){
+   const x=((i*179+41)%991)/991*W,y=((i*379+62)%983)/983*H;
+   const a=.12+.17*(.5+.5*Math.sin(t*(.45+i*.09)+i));
+   ctx.fillStyle=`rgba(188,217,243,${a})`;
+   ctx.fillRect(Math.round(x),Math.round(y),i%3===0?2:1,i%3===0?2:1);
+  }
+ }
 }
 function drawGoals(){
  const l=levels[state.level];
@@ -393,7 +401,7 @@ canvas.addEventListener('pointerdown',ev=>{if(state.mode==='won'||state.mode==='
 canvas.addEventListener('pointermove',ev=>{if(!state.dragging)return;const p=pointerXY(ev),ring=wheelGeometry()[state.dragging.index],v=Math.hypot(p.x-ring.cx,p.y-ring.cy)/worldScale;const i=state.dragging.index;updateWheel(i,'r',v,false);syncRadiusUI(i);ev.preventDefault()});
 function endRadiusDrag(){if(!state.dragging)return;const drag=state.dragging;state.dragging=null;canvas.classList.remove('dragging');if(drag.startR!==state.wheels[drag.index].r&&(state.mode==='running'||state.mode==='paused')){state.edits++;syncHUD()}syncRadiusUI(drag.index)}
 canvas.addEventListener('pointerup',endRadiusDrag);canvas.addEventListener('pointercancel',endRadiusDrag);canvas.addEventListener('lostpointercapture',endRadiusDrag);
-$('sceneBtn').addEventListener('click',()=>{state.showScenery=!state.showScenery;sceneryKey='';$('sceneBtn').classList.toggle('active',state.showScenery);$('sceneBtn').setAttribute('aria-pressed',String(state.showScenery));$('sceneBtn').textContent=state.showScenery?'✦ 星空特效：開':'環境光：關';draw()});$('startBtn').addEventListener('click',start);$('resetBtn').addEventListener('click',resetRun);$('previewBtn').addEventListener('click',()=>{state.showPrediction=!state.showPrediction;$('previewBtn').classList.toggle('active',state.showPrediction);$('previewBtn').setAttribute('aria-pressed',String(state.showPrediction));$('canvasHint').textContent=state.showPrediction?'拖曳彩色圓點改變半徑':'拖曳圓點改半徑 · 預測已關';draw()});
+$('sceneBtn').addEventListener('click',()=>{state.showScenery=!state.showScenery;sceneryKey='';$('sceneBtn').classList.toggle('active',state.showScenery);$('sceneBtn').setAttribute('aria-pressed',String(state.showScenery));$('sceneBtn').textContent=state.showScenery?'✦ 背景：經典宇宙':'○ 背景：簡約';draw()});$('startBtn').addEventListener('click',start);$('resetBtn').addEventListener('click',resetRun);$('previewBtn').addEventListener('click',()=>{state.showPrediction=!state.showPrediction;$('previewBtn').classList.toggle('active',state.showPrediction);$('previewBtn').setAttribute('aria-pressed',String(state.showPrediction));$('canvasHint').textContent=state.showPrediction?'拖曳彩色圓點改變半徑':'拖曳圓點改半徑 · 預測已關';draw()});
 $('plusCircle').addEventListener('click',()=>{if(state.wheels.length<MAX_WHEELS){state.wheels.push(defaultWheel());state.selectedWheel=state.wheels.length-1;if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];renderWheels();syncHUD();draw()}});$('minusCircle').addEventListener('click',()=>{if(state.wheels.length>1){state.wheels.pop();state.selectedWheel=Math.min(state.selectedWheel,state.wheels.length-1);if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];renderWheels();syncHUD();draw()}});
 $('referenceBtn').addEventListener('click',()=>{state.wheels=clone(levels[state.level].refs);state.assisted=true;resetRun();renderWheels();msg('已載入示範參數','這組參數能收集所有訊號，不必依照固定順序。按「開始試跑」，觀察各圓如何合成一條成功的路線。')});$('randomBtn').addEventListener('click',()=>{state.wheels=Array.from({length:clamp(state.wheels.length,1,MAX_WHEELS)},()=>({r:Math.round(35+Math.random()*125),d:Math.random()<.5?-1:1}));resetRun();renderWheels();msg('隨機配置已生成','從預測線判斷它會經過哪些目標，再自由修改參數。')});$('retryResult').addEventListener('click',resetRun);$('nextResult').addEventListener('click',()=>{if(state.level+1<levels.length)setLevel(state.level+1)});
 
@@ -416,6 +424,6 @@ syncMobilePanels();
 
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&mobilePane){const prior=mobilePane;mobilePane='';syncMobilePanels();(prior==='settings'?$('dockSettings'):$('dockLevels')).focus();return}if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(document.activeElement?.tagName))return;if(e.code==='Space'){e.preventDefault();start()}else if(e.key.toLowerCase()==='r')resetRun()});
 new ResizeObserver(resize).observe($('boardArea'));setLevel(0);requestAnimationFrame(tick);
-window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,visual:{ship:'circle',background:'ambient'}};
+window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,visual:{ship:'circle',background:'classic-cosmos'}};
 })();
 </script></body></html>
