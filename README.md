@@ -1,6 +1,6 @@
 # ORBIT // CODE — 軌道守護者
 
-**One-Screen Edition V0.7** · 傅立葉圓周軌道益智遊戲 · 繁體中文
+**One-Screen Ambient V0.7.1** · 傅立葉圓周軌道益智遊戲 · 繁體中文
 
 🎮 **[立即遊玩（GitHub Pages）](https://qookey109-pixel.github.io/orbit-guardians/)**
 
@@ -27,6 +27,7 @@
 
 ## 版本
 
+- **V0.7.1**：太空船改為白藍色圓形光球；恢復低雜訊的星空深度，包括柔和星雲光暈、稀疏星點、遠景弧線與中心核心；維持 V0.7 單畫面操作及六關規則。
 - **V0.7**：一面式遊玩；桌機整屏配置、手機固定底部控制與關卡面板、八種尺寸無溢出驗收。
 - **V0.6.1**：Pure Minimal Abstract；移除粒子、星雲、背景光絲、掃描線及多餘 HUD，保留簡約幾何軌跡、抽象核心及必要操作資訊。
 - **V0.6**：Luminous 光影風格。
@@ -35,6 +36,6 @@
 
 ## 驗收
 
-- `.github/workflows/browser-smoke.yml` 在雲端 Chromium 驗證八種桌面／平板／手機畫面尺寸無網頁捲動、手機底部面板切換、三圓上限、半徑拖曳、六關參考路線與 JavaScript 錯誤。
+- `.github/workflows/browser-smoke.yml` 在雲端 Chromium 驗證八種桌面／平板／手機畫面尺寸無網頁捲動、手機底部面板切換、三圓上限、半徑拖曳、六關參考路線、圓形飛船與環境背景設定及 JavaScript 錯誤。
 - 本遊戲完全在瀏覽器中執行，不需 API。
 
