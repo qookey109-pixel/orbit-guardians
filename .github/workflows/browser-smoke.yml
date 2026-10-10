@@ -1,4 +1,4 @@
-name: Orbit Classic Cosmos one-screen QA
+name: Orbit integrated command deck QA
 
 on:
   push:
@@ -32,21 +32,29 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Classic Cosmos V0\.7\.2/);
+          assert.match(await page.title(),/Integrated Command Deck V0\.7\.3/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
           });
           assert.deepEqual(checks.stages,6);
           assert.deepEqual(checks.max,3);
-          assert.equal(checks.visual.ship,'circle');
+          assert.equal(checks.visual.ship,'round-scout');
+          assert.equal(checks.visual.goal,'supply-station');
+          assert.equal(checks.visual.hazard,'navigation-mine');
+          assert.equal(checks.visual.layout,'integrated');
           assert.equal(checks.visual.background,'classic-cosmos');
           assert.deepEqual(checks.styleCount,1);
           assert.equal(checks.hiddenDecor,true);
           assert.equal(checks.noOldScanline,true);
           assert.ok(checks.overflow<2,'Desktop horizontal overflow '+checks.overflow);
           assert.ok(checks.verticalOverflow<2,'Desktop vertical overflow '+checks.verticalOverflow);
-          assert.ok(checks.canvasHeight>200,'Desktop canvas too small '+checks.canvasHeight);
+          assert.ok(checks.canvasHeight>600,'Integrated desktop canvas should exceed 600px '+checks.canvasHeight);
+          const integration=await page.evaluate(()=>({headerControls:document.querySelector('.board-header').contains(document.querySelector('.actionbar')),headerMetrics:document.querySelector('.board-header').contains(document.querySelector('.metrics')),stageHeight:document.querySelector('#levelsSection').getBoundingClientRect().height,stageCount:document.querySelectorAll('.level-btn').length}));
+          assert.equal(integration.headerControls,true);
+          assert.equal(integration.headerMetrics,true);
+          assert.equal(integration.stageCount,6);
+          assert.ok(integration.stageHeight<=45,'Stage selector not compact: '+JSON.stringify(integration));
           const pixelRange=await page.evaluate(()=>{
             const c=document.querySelector('#gameCanvas'),g=c.getContext('2d');
             const sample=(x,y)=>Array.from(g.getImageData(Math.floor(x*c.width),Math.floor(y*c.height),1,1).data).slice(0,3);
@@ -71,7 +79,7 @@ jobs:
           assert.ok(sceneDifference>65,'Original space scene absent: difference '+sceneDifference);
           await page.locator('#sceneBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
-          await page.screenshot({path:'desktop-v072.png',fullPage:true});
+          await page.screenshot({path:'desktop-v073.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -140,7 +148,7 @@ jobs:
           assert.equal(await page.locator('#levelList .level-btn').count(),6);
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v072.png',fullPage:true});
+          await page.screenshot({path:'mobile-v073.png',fullPage:true});
           await page.locator('#startBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running');
           await page.locator('#startBtn').click();
@@ -148,14 +156,14 @@ jobs:
           await page.locator('#resetBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready');
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
-          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference}));
+          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration}));
           await browser.close();
           NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v072-classic-cosmos-qa
+          name: orbit-v073-command-deck-qa
           path: |
             desktop-v072.png
             mobile-v072.png
