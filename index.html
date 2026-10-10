@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Pure Minimal Abstract V0.6.1</title>
+<title>ORBIT // CODE — 軌道守護者｜One-Screen Edition V0.7</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -102,10 +102,123 @@ footer{margin-top:36px;border-top:1px solid #29333f;padding:22px 0;display:flex;
 @media(max-width:510px){header{min-height:63px}.brand b{font-size:13px}.brand small{font-size:8px}.logo{height:30px;width:30px;font-size:21px}.nav-link{font-size:9px}.intro{padding:24px 0 19px}.intro h1{font-size:29px}.intro p{font-size:12px}.board-header{padding:13px 14px;min-height:62px}.board-canvas{aspect-ratio:1.07;min-height:315px}.live-readout{top:13px;left:13px;font-size:10px}.radius-readout{top:14px;right:13px;font-size:10px}.canvas-hint{font-size:9px;right:13px}.metrics .metric{padding:13px 14px}.metric strong{font-size:21px}.actionbar{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:7px}.actionbar .btn{min-width:0;padding:10px 5px;font-size:10px}.wheels{display:flex}.level-list{grid-template-columns:repeat(2,minmax(0,1fr))}.panel-footer{display:flex}footer{flex-direction:column}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
 
+
+/* V0.7 - Single-screen game layout. Full document never scrolls; control drawer may scroll internally. */
+html,body{height:100%;width:100%;overflow:hidden;overscroll-behavior:none}
+.shell{width:100%;max-width:1600px;height:100vh;height:100dvh;min-height:0;display:flex;flex-direction:column;padding:0 clamp(12px,1.6vw,24px) 10px}
+header{height:56px;min-height:56px;flex-shrink:0}
+.intro,footer{display:none}
+.layout{flex:1;min-height:0;position:relative;grid-template-columns:minmax(0,1fr) minmax(258px,312px);gap:13px;align-items:stretch}
+.left{display:flex;flex-direction:column;min-height:0;min-width:0}
+.board{display:flex;flex-direction:column;flex:1;min-height:0}
+.board-header{flex:none;min-height:49px;padding:9px 16px}
+.board-canvas{flex:1;min-height:0;max-height:none;aspect-ratio:auto;overflow:hidden}
+.metrics{flex:none}
+.metric{padding:10px 15px}
+.metric span{font-size:10px}
+.metric strong{font-size:20px;margin-top:3px}
+.actionbar{flex:none;gap:8px;padding:9px 0}
+.actionbar .btn{min-height:39px;padding:8px 14px}
+.game-message{flex:none;padding:5px 2px 8px;border-bottom:0;gap:9px;min-height:34px;display:flex;align-items:center;overflow:hidden}
+.game-message b{font-size:11px}
+.game-message p{display:inline;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;margin:0 0 0 7px}
+.game-message>div:last-child{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.message-icon{font-size:14px}
+.levels-section{flex:none;min-height:0;border-top:1px solid #263440;padding-top:7px}
+.levels-head{margin:0 0 7px}
+.level-list{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.level-btn{min-height:55px;padding:7px 9px;gap:4px}
+.level-btn b{font-size:11px}
+.panel{min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#3c4d5e transparent}
+.panel-pad{padding:15px 14px 11px}
+.panel-intro,.mini-notice,.fineprint{display:none}
+.panel h2{font-size:14px}
+.count-row{padding:10px 0;margin-top:13px}
+.wheels-header{margin:15px 0 6px}
+.wheels{gap:6px}
+.wheel-title{padding:8px 0 6px}
+.wheel-details{padding-bottom:0}
+.ctrl-row{margin:4px 0}
+input[type=range]{margin:0 0 4px}
+.dir-switch{margin:4px 0}
+.dir{min-height:32px}
+.panel-footer{padding:11px 14px;gap:6px}
+.panel-footer .btn{min-height:37px;padding:7px}
+.mobile-dock{display:none}
+@media(max-height:710px) and (min-width:861px){
+ .shell{padding-bottom:7px}header{height:46px;min-height:46px}
+ .board-header{min-height:42px;padding:6px 13px}
+ .level-name{font-size:14px}
+ .metric{padding:7px 12px}.metric strong{font-size:18px}
+ .actionbar{padding:6px 0}.actionbar .btn{min-height:35px}
+ .game-message{min-height:25px;padding:2px 0 4px}
+ .levels-section{padding-top:5px}.levels-head{margin-bottom:4px}
+ .level-btn{min-height:41px;padding:5px 7px}
+ .panel-pad{padding:10px 12px}.panel-footer{padding:8px 12px}
+}
+@media(max-width:860px){
+ .shell{padding:0 10px 0}
+ header{height:49px;min-height:49px}
+ .brand small{font-size:8px}.logo{width:30px;height:30px;font-size:20px}
+ .nav-link{font-size:9px}
+ .layout{display:flex;flex-direction:column;flex:1;min-height:0;gap:0;overflow:hidden}
+ .left{flex:1;min-height:0}
+ .board{min-height:0}
+ .board-header{min-height:43px;padding:7px 12px}
+ .board-canvas{flex:1;min-height:0;max-height:none;aspect-ratio:auto}
+ .metric{padding:9px 12px}.metric strong{font-size:19px}
+ .actionbar{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:7px;padding:9px 0 10px}
+ .actionbar .btn{min-width:0;min-height:42px;padding:6px 4px;font-size:11px}
+ .game-message{display:none}
+ .levels-section,.panel{display:none}
+ .mobile-dock{display:grid;grid-template-columns:1fr 1fr;flex:none;gap:8px;padding:8px 0 max(9px,env(safe-area-inset-bottom));border-top:1px solid #26313d;background:#090d13}
+ .dock-btn{height:42px;min-height:42px;border:1px solid #354451;background:#121b26;color:#b7c8d1;border-radius:8px;font-size:12px;font-weight:560}
+ .dock-btn[aria-expanded=true]{color:#efd29d;background:#24272a;border-color:#b59c70}
+ body[data-mobile-pane=settings] .panel,body[data-mobile-pane=levels] .levels-section{
+  display:block;position:absolute;bottom:4px;left:0;right:0;z-index:10;
+  border:1px solid #586c7a;border-radius:13px 13px 8px 8px;background:#101720;
+  max-height:min(46dvh,420px);overflow-y:auto;overscroll-behavior:contain;
+  box-shadow:0 -12px 60px #050a12d9;
+ }
+ body[data-mobile-pane=settings] .panel{height:min(46dvh,420px)}
+ body[data-mobile-pane=levels] .levels-section{padding:14px 13px 15px}
+ .levels-head{margin:0 0 11px}.level-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .level-btn{min-height:62px;padding:10px}
+ .panel-pad{padding:16px}
+ .panel-intro{display:block;margin:7px 0 11px}
+ .mini-notice{display:block;margin:7px 0}
+ .panel-footer{padding:11px 16px}
+ .panel-footer .btn{min-height:41px}
+ .wheels{display:flex;flex-direction:column}
+ .wheel{padding:2px 0}
+ .num{font-size:16px}
+}
+@media(max-width:510px){
+ .shell{padding:0 8px}
+ header{height:45px;min-height:45px}
+ .brand b{font-size:12px}.brand small{display:none}
+ .board-header{min-height:41px;padding:7px 10px}
+ .board-canvas{min-height:0}
+ .live-readout{top:11px;left:11px}.radius-readout{top:11px;right:11px;font-size:10px}
+ .canvas-hint{right:10px;bottom:9px}
+ .actionbar{padding:7px 0}
+ .mobile-dock{padding:7px 0 max(7px,env(safe-area-inset-bottom))}
+ .dock-btn{height:40px;min-height:40px}
+}
+@media(max-height:610px) and (max-width:860px){
+ header{height:38px;min-height:38px}
+ .board-header{min-height:35px;padding:4px 10px}
+ .level-tag{font-size:9px}.level-name{font-size:13px;margin-top:2px}
+ .metrics .metric{padding:5px 11px}.metric strong{font-size:17px;margin-top:0}
+ .actionbar{padding:5px 0}.actionbar .btn{min-height:36px;font-size:10px}
+ .mobile-dock{padding-top:5px;padding-bottom:max(5px,env(safe-area-inset-bottom))}
+ .dock-btn{height:36px;min-height:36px}
+}
+
 </style>
 </head>
 <body><div class="shell">
-<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">PURE MINIMAL / V0.6.1</span></div></header>
+<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">ONE SCREEN / V0.7</span></div></header>
 <section class="intro"><div><div class="eyebrow">ORBITAL PUZZLE — SIX MISSIONS</div><h1>讓軌道，<span>剛好經過。</span></h1><p>調整最多三個圓的半徑與方向，讓軌跡經過所有訊號，避開危險區。</p></div><div class="intro-flag">最多三個圓 · 拖曳半徑 · 正反轉<br><b>6 個任務 · 無限種路線</b></div></section>
 <main class="layout"><section class="left" aria-label="遊戲畫面與關卡">
 <div class="board"><div class="board-header"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div></div><div class="board-top-right"><div class="state-chip" id="stateChip">準備開始</div></div></div>
@@ -115,8 +228,9 @@ footer{margin-top:36px;border-top:1px solid #29333f;padding:22px 0;display:flex;
 <div class="metrics"><div class="metric"><span>剩餘秒數</span><strong class="lime" id="timerMetric">17.0<small>s</small></strong></div><div class="metric"><span>已收集訊號</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞次數</span><strong id="hazardMetric">0</strong></div><div class="metric"><span>調整參數</span><strong class="pink" id="editMetric">0</strong></div></div></div>
 <div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn">↻ 重設試跑</button><button class="btn active" id="previewBtn" aria-pressed="true">⌁ 預測路線</button><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">環境光：開</button></div>
 <div class="game-message" aria-live="polite"><div class="message-icon">✳</div><div><b id="missionTitle">任務：收集物資訊號</b><p id="missionTip">調整第一個圓的半徑。預測線會即時顯示運行路線。</p></div></div>
-<div class="levels-head"><h2>任務選擇</h2><span id="levelProgress">已解鎖 1 / 6</span></div><div class="level-list" id="levelList"></div></section>
-<aside class="panel" aria-label="軌道控制台"><div class="panel-pad"><h2>軌道控制台 <small>／即時生效</small></h2><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><p class="mini-notice">最多使用 3 個圓。圓 1、2、3 固定以 1×、2×、3× 節奏旋轉；你只要控制半徑及方向。</p><div class="wheels-header"><span>每個圓的設定</span><small>半徑 · 順時針 / 逆時針</small></div><div id="wheelControls" class="wheels"></div></div><div class="panel-footer"><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳畫面中的彩色圓點即可調整半徑，也可在此輸入數字。每層圓周會自動使用固定旋轉節奏。</div></div></aside></main>
+<div class="levels-section" id="levelsSection"><div class="levels-head"><h2>任務選擇</h2><span id="levelProgress">已解鎖 1 / 6</span></div><div class="level-list" id="levelList"></div></div></section>
+<aside class="panel" id="settingsPanel" aria-label="軌道控制台"><div class="panel-pad"><h2>軌道控制台 <small>／即時生效</small></h2><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><p class="mini-notice">最多使用 3 個圓。圓 1、2、3 固定以 1×、2×、3× 節奏旋轉；你只要控制半徑及方向。</p><div class="wheels-header"><span>每個圓的設定</span><small>半徑 · 順時針 / 逆時針</small></div><div id="wheelControls" class="wheels"></div></div><div class="panel-footer"><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳畫面中的彩色圓點即可調整半徑，也可在此輸入數字。每層圓周會自動使用固定旋轉節奏。</div></div></aside></main>
+<nav class="mobile-dock" aria-label="手機遊戲工具列"><button class="dock-btn" id="dockSettings" aria-controls="settingsPanel" aria-expanded="false" type="button">◯ 軌道設定</button><button class="dock-btn" id="dockLevels" aria-controls="levelsSection" aria-expanded="false" type="button">▤ 選擇關卡</button></nav>
 <footer><span>ORBIT // CODE — 2026 · 靜態網頁，完全在你的裝置運算</span><span><span>不需帳號或 API</span></span></footer>
 </div>
 <script>
@@ -145,7 +259,7 @@ function msg(title,body){$('missionTitle').textContent=title;$('missionTip').tex
 function setMode(mode){state.mode=mode;const label={ready:'參數編輯中',running:'訊號運行中',paused:'已暫停',won:'挑戰成功',lost:'時間結束'}[mode];$('liveLabel').textContent=label;$('liveLight').classList.toggle('off',mode!=='running');const chip=$('stateChip');chip.textContent={ready:'等待試跑',running:'LIVE',paused:'已暫停',won:'已完成',lost:'失敗'}[mode];chip.classList.toggle('pink',mode==='lost');$('startBtn').textContent=mode==='running'?'Ⅱ 暫停運轉':mode==='paused'?'▶ 繼續試跑':mode==='won'?'▶ 再玩一次':mode==='lost'?'▶ 重新試跑':'▶ 派出太空船'}
 function resetRun(){state.t=0;state.done=0;state.collected=new Set();state.hits=0;state.remaining=levels[state.level].max;state.edits=0;state.hazardCooldown=0;state.trail=[];state.flash=0;state.last=0;$('resultOverlay').hidden=true;setMode('ready');syncHUD()}
 function setLevel(index){if(index<0||index>=state.unlocked)return;state.level=index;state.selectedWheel=0;state.dragging=null;sceneryKey='';state.wheels=clone(levels[index].start);state.assisted=false;$('levelTag').textContent=`MISSION ${String(index+1).padStart(2,'0')} / ${String(levels.length).padStart(2,'0')}`;$('levelName').textContent=levels[index].name;msg(levels[index].desc,levels[index].tip);resetRun();renderWheels();renderLevels();draw()}
-function renderLevels(){const container=$('levelList');container.replaceChildren();levels.forEach((l,i)=>{const b=document.createElement('button');b.type='button';b.className='level-btn'+(i===state.level?' selected':'');b.disabled=i>=state.unlocked;b.setAttribute('aria-label',i>=state.unlocked?`第 ${i+1} 關，尚未解鎖`:`選擇第 ${i+1} 關：${l.name}`);b.innerHTML=`<span class="tiny">${i>=state.unlocked?'🔒':'LV '+String(i+1).padStart(2,'0')} ${state.complete[i]?' <span class="check">✓</span>':''}</span><b>${l.name}</b>`;b.addEventListener('click',()=>setLevel(i));container.append(b)});$('levelProgress').textContent=`已解鎖 ${state.unlocked} / ${levels.length}`}
+function renderLevels(){const container=$('levelList');container.replaceChildren();levels.forEach((l,i)=>{const b=document.createElement('button');b.type='button';b.className='level-btn'+(i===state.level?' selected':'');b.disabled=i>=state.unlocked;b.setAttribute('aria-label',i>=state.unlocked?`第 ${i+1} 關，尚未解鎖`:`選擇第 ${i+1} 關：${l.name}`);b.innerHTML=`<span class="tiny">${i>=state.unlocked?'🔒':'LV '+String(i+1).padStart(2,'0')} ${state.complete[i]?' <span class="check">✓</span>':''}</span><b>${l.name}</b>`;b.addEventListener('click',()=>{setLevel(i);if(mobilePane){mobilePane='';syncMobilePanels()}});container.append(b)});$('levelProgress').textContent=`已解鎖 ${state.unlocked} / ${levels.length}`}
 function updateWheel(index,key,value,countEdit=true){const w=state.wheels[index];if(!w||!['r','d'].includes(key))return false;let n=Number(value);if(!Number.isFinite(n))return false;if(key==='r')n=clamp(Math.round(n),0,165);if(key==='d')n=n===-1?-1:1;if(w[key]===n)return false;w[key]=n;if(countEdit&&(state.mode==='running'||state.mode==='paused'))state.edits++;state.trail=[];syncHUD();draw();return true}
 function selectWheel(i){state.selectedWheel=i;document.querySelectorAll('#wheelControls .wheel').forEach((el,n)=>el.classList.toggle('selected',n===i));syncRadiusReadout();draw()}
 function syncRadiusReadout(){$('radiusReadout').textContent=`圓 ${String(state.selectedWheel+1).padStart(2,'0')}　半徑 ${state.wheels[state.selectedWheel]?.r??0}`}
@@ -255,7 +369,25 @@ canvas.addEventListener('pointerup',endRadiusDrag);canvas.addEventListener('poin
 $('sceneBtn').addEventListener('click',()=>{state.showScenery=!state.showScenery;sceneryKey='';$('sceneBtn').classList.toggle('active',state.showScenery);$('sceneBtn').setAttribute('aria-pressed',String(state.showScenery));$('sceneBtn').textContent=state.showScenery?'✦ 星空特效：開':'環境光：關';draw()});$('startBtn').addEventListener('click',start);$('resetBtn').addEventListener('click',resetRun);$('previewBtn').addEventListener('click',()=>{state.showPrediction=!state.showPrediction;$('previewBtn').classList.toggle('active',state.showPrediction);$('previewBtn').setAttribute('aria-pressed',String(state.showPrediction));$('canvasHint').textContent=state.showPrediction?'拖曳彩色圓點改變半徑':'拖曳圓點改半徑 · 預測已關';draw()});
 $('plusCircle').addEventListener('click',()=>{if(state.wheels.length<MAX_WHEELS){state.wheels.push(defaultWheel());state.selectedWheel=state.wheels.length-1;if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];renderWheels();syncHUD();draw()}});$('minusCircle').addEventListener('click',()=>{if(state.wheels.length>1){state.wheels.pop();state.selectedWheel=Math.min(state.selectedWheel,state.wheels.length-1);if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];renderWheels();syncHUD();draw()}});
 $('referenceBtn').addEventListener('click',()=>{state.wheels=clone(levels[state.level].refs);state.assisted=true;resetRun();renderWheels();msg('已載入示範參數','這組參數能收集所有訊號，不必依照固定順序。按「開始試跑」，觀察各圓如何合成一條成功的路線。')});$('randomBtn').addEventListener('click',()=>{state.wheels=Array.from({length:clamp(state.wheels.length,1,MAX_WHEELS)},()=>({r:Math.round(35+Math.random()*125),d:Math.random()<.5?-1:1}));resetRun();renderWheels();msg('隨機配置已生成','從預測線判斷它會經過哪些目標，再自由修改參數。')});$('retryResult').addEventListener('click',resetRun);$('nextResult').addEventListener('click',()=>{if(state.level+1<levels.length)setLevel(state.level+1)});
-window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(document.activeElement?.tagName))return;if(e.code==='Space'){e.preventDefault();start()}else if(e.key.toLowerCase()==='r')resetRun()});
+
+let mobilePane='';
+const mobileMedia=window.matchMedia('(max-width:860px)');
+function syncMobilePanels(){
+ const isMobile=mobileMedia.matches;
+ if(!isMobile)mobilePane='';
+ document.body.dataset.mobilePane=isMobile?mobilePane:'';
+ $('dockSettings').setAttribute('aria-expanded',String(isMobile&&mobilePane==='settings'));
+ $('dockLevels').setAttribute('aria-expanded',String(isMobile&&mobilePane==='levels'));
+ $('settingsPanel').inert=isMobile&&mobilePane!=='settings';
+ $('levelsSection').inert=isMobile&&mobilePane!=='levels';
+}
+$('dockSettings').addEventListener('click',()=>{mobilePane=mobilePane==='settings'?'':'settings';syncMobilePanels()});
+$('dockLevels').addEventListener('click',()=>{mobilePane=mobilePane==='levels'?'':'levels';syncMobilePanels()});
+if(mobileMedia.addEventListener)mobileMedia.addEventListener('change',syncMobilePanels);
+else mobileMedia.addListener(syncMobilePanels);
+syncMobilePanels();
+
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&mobilePane){const prior=mobilePane;mobilePane='';syncMobilePanels();(prior==='settings'?$('dockSettings'):$('dockLevels')).focus();return}if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(document.activeElement?.tagName))return;if(e.code==='Space'){e.preventDefault();start()}else if(e.key.toLowerCase()==='r')resetRun()});
 new ResizeObserver(resize).observe($('boardArea'));setLevel(0);requestAnimationFrame(tick);
 window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance};
 })();
