@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Classic Cosmos V0.7.2</title>
+<title>ORBIT // CODE — 軌道守護者｜Integrated Command Deck V0.7.3</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -224,18 +224,119 @@ body{background:radial-gradient(ellipse 85% 65% at 52% -12%,rgba(55,72,132,.34),
 .panel-footer .scene-toggle:not(.active){background:#101924;border-color:#334759;color:#8ea3b2}
 .panel-footer .scene-toggle:hover{background:#22364f;border-color:#8ebbd3}
 @media(max-width:860px){body[data-mobile-pane=settings] .panel-footer .scene-toggle{display:inline-flex}}
+
+/* V0.7.3 Integrated Command Deck — one dominant viewport and one unified console */
+.shell{max-width:1820px;padding:0 clamp(8px,1.1vw,18px) 6px}
+header{height:45px;min-height:45px;border-bottom-color:#254164}
+header .brand{gap:9px}header .logo{width:30px;height:30px;font-size:20px}
+header .brand b{font-size:13px}header .brand small{display:none}
+.layout{grid-template-columns:minmax(0,1fr) clamp(228px,18vw,270px);gap:9px}
+.left{min-height:0}
+.board{flex:1;min-height:0;border:1px solid #365573;border-radius:10px;background:#081326;overflow:hidden}
+.board-header{flex:none;min-height:56px;display:grid;grid-template-columns:minmax(128px,1fr) auto auto;align-items:center;gap:12px;padding:7px 12px;border-bottom:1px solid #294966;background:rgba(9,24,46,.94)}
+.command-title{min-width:0;display:flex;align-items:center;gap:9px}
+.command-title .level-tag{font-size:9px;letter-spacing:.08em}
+.command-title .level-name{font-size:14px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.command-title .state-chip{font-size:9px;padding:4px 7px;white-space:nowrap;flex:none}
+.board-header .metrics{display:flex;grid-template-columns:none;align-items:center;gap:12px;flex:none;background:transparent;border:0}
+.board-header .metric{padding:0 0 0 11px;border-left:1px solid #324960!important;border-right:0;min-width:0}
+.board-header .metric span{font-size:9px;margin-bottom:0;color:#a1bbd0}
+.board-header .metric strong{font-size:18px;margin-top:2px}
+.board-header .metric strong small{font-size:9px}
+.board-header .metric:nth-child(n+3){display:none}
+.board-header .actionbar{display:flex;align-items:center;gap:5px;padding:0;margin:0;flex:none}
+.board-header .actionbar .btn{min-height:35px;padding:7px 10px;font-size:11px;min-width:0;border-radius:6px}
+.board-header #startBtn{min-width:118px}
+.board-header #resetBtn{min-width:73px}
+.board-header #previewBtn{min-width:87px}
+.board-canvas{flex:1;min-height:0;max-height:none;aspect-ratio:auto}
+.time-track{height:2px}
+.levels-section{flex:none;min-height:39px;border-top:1px solid #223e59;padding:5px 5px 0;margin:0;background:rgba(7,18,35,.83);display:flex;align-items:center}
+.levels-head{display:none}
+.level-list{display:grid;width:100%;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+.level-btn{min-height:30px;padding:5px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:4px;background:transparent;border:1px solid transparent;border-radius:5px;color:#abbfce}
+.level-btn .tiny{font-size:9px;letter-spacing:0;white-space:nowrap}
+.level-btn b{font-size:10px;font-weight:550}
+.level-btn:hover:enabled{background:#192a40;border-color:#345b75}
+.level-btn.selected{background:#21384b;border-color:#668aa6;color:#eff6fa}
+.game-message{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.panel{background:rgba(8,20,38,.8);border:1px solid #34536f;border-radius:10px;min-height:0;backdrop-filter:blur(6px)}
+.panel-pad{padding:13px 11px 10px}.panel h2{font-size:13px}
+.panel-pad .wheels-header{margin:12px 0 5px}
+.panel-footer{padding:10px 11px;gap:7px}
+.panel-footer .btn{font-size:11px}
+.wheel-title{padding:7px 0 4px}.wheel-details{padding-bottom:0}.wheels{gap:4px}
+.count-row{padding:7px 0;margin-top:9px}
+.wheel .ctrl-row{margin:3px 0}
+.num{width:61px;padding:5px 4px}
+input[type=range]{height:14px;margin:0 0 2px}
+.dir{min-height:30px;font-size:10px}
+.dir-switch{gap:4px;margin:3px 0}
+@media(max-width:1190px) and (min-width:861px){
+ .layout{grid-template-columns:minmax(0,1fr) 227px}
+ .board-header{gap:6px;padding:6px 9px}
+ .command-title .state-chip{display:none}
+ .board-header .metrics{gap:5px}
+ .board-header .metric{padding-left:6px}
+ .board-header .actionbar .btn{font-size:10px;padding:6px 7px}
+ .board-header #startBtn{min-width:102px}
+ .board-header #resetBtn{min-width:61px}
+ .board-header #previewBtn{min-width:71px}
+ .level-btn b{font-size:9px}
+}
+@media(max-width:860px){
+ .shell{padding:0 8px}
+ header{height:40px;min-height:40px}
+ .layout{display:flex;flex-direction:column;gap:0}
+ .left{flex:1;min-height:0}
+ .board-header{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;grid-template-areas:'mission stats' 'controls controls';gap:5px;padding:6px 9px;min-height:85px}
+ .command-title{grid-area:mission;min-width:0}
+ .command-title .level-name{max-width:none;font-size:13px}
+ .command-title .state-chip{display:none}
+ .board-header .metrics{grid-area:stats;gap:5px}
+ .board-header .metric{padding-left:7px}
+ .board-header .metric span{font-size:8px}
+ .board-header .metric strong{font-size:15px}
+ .board-header .actionbar{grid-area:controls;display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:5px;width:100%;margin:0}
+ .board-header .actionbar .btn{height:32px;min-height:32px;max-height:32px;padding:5px 4px;font-size:10px;width:100%}
+ .board-header #startBtn,.board-header #resetBtn,.board-header #previewBtn{min-width:0}
+ .board-canvas{min-height:0}
+ .levels-section,.panel{display:none}
+ body[data-mobile-pane=settings] .panel,body[data-mobile-pane=levels] .levels-section{display:block;z-index:11;max-height:min(48dvh,420px)}
+ body[data-mobile-pane=levels] .levels-head{display:flex;margin:0 0 8px}
+ body[data-mobile-pane=levels] .level-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ body[data-mobile-pane=levels] .level-btn{min-height:58px;display:flex;flex-direction:column;gap:5px;align-items:flex-start;padding:10px}
+ body[data-mobile-pane=levels] .level-btn .tiny{font-size:10px}
+ body[data-mobile-pane=levels] .level-btn b{font-size:12px}
+ .mobile-dock{border-top-color:#284660}
+ .panel-pad{padding:14px}
+ .panel-footer{padding:12px}
+ .panel-pad .panel-intro{display:block}
+}
+@media(max-height:610px) and (max-width:860px){
+ header{height:35px;min-height:35px}
+ .board-header{min-height:70px;padding:4px 9px;gap:2px}
+ .board-header .actionbar .btn{height:29px;min-height:29px;max-height:29px}
+ .board-header .metric strong{font-size:13px}
+}
+@media(max-height:670px) and (min-width:861px){
+ header{height:37px;min-height:37px}
+ .board-header{min-height:48px}
+ .level-btn{min-height:26px}
+ .levels-section{min-height:32px;padding-top:3px}
+}
 </style>
 </head>
 <body><div class="shell">
-<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">CLASSIC COSMOS / V0.7.2</span></div></header>
+<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">PIXEL ADVENTURE / V0.7.3</span></div></header>
 <section class="intro"><div><div class="eyebrow">ORBITAL PUZZLE — SIX MISSIONS</div><h1>讓軌道，<span>剛好經過。</span></h1><p>調整最多三個圓的半徑與方向，讓軌跡經過所有訊號，避開危險區。</p></div><div class="intro-flag">最多三個圓 · 拖曳半徑 · 正反轉<br><b>6 個任務 · 無限種路線</b></div></section>
 <main class="layout"><section class="left" aria-label="遊戲畫面與關卡">
-<div class="board"><div class="board-header"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div></div><div class="board-top-right"><div class="state-chip" id="stateChip">準備開始</div></div></div>
+<div class="board"><div class="board-header"><div class="command-title"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div></div><div class="state-chip" id="stateChip">準備開始</div></div><div class="metrics"><div class="metric"><span>剩餘秒數</span><strong class="lime" id="timerMetric">17.0<small>s</small></strong></div><div class="metric"><span>已收集訊號</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞次數</span><strong id="hazardMetric">0</strong></div><div class="metric"><span>調整參數</span><strong class="pink" id="editMetric">0</strong></div></div><div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn">↻ 重設試跑</button><button class="btn active" id="previewBtn" aria-pressed="true">⌁ 預測路線</button></div></div>
 <div class="board-canvas" id="boardArea"><canvas id="gameCanvas" aria-label="拖曳圓周上的彩色控制點可以調整半徑；旋轉圓組合和關卡目標軌跡可視化"></canvas><div class="live-readout"><span class="light off" id="liveLight"></span><span id="liveLabel">參數編輯中</span></div><div class="radius-readout" id="radiusReadout" aria-live="polite">圓 01　半徑 90</div><div class="space-caption"><b>ERIS COLONY / SECTOR 07</b><span>REMOTE FLIGHT TELEMETRY</span></div><div class="hud-corners"></div><div class="board-overtext">軌道末端收集訊號 · 不限順序</div><div class="canvas-hint" id="canvasHint">拖曳彩色圓點改變半徑</div>
 <div class="overlay" id="resultOverlay" hidden><div class="result" role="dialog" aria-modal="true" aria-labelledby="resultTitle"><div class="result-kicker" id="resultKicker">MISSION COMPLETE</div><h2 id="resultTitle">物資成功送達</h2><div class="result-stars" id="resultStars">✦ ✦ ✦</div><p id="resultBody"></p><div class="result-actions"><button class="btn" id="retryResult">重新挑戰</button><button class="btn primary" id="nextResult">下一關 →</button></div></div></div></div>
 <div class="time-track"><div class="time-fill" id="timeFill"></div></div>
-<div class="metrics"><div class="metric"><span>剩餘秒數</span><strong class="lime" id="timerMetric">17.0<small>s</small></strong></div><div class="metric"><span>已收集訊號</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞次數</span><strong id="hazardMetric">0</strong></div><div class="metric"><span>調整參數</span><strong class="pink" id="editMetric">0</strong></div></div></div>
-<div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn">↻ 重設試跑</button><button class="btn active" id="previewBtn" aria-pressed="true">⌁ 預測路線</button></div>
+</div>
+
 <div class="game-message" aria-live="polite"><div class="message-icon">✳</div><div><b id="missionTitle">任務：收集物資訊號</b><p id="missionTip">調整第一個圓的半徑。預測線會即時顯示運行路線。</p></div></div>
 <div class="levels-section" id="levelsSection"><div class="levels-head"><h2>任務選擇</h2><span id="levelProgress">已解鎖 1 / 6</span></div><div class="level-list" id="levelList"></div></div></section>
 <aside class="panel" id="settingsPanel" aria-label="軌道控制台"><div class="panel-pad"><h2>軌道控制台 <small>／即時生效</small></h2><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><p class="mini-notice">最多使用 3 個圓。圓 1、2、3 固定以 1×、2×、3× 節奏旋轉；你只要控制半徑及方向。</p><div class="wheels-header"><span>每個圓的設定</span><small>半徑 · 順時針 / 逆時針</small></div><div id="wheelControls" class="wheels"></div></div><div class="panel-footer"><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">✦ 背景：經典宇宙</button><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳畫面中的彩色圓點即可調整半徑，也可在此輸入數字。每層圓周會自動使用固定旋轉節奏。</div></div></aside></main>
@@ -333,25 +434,64 @@ function bg(){
 }
 function drawGoals(){
  const l=levels[state.level];
+ const now=performance.now()*.001;
  for(let i=0;i<l.goals.length;i++){
-  const p=l.goals[i],x=sx(p.x),y=sy(p.y),hitR=l.captureRadius*worldScale;
-  const complete=state.collected.has(i);ctx.save();
-  if(!complete){
-   const r=Math.max(3.8,hitR);
-   ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.lineWidth=1;
-   ctx.strokeStyle='#d1b57e9e';ctx.stroke();
-   ctx.translate(x,y);ctx.rotate(Math.PI/4);
-   ctx.beginPath();ctx.rect(-3.2,-3.2,6.4,6.4);ctx.fillStyle='#e6d5b2';ctx.fill();
-  }else{
-   ctx.beginPath();ctx.arc(x,y,3.1,0,TAU);ctx.fillStyle='#718597';ctx.fill();
+  const p=l.goals[i],x=sx(p.x),y=sy(p.y);
+  const hitR=l.captureRadius*worldScale,complete=state.collected.has(i);
+  // Collision radius is unchanged; fine ring marks the actual docking target.
+  ctx.save();ctx.translate(x,y);
+  ctx.globalAlpha=complete?.36:1;
+  ctx.beginPath();ctx.arc(0,0,Math.max(1.8,hitR),0,TAU);
+  ctx.strokeStyle=complete?'#71899c77':'#bce9f399';
+  ctx.lineWidth=1;ctx.stroke();
+  const scale=Math.max(.70,Math.min(1.2,hitR/9));
+  ctx.scale(scale,scale);
+  // A tiny orbital supply station: side photovoltaic collectors, reinforced hub, antenna.
+  ctx.fillStyle=complete?'#60778a':'#285f78';
+  ctx.strokeStyle=complete?'#798e9b':'#8bd6e1';
+  ctx.lineWidth=.95;
+  for(const side of [-1,1]){
+   ctx.fillRect(side<0?-11:6,-3,5,7);
+   ctx.strokeRect(side<0?-11:6,-3,5,7);
+   ctx.fillStyle=complete?'#647a88':'#6ed4ce';
+   ctx.fillRect(side<0?-9.4:7.5,-2,1.5,5);
+   ctx.fillStyle=complete?'#60778a':'#285f78';
+  }
+  ctx.fillStyle='#1a354b';ctx.fillRect(-2,-10,4,4);
+  ctx.fillStyle=complete?'#758b97':'#d2f6f7';ctx.fillRect(-.8,-12,1.6,2.3);
+  ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(6,-2);ctx.lineTo(6,4);
+  ctx.lineTo(0,8);ctx.lineTo(-6,4);ctx.lineTo(-6,-2);ctx.closePath();
+  ctx.fillStyle=complete?'#314253':'#1b4a61';ctx.fill();
+  ctx.strokeStyle=complete?'#667c89':'#9adce4';ctx.stroke();
+  ctx.beginPath();ctx.arc(0,0,3.1,0,TAU);
+  ctx.fillStyle=complete?'#71808c':'#f3dca1';ctx.fill();
+  ctx.beginPath();ctx.arc(0,0,1.55,0,TAU);
+  ctx.fillStyle=complete?'#9ab0bb':'#fff5d6';ctx.fill();
+  if(!complete&&!reducedMotion){
+    ctx.globalAlpha=.5+.5*Math.sin(now*2.8+i*.9);
+    ctx.fillStyle='#b8f9ed';ctx.fillRect(-.9,-12,1.8,2.4);
   }
   ctx.restore();
  }
  for(const h of l.hazards){
-  const x=sx(h.x),y=sy(h.y),r=Math.max(5,h.r*worldScale);
-  ctx.beginPath();ctx.arc(x,y,r,0,TAU);
-  ctx.lineWidth=1.2;ctx.strokeStyle='#d87e7c';ctx.stroke();
- } 
+  const x=sx(h.x),y=sy(h.y),r=Math.max(6,h.r*worldScale);
+  ctx.save();ctx.translate(x,y);
+  ctx.beginPath();ctx.arc(0,0,r,0,TAU);
+  ctx.lineWidth=1;ctx.strokeStyle='#f98b88af';ctx.stroke();
+  // Red navigation mine, four fins and a pulsing warning core.
+  const scale=Math.min(1.5,Math.max(.68,r/13));
+  ctx.scale(scale,scale);
+  for(let k=0;k<4;k++){
+    ctx.save();ctx.rotate(k*Math.PI/2+Math.PI/4);
+    ctx.beginPath();ctx.moveTo(-2,-9);ctx.lineTo(0,-15);ctx.lineTo(2,-9);
+    ctx.closePath();ctx.fillStyle='#d77a7d';ctx.fill();ctx.restore();
+  }
+  ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(8,0);ctx.lineTo(0,8);ctx.lineTo(-8,0);ctx.closePath();
+  ctx.fillStyle='#482d40';ctx.fill();ctx.strokeStyle='#ed9994';ctx.lineWidth=1.3;ctx.stroke();
+  ctx.fillStyle='#ffada4';ctx.fillRect(-2.5,-2.5,5,5);
+  ctx.fillStyle='#ffe0c8';ctx.fillRect(-1,-1,2,2);
+  ctx.restore();
+ }
 }
 function drawPrediction(){
  if(!state.showPrediction)return;
@@ -367,10 +507,8 @@ function drawWheels(){
   const col=COLORS[i],selected=i===state.selectedWheel;
   const {cx,cy,tx,ty,r}=ring;
   if(r>1){ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.lineWidth=selected?1.5:1;ctx.strokeStyle=selected?col+'c7':col+'65';ctx.stroke()}
-  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(tx,ty);ctx.lineWidth=selected?1.2:1;
-  ctx.strokeStyle=col+'8f';ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(tx,ty);ctx.lineWidth=selected?1.2:1;ctx.strokeStyle=col+'8f';ctx.stroke();
   ctx.beginPath();ctx.arc(cx,cy,2,0,TAU);ctx.fillStyle=col;ctx.fill();
-  // Endpoints remain draggable; the final endpoint is rendered as the circular spacecraft.
   if(i<rings.length-1){
    ctx.beginPath();ctx.arc(tx,ty,selected?6:4.5,0,TAU);ctx.fillStyle=col;ctx.fill();
    ctx.beginPath();ctx.arc(tx,ty,selected?2.8:2,0,TAU);ctx.fillStyle='#101923';ctx.fill();
@@ -378,15 +516,34 @@ function drawWheels(){
  });
  if(state.trail.length>1)drawLine(state.trail,'#ded1b4ba',1.8,0);
  const tip=pointAt(state.t,state.wheels),tx=sx(tip.x),ty=sy(tip.y);
- ctx.save();ctx.translate(tx,ty);
- // Round spacecraft: a luminous pearl with a narrow guidance halo, no triangle or exhaust.
- ctx.shadowColor='#b6e3f3';ctx.shadowBlur=12;
- const orb=ctx.createRadialGradient(-2.3,-2.7,.7,0,0,9);
- orb.addColorStop(0,'#ffffff');orb.addColorStop(.33,'#e4f3fa');orb.addColorStop(.77,'#93c2d7');orb.addColorStop(1,'#4d8199');
- ctx.beginPath();ctx.arc(0,0,7.5,0,TAU);ctx.fillStyle=orb;ctx.fill();ctx.shadowBlur=0;
- ctx.beginPath();ctx.arc(0,0,11.5,0,TAU);
- ctx.lineWidth=1;ctx.strokeStyle='rgba(195,226,242,.63)';ctx.stroke();
- ctx.beginPath();ctx.arc(-2.5,-2.8,1.6,0,TAU);ctx.fillStyle='rgba(255,255,255,.93)';ctx.fill();
+ const back=pointAt(state.t-.05,state.wheels),front=pointAt(state.t+.05,state.wheels);
+ const heading=Math.atan2(front.y-back.y,front.x-back.x)+Math.PI/2;
+ ctx.save();ctx.translate(tx,ty);ctx.rotate(heading);
+ // Round-bodied scout ship with lateral stabilizers and two small engine pods.
+ // Its body is a capsule-like disk, not a plain glowing dot.
+ ctx.shadowColor='#7ec9e4';ctx.shadowBlur=5;
+ ctx.fillStyle='#2c526b';
+ ctx.beginPath();ctx.moveTo(-7,1);ctx.lineTo(-15,5);ctx.lineTo(-16,10);
+ ctx.lineTo(-6,8);ctx.lineTo(6,8);ctx.lineTo(16,10);ctx.lineTo(15,5);ctx.lineTo(7,1);ctx.closePath();ctx.fill();
+ ctx.shadowBlur=0;ctx.strokeStyle='#abd5e4';ctx.lineWidth=1;ctx.stroke();
+ ctx.fillStyle='#5b90aa';ctx.fillRect(-15,6,5,3);ctx.fillRect(10,6,5,3);
+ ctx.fillStyle='#335b75';ctx.fillRect(-8,10,5,5);ctx.fillRect(3,10,5,5);
+ if(state.mode==='running'&&!reducedMotion){
+  const flicker=2+Math.sin(performance.now()*.026)*1.4;
+  ctx.fillStyle='rgba(124,233,250,.72)';
+  ctx.fillRect(-7,15,3,3+flicker);ctx.fillRect(4,15,3,3+flicker);
+ }
+ ctx.beginPath();ctx.arc(0,1,10,0,TAU);
+ ctx.fillStyle='#d2e2e9';ctx.fill();ctx.strokeStyle='#5e91a6';ctx.lineWidth=1.4;ctx.stroke();
+ ctx.beginPath();ctx.arc(0,.7,7.1,0,TAU);
+ ctx.fillStyle='#233d56';ctx.fill();
+ ctx.beginPath();ctx.arc(0,.1,5.8,0,TAU);
+ const glass=ctx.createRadialGradient(-2.8,-3,0,-.4,1,8);
+ glass.addColorStop(0,'#d8faff');glass.addColorStop(.33,'#82cee5');glass.addColorStop(.78,'#306d9b');glass.addColorStop(1,'#1c4169');
+ ctx.fillStyle=glass;ctx.fill();
+ ctx.beginPath();ctx.arc(-2.5,-2.6,1.5,0,TAU);ctx.fillStyle='#f7ffff';ctx.fill();
+ ctx.fillStyle='#f0d49d';ctx.fillRect(-1.1,-12,2.2,2.4);
+ ctx.fillStyle='#466c83';ctx.fillRect(-2.5,9,5,3);
  ctx.restore();
 }
 function draw(){if(!W)return;ctx.clearRect(0,0,W,H);bg();drawPrediction();drawGoals();drawWheels();if(state.flash>0){ctx.fillStyle=`rgba(255,113,108,${state.flash*.13})`;ctx.fillRect(0,0,W,H)}}
@@ -424,6 +581,6 @@ syncMobilePanels();
 
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&mobilePane){const prior=mobilePane;mobilePane='';syncMobilePanels();(prior==='settings'?$('dockSettings'):$('dockLevels')).focus();return}if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(document.activeElement?.tagName))return;if(e.code==='Space'){e.preventDefault();start()}else if(e.key.toLowerCase()==='r')resetRun()});
 new ResizeObserver(resize).observe($('boardArea'));setLevel(0);requestAnimationFrame(tick);
-window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,visual:{ship:'circle',background:'classic-cosmos'}};
+window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'integrated'}};
 })();
 </script></body></html>
