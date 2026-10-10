@@ -165,6 +165,6 @@ jobs:
         with:
           name: orbit-v073-command-deck-qa
           path: |
-            desktop-v072.png
-            mobile-v072.png
+            desktop-v073.png
+            mobile-v073.png
           if-no-files-found: ignore
