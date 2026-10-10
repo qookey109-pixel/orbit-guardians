@@ -1,6 +1,6 @@
 # ORBIT // CODE — 軌道守護者
 
-**Pixel Edition V0.5** · 傅立葉圓周軌道益智遊戲 · 繁體中文
+**Pure Minimal Abstract V0.6.1** · 傅立葉圓周軌道益智遊戲 · 繁體中文
 
 🎮 **[立即遊玩（GitHub Pages）](https://qookey109-pixel.github.io/orbit-guardians/)**
 
@@ -21,6 +21,13 @@
 
 ## 版本
 
-- **V0.5**：三圓上限、物資訊號任意順序收集、精準判定
-- 保留 V0.2 像素太空背景及 V0.3 滑鼠／觸控半徑調整
+- **V0.6.1**：Pure Minimal Abstract；移除粒子、星雲、背景光絲、掃描線及多餘 HUD，保留簡約幾何軌跡、抽象核心及必要操作資訊。
+- **V0.6**：Luminous 光影風格。
+- **V0.5**：三圓上限、物資訊號任意順序收集、精準判定。
+- **V0.3**：滑鼠／觸控拖曳半徑。
+
+## 驗收
+
+- `.github/workflows/browser-smoke.yml` 在雲端 Chromium 驗證桌面與手機基本操作、三圓上限、半徑拖曳、六關參考路線、無水平溢出與 JavaScript 錯誤。
+- 本遊戲完全在瀏覽器中執行，不需 API。
 
