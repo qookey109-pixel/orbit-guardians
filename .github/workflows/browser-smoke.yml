@@ -1,4 +1,4 @@
-name: Orbit one-screen game QA
+name: Orbit one-screen ambient visual QA
 
 on:
   push:
@@ -32,20 +32,29 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/One-Screen Edition V0\.7/);
+          assert.match(await page.title(),/One-Screen Ambient V0\.7\.1/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
-            return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
+            return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
           });
           assert.deepEqual(checks.stages,6);
           assert.deepEqual(checks.max,3);
+          assert.equal(checks.visual.ship,'circle');
+          assert.equal(checks.visual.background,'ambient');
           assert.deepEqual(checks.styleCount,1);
           assert.equal(checks.hiddenDecor,true);
           assert.equal(checks.noOldScanline,true);
           assert.ok(checks.overflow<2,'Desktop horizontal overflow '+checks.overflow);
           assert.ok(checks.verticalOverflow<2,'Desktop vertical overflow '+checks.verticalOverflow);
           assert.ok(checks.canvasHeight>200,'Desktop canvas too small '+checks.canvasHeight);
-          await page.screenshot({path:'desktop-v07.png',fullPage:true});
+          const pixelRange=await page.evaluate(()=>{
+            const c=document.querySelector('#gameCanvas'),g=c.getContext('2d');
+            const sample=(x,y)=>Array.from(g.getImageData(Math.floor(x*c.width),Math.floor(y*c.height),1,1).data).slice(0,3);
+            const a=sample(.06,.06),b=sample(.87,.78);
+            return {a,b,distance:a.reduce((sum,v,i)=>sum+Math.abs(v-b[i]),0)};
+          });
+          assert.ok(pixelRange.distance>1,'Ambient background has no depth: '+JSON.stringify(pixelRange));
+          await page.screenshot({path:'desktop-v071.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -109,7 +118,7 @@ jobs:
           assert.equal(await page.locator('#levelList .level-btn').count(),6);
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v07.png',fullPage:true});
+          await page.screenshot({path:'mobile-v071.png',fullPage:true});
           await page.locator('#startBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running');
           await page.locator('#startBtn').click();
@@ -124,8 +133,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v07-one-screen-qa
+          name: orbit-v071-ambient-circle-qa
           path: |
-            desktop-v061.png
-            mobile-v061.png
+            desktop-v071.png
+            mobile-v071.png
           if-no-files-found: ignore
