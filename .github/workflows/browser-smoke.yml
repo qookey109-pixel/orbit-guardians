@@ -1,0 +1,93 @@
+name: Orbit visual and gameplay smoke
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm install --no-save playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Check game in Chromium (desktop and mobile)
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/orbit-server.log 2>&1 &
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { chromium } from 'playwright';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const errors=[];
+          const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
+          page.on('pageerror',e=>errors.push(String(e)));
+          await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
+          assert.match(await page.title(),/Pure Minimal Abstract V0\.6\.1/);
+          const checks=await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__;
+            return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',overflow:document.documentElement.scrollWidth-innerWidth};
+          });
+          assert.deepEqual(checks.stages,6);
+          assert.deepEqual(checks.max,3);
+          assert.deepEqual(checks.styleCount,1);
+          assert.equal(checks.hiddenDecor,true);
+          assert.equal(checks.noOldScanline,true);
+          assert.ok(checks.overflow<2,'Desktop horizontal overflow '+checks.overflow);
+          await page.screenshot({path:'desktop-v061.png',fullPage:true});
+          const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
+          const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
+          const rect=await page.locator('#gameCanvas').boundingBox();
+          await page.mouse.move(rect.x+handle.tx,rect.y+handle.ty);
+          await page.mouse.down();
+          await page.mouse.move(rect.x+handle.tx+26,rect.y+handle.ty,{steps:7});
+          await page.mouse.up();
+          const dragged=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
+          assert.notEqual(dragged,first,'Radius drag did not update');
+          await page.locator('#plusCircle').click();
+          await page.locator('#plusCircle').click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length),3);
+          assert.equal(await page.locator('#plusCircle').isDisabled(),true);
+          const results=await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__,out=[];
+            for(const lvl of d.levels){
+              const steps=5000,found=new Set();let hitHazard=false;
+              let prev=d.pointAt(0,lvl.refs);
+              for(let j=1;j<=steps;j++){
+                const t=lvl.max*j/steps,now=d.pointAt(t,lvl.refs);
+                lvl.goals.forEach((g,k)=>{if(d.segmentDistance(prev,now,g)<=lvl.captureRadius)found.add(k)});
+                if(lvl.hazards.some(h=>d.segmentDistance(prev,now,h)<=h.r+4))hitHazard=true;
+                prev=now;
+              }
+              out.push({name:lvl.name,hit:found.size,goals:lvl.goals.length,collision:hitHazard});
+            }
+            return out;
+          });
+          for(const r of results){assert.equal(r.hit,r.goals,r.name+' missed goal');assert.equal(r.collision,false,r.name+' hit hazard')}
+          await page.setViewportSize({width:390,height:844});
+          await page.screenshot({path:'mobile-v061.png',fullPage:true});
+          const mobile=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth-innerWidth,display:getComputedStyle(document.querySelector('#gameCanvas')).display}));
+          assert.ok(mobile.overflow<2,'Mobile horizontal overflow '+mobile.overflow);
+          assert.equal(mobile.display,'block');
+          assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
+          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,mobile}));
+          await browser.close();
+          NODE
+      - name: Attach screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbit-v061-visual-qa
+          path: |
+            desktop-v061.png
+            mobile-v061.png
+          if-no-files-found: ignore
