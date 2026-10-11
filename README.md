@@ -1,6 +1,6 @@
 # ORBIT // CODE — 軌道守護者
 
-**Level Workshop V1.11** · 傅立葉圓周軌道益智遊戲 · 繁體中文
+**Level Review Lab V1.12** · 傅立葉圓周軌道益智遊戲 · 繁體中文
 
 🎮 **[立即遊玩（GitHub Pages）](https://qookey109-pixel.github.io/orbit-guardians/)**
 
@@ -59,6 +59,23 @@
 - 舊版六關的解鎖及最佳成績使用相同 localStorage keys 和 flat level indices。舊資料中若第六關已完成但 unlocked=6，會自動開放第七關。
 - **動畫留待後續加入**：跨星球時觸發 `orbit:planet-arrival` CustomEvent，其 `detail` 為 `{from,to,name}`（從 0 起算的星球索引）；之後可接入玩家製作的過場動畫，而目前直接切關。
 - 不增加付費 API 或額外伺服器，維持 GitHub Pages 及 V0.8 無倒數的自由探索玩法。
+
+## V1.12｜Level Review Lab：難度評估、相似度檢查與獨立試玩
+
+- **[獨立候選試玩室](https://qookey109-pixel.github.io/orbit-guardians/lab/)**：預載 3 份由 seed `20261011` 生成的 Hard 研究候選；可以直接切關、調整最多三個圓、半徑與方向、發射、重試、開關預測路線或載入參考解法。另可匯入候選產生器輸出的 JSON。
+- **人工評審與匯出**：可標記「可採用／待修改／不採用」、填寫備註並匯出評審 JSON。評審紀錄只寫到獨立 `orbit-lab-reviews-v1` 本機儲存鍵，不會修改正式遊戲的 `orbit-code-progress`、解鎖紀錄或關卡資料。
+- **規則式品質分析**：[候選品質工具](tools/level-quality.mjs) 計算起始配置命中目標數、圓周方向變化、路徑變化、目標空間分布、參考解法禁區餘裕與 0–100 挑戰指數，並提供 Easy／Medium／Hard／Expert 的**預估級距**。此指數不是經玩家成功率校準的客觀難度；仍需真人試玩。
+- **相似度與重複檢查**：比較候選和正式 18 關及本批已接受的研究候選，包括圓周形狀、方向、半徑、目標時間與禁區位置。近似度達門檻的候選需重新生成；這是啟發式篩查，不保證題型獨特或有趣。
+- **獨立審核門檻**：新的 `tools/test-level-review-lab.mjs` 驗證展示候選可用固定 seed 重新產出、幾何無禁區碰撞、品質指數一致，並拒絕極近似候選。GitHub Actions 同時執行正式 18 關、生成器及試玩室桌面／手機操作驗收。
+- **不自動發布**：新關卡只以研究檔案或 [試玩室](lab/) 呈現，**並未加入正式三顆星球／18 關**。即使選「可採用」，也不會執行 GitHub 寫入或部署。
+- **可重現命令**：
+
+  ```bash
+  node tools/verify-orbit-levels.mjs
+  node tools/test-level-workshop.mjs
+  node tools/test-level-review-lab.mjs
+  node tools/generate-level-candidates.mjs --seed 20261011 --difficulty hard --count 3 --output research/candidates.json
+  ```
 
 ## V1.11｜Level Workshop：關卡資料模組化與離線候選產生器
 
@@ -157,6 +174,7 @@
 
 ## 版本
 
+- **V1.12**：Level Review Lab；獨立試玩室、人工評審 JSON、規則式難度／相似度篩查與候選審查測試。
 - **V1.11**：Level Workshop；正式關卡資料外移、四級難度離線候選產生器、獨立物理與產生器測試、CI 候選審查檔。
 - **V1.10**：Canvas Interaction；路線重新開啟時的描繪回饋、半徑數字短暫高亮、按鈕 ARIA 調整與獨立關卡幾何 CI 驗證。
 - **V1.9**：Motion Polish；原生 Canvas 軌道微光、拖曳環提示、補給粒子與 AI Resource Hub 資源整合決策。
