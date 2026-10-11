@@ -211,10 +211,10 @@ jobs:
           await page.mouse.up();
           const dragged=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           assert.notEqual(dragged,first,'Radius drag did not update');
-          await page.locator('#plusCircle').click();
-          await page.locator('#plusCircle').click();
+          await page.locator('#wheelTabs .wheel-count-shortcut').nth(1).click();
+          await page.locator('#wheelTabs .wheel-count-shortcut').nth(1).click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length),3);
-          assert.equal(await page.locator('#plusCircle').isDisabled(),true);
+          assert.equal(await page.locator('#wheelTabs .wheel-count-shortcut').nth(1).isDisabled(),true);
           assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),3,'Wheel tabs not created');
           await page.locator('#wheelTabs .wheel-tab').nth(1).click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.selectedWheel),1);
@@ -565,10 +565,10 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           // Planet three starts with two/three wheels; normalize before checking controls.
-          while(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length)>1)await page.locator('#minusCircle').click();
-          await page.locator('#plusCircle').click();
-          await page.locator('#plusCircle').click();
-          assert.equal(await page.locator('#plusCircle').isDisabled(),true);
+          while(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length)>1)await page.locator('#wheelTabs .wheel-count-shortcut').nth(0).click();
+          await page.locator('#wheelTabs .wheel-count-shortcut').nth(1).click();
+          await page.locator('#wheelTabs .wheel-count-shortcut').nth(1).click();
+          assert.equal(await page.locator('#wheelTabs .wheel-count-shortcut').nth(1).isDisabled(),true);
           const wheelCount=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length);
           assert.equal(wheelCount,3,'Mobile circle control broken');
           await page.locator('#dockLevels').click();
