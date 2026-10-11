@@ -1,4 +1,4 @@
-name: Orbit V1.4 flight-feedback QA
+name: Orbit V1.5 planet journey QA
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Flight Feedback V1\.4/);
+          assert.match(await page.title(),/Planet Journey V1\.5/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -41,13 +41,18 @@ jobs:
           assert.equal(checks.visual.planets,3);
           assert.equal(checks.visual.levelsPerPlanet,6);
           assert.equal(await page.locator('#planetBar .planet-btn').count(),3);
+          assert.equal(await page.locator('#planetAchievement').count(),1);
+          assert.equal(await page.locator('#planetAchievement').isVisible(),false);
+          assert.equal(await page.locator('#gamepadStatus').isVisible(),false);
           assert.equal(await page.locator('#levelList .level-btn').count(),6);
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.unlocked),1);
           assert.deepEqual(checks.max,3);
           assert.equal(checks.visual.ship,'round-scout');
           assert.equal(checks.visual.goal,'supply-station');
           assert.equal(checks.visual.hazard,'navigation-mine');
-          assert.equal(checks.visual.layout,'flight-feedback');
+          assert.equal(checks.visual.layout,'planet-journey');
+          assert.equal(checks.visual.gamepad,true);
+          assert.equal(checks.visual.planetUnlock,'nonmodal');
           assert.equal(checks.visual.sonicFeedback,true);
           assert.equal(checks.visual.shareableOrbit,true);
           assert.equal(checks.visual.precision,true);
@@ -169,7 +174,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
-          await page.screenshot({path:'desktop-v14.png',fullPage:true});
+          await page.screenshot({path:'desktop-v15.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -247,6 +252,57 @@ jobs:
           assert.match(await page.locator('#flightToast').textContent(),/尚未解鎖/);
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
           assert.equal(await page.locator('#soundBtn').getAttribute('aria-pressed'),'false','Sound preference lost');
+          // Exercise standard-mapped gamepad input with a deterministic simulated pad.
+          const gamepadAudit=await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__;
+            const pad={index:0,connected:true,mapping:'standard',axes:[0,0,0,0],
+              buttons:Array.from({length:18},()=>({pressed:false}))};
+            Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[pad]});
+            let now=performance.now()+2000;
+            const poll=()=>d.pollGamepad(now+=300);
+            const press=i=>{pad.buttons[i].pressed=true;poll();pad.buttons[i].pressed=false;poll()};
+            poll();
+            const connected=!document.querySelector('#gamepadStatus').hidden;
+            document.querySelector('#plusCircle').click();
+            const initiallySelected=d.state.selectedWheel;
+            press(4);
+            const backSelected=d.state.selectedWheel;
+            press(5);
+            const forwardSelected=d.state.selectedWheel;
+            const beforeRadius=d.state.wheels[1].r;
+            press(12);
+            const afterRadius=d.state.wheels[1].r;
+            const beforeRotation=d.state.wheels[1].d;
+            press(1);
+            const afterRotation=d.state.wheels[1].d;
+            const beforePrediction=d.state.showPrediction;
+            press(2);
+            const afterPrediction=d.state.showPrediction;
+            press(2);
+            press(0);
+            const afterLaunch=d.state.mode;
+            press(0);
+            const afterPause=d.state.mode;
+            press(3);
+            const afterReset=d.state.mode;
+            Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[]});
+            poll();
+            const disconnected=document.querySelector('#gamepadStatus').hidden;
+            return {connected,disconnected,initiallySelected,backSelected,forwardSelected,
+              beforeRadius,afterRadius,beforeRotation,afterRotation,
+              beforePrediction,afterPrediction,afterLaunch,afterPause,afterReset};
+          });
+          assert.equal(gamepadAudit.connected,true,'Gamepad connection indicator missing');
+          assert.equal(gamepadAudit.disconnected,true,'Gamepad disconnect indicator remained visible');
+          assert.equal(gamepadAudit.initiallySelected,1);
+          assert.equal(gamepadAudit.backSelected,0);
+          assert.equal(gamepadAudit.forwardSelected,1);
+          assert.equal(gamepadAudit.afterRadius,gamepadAudit.beforeRadius+5);
+          assert.equal(gamepadAudit.afterRotation,-gamepadAudit.beforeRotation);
+          assert.equal(gamepadAudit.afterPrediction,!gamepadAudit.beforePrediction);
+          assert.equal(gamepadAudit.afterLaunch,'running');
+          assert.equal(gamepadAudit.afterPause,'paused');
+          assert.equal(gamepadAudit.afterReset,'ready');
           const results=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__,out=[];
             for(const lvl of d.levels){
@@ -302,7 +358,7 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v14-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v15-clear.png',fullPage:true});
           // Replaying with worse collisions must not erase the previous best score.
           await page.locator('#retrySideBtn').click();
           await page.evaluate(()=>{
@@ -351,14 +407,15 @@ jobs:
             });
             worldSamples.push(sample);return sample;
           };
-          await samplePlanet(0);await page.screenshot({path:'desktop-v14-origin.png',fullPage:true});
-          await samplePlanet(6);await page.screenshot({path:'desktop-v14-frost.png',fullPage:true});
-          await samplePlanet(12);await page.screenshot({path:'desktop-v14-ember.png',fullPage:true});
+          await samplePlanet(0);await page.screenshot({path:'desktop-v15-origin.png',fullPage:true});
+          await samplePlanet(6);await page.screenshot({path:'desktop-v15-frost.png',fullPage:true});
+          await samplePlanet(12);await page.screenshot({path:'desktop-v15-ember.png',fullPage:true});
           assert.ok(worldSamples[0].some((v,i)=>Math.abs(v-worldSamples[1][i])>5),'Second planet background must differ');
           assert.ok(worldSamples[1].some((v,i)=>Math.abs(v-worldSamples[2][i])>5),'Third planet background must differ');
           // All 18 levels clear without a modal, and each next stage unlocks sequentially.
-          await page.evaluate(()=>{
-            const d=window.__ORBIT_DEBUG__;
+          const planetUnlockAudit=await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__,unlocks=[],milestones=[];
+            window.addEventListener('orbit:planet-unlocked',ev=>unlocks.push(ev.detail));
             d.state.unlocked=1;
             for(let i=0;i<d.levels.length;i++){
               d.setLevel(i);
@@ -367,11 +424,39 @@ jobs:
               d.start();
               for(const goal of d.levels[i].goals)d.collision(goal,goal);
               if(!d.state.cleared||d.state.mode!=='running')throw Error('Stage '+(i+1)+' did not clear nonmodally');
+              if(i===5||i===11){
+                const award=document.querySelector('#planetAchievement');
+                const reward=document.querySelector('#planetReward');
+                if(award.hidden||reward.hidden)throw Error('Planet milestone missing on stage '+i);
+                milestones.push({stage:i,name:award.querySelector('#achievementName').textContent,
+                  reward:reward.querySelector('#planetRewardName').textContent,
+                  stillRunning:d.state.mode==='running',hasModal:!!document.querySelector('#resultOverlay')});
+              }
             }
+            // Replaying a finished world must not fire duplicate unlock events.
+            d.setLevel(11);d.state.wheels=d.levels[11].refs.map(w=>({...w}));d.start();
+            for(const goal of d.levels[11].goals)d.collision(goal,goal);
+            return {unlocks,milestones};
           });
+          assert.equal(planetUnlockAudit.unlocks.length,2,'Planet unlock must fire exactly once per new planet');
+          assert.deepEqual(planetUnlockAudit.unlocks.map(e=>[e.from,e.to,e.name]),[[0,1,'霜環星'],[1,2,'赤曜星']]);
+          assert.equal(planetUnlockAudit.milestones.length,2);
+          assert.ok(planetUnlockAudit.milestones.every(x=>x.stillRunning&&!x.hasModal));
+          assert.deepEqual(planetUnlockAudit.milestones.map(x=>x.reward),['霜環星','赤曜星']);
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.unlocked),18);
           assert.equal(await page.evaluate(()=>Object.keys(window.__ORBIT_DEBUG__.state.complete).filter(k=>window.__ORBIT_DEBUG__.state.complete[k]).length),18);
+          await page.evaluate(()=>{const d=window.__ORBIT_DEBUG__;d.setLevel(17);d.state.wheels=d.levels[17].refs.map(w=>({...w}));d.start();for(const g of d.levels[17].goals)d.collision(g,g)});
           assert.equal(await page.locator('#nextSideBtn').textContent(),'↻ 再次挑戰');
+          // Player-triggered travel still emits the original arrival hook, without any forced cutscene.
+          await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__;window.__ORBIT_ARRIVALS__=[];
+            window.addEventListener('orbit:planet-arrival',ev=>window.__ORBIT_ARRIVALS__.push(ev.detail));
+            d.setLevel(5);d.state.wheels=d.levels[5].refs.map(w=>({...w}));d.start();
+            for(const g of d.levels[5].goals)d.collision(g,g);
+          });
+          await page.locator('#nextSideBtn').click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),6);
+          assert.deepEqual(await page.evaluate(()=>window.__ORBIT_ARRIVALS__.map(e=>[e.from,e.to,e.name])),[[0,1,'霜環星']]);
           await page.reload({waitUntil:'networkidle'});
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.unlocked),18,'Planet progress lost after reload');
           assert.equal(await page.evaluate(()=>Object.keys(window.__ORBIT_DEBUG__.state.best).length),18,'Best records not persisted');
@@ -445,7 +530,7 @@ jobs:
           assert.match(await page.locator('#levelProgress').textContent(),/赤曜星/);
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v14.png',fullPage:true});
+          await page.screenshot({path:'mobile-v15.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -457,7 +542,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
-          await page.screenshot({path:'mobile-v14-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v15-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),13,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
@@ -469,20 +554,20 @@ jobs:
           await page.locator('#resetBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready');
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
-          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl}));
+          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl,gamepadAudit,planetUnlockAudit}));
           await browser.close();
           NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v14-flight-feedback-qa
+          name: orbit-v15-planet-journey-qa
           path: |
-            desktop-v14.png
-            mobile-v14.png
-            desktop-v14-clear.png
-            mobile-v14-clear.png
-            desktop-v14-origin.png
-            desktop-v14-frost.png
-            desktop-v14-ember.png
+            desktop-v15.png
+            mobile-v15.png
+            desktop-v15-clear.png
+            mobile-v15-clear.png
+            desktop-v15-origin.png
+            desktop-v15-frost.png
+            desktop-v15-ember.png
           if-no-files-found: ignore
