@@ -1,4 +1,4 @@
-name: Orbit V1.12 level review lab QA
+name: Orbit V1.13 control focus QA
 
 on:
   push:
@@ -43,7 +43,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Level Review Lab V1\.12/);
+          assert.match(await page.title(),/Control Focus V1\.13/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -79,9 +79,26 @@ jobs:
           assert.equal(await page.locator('.live-readout').isVisible(),false);
           assert.equal(await page.locator('.state-chip').isVisible(),false);
           assert.equal(await page.locator('.canvas-hint').isVisible(),false);
-          assert.equal(await page.locator('.count-row').isVisible(),false);
+          assert.equal(await page.locator('.count-row').count(),0,'Remove redundant wheel number row, not just hide');
+          assert.equal(await page.locator('.control-caption,.panel-intro').count(),0);
+          assert.equal(await page.locator('#wheelNumber,#plusCircle,#minusCircle').count(),0);
+          assert.equal(await page.locator('#wheelCountHint').textContent(),'1 / 3 圓');
           assert.equal(await page.locator('.planet-btn.locked .planet-status:visible').count(),0);
           assert.equal(await page.locator('#wheelTabs .wheel-count-shortcut').count(),2);
+          const focusedPanel=await page.evaluate(()=>{
+            const panel=document.querySelector('#settingsPanel'),h=panel.querySelector('.console-header');
+            const pStyle=getComputedStyle(panel),hStyle=getComputedStyle(h);
+            const active=panel.querySelector('.wheel.selected'),aStyle=getComputedStyle(active);
+            return {border:parseFloat(pStyle.borderTopWidth),shadow:pStyle.boxShadow,
+              accent:parseFloat(hStyle.borderLeftWidth),activeBackground:aStyle.backgroundImage,
+              sliderHeight:active.querySelector('input[type=range]').getBoundingClientRect().height,
+              numericColor:getComputedStyle(active.querySelector('input[type=number]')).color};
+          });
+          assert.ok(focusedPanel.border>=1,'Control rail border not visible');
+          assert.ok(focusedPanel.shadow!=='none','Control rail shadow missing');
+          assert.ok(focusedPanel.accent>=3,'Warm gold header accent missing');
+          assert.ok(focusedPanel.activeBackground!=='none','Selected ring editor must be emphasized');
+          assert.ok(focusedPanel.sliderHeight>=20,'Radius slider not prominent enough');
           assert.equal(await page.locator('#previewBtn').getAttribute('aria-pressed'),'true');
           assert.equal(await page.locator('#previewText').textContent(),'路線：開');
           assert.equal(checks.visual.settlement,false);
@@ -138,13 +155,15 @@ jobs:
             return {railBackground:rail.backgroundImage,railBlur:rail.backdropFilter,actionBorder:outer.borderTopWidth,actionBackground:outer.backgroundColor,stageRadius:stage.borderTopLeftRadius};
           });
           assert.ok(seamless.railBackground.includes('linear-gradient'),'Right control rail should feather into the cosmos');
-          assert.equal(seamless.railBlur,'none','World rail should not blur the scenery behind it');
+          assert.notEqual(seamless.railBlur,'none','Focused control rail should separate from cosmic scenery');
           assert.equal(seamless.actionBorder,'0px','Bottom action controls should have no outer card');
           assert.equal(seamless.stageRadius,'0px','Stage navigation should not consist of pills');
           assert.equal(await page.locator('#hudControlBtn').getAttribute('aria-expanded'),'true');
           await page.locator('#hudControlBtn').click();
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Hiding HUD rail should leave canvas visible');
           assert.equal(await page.locator('#hudControlBtn').getAttribute('aria-expanded'),'false');
+          assert.ok(await page.locator('#hudControlBtn').evaluate(el=>getComputedStyle(el).boxShadow!=='none'),
+            'Collapsed rail toggle should remain visually prominent');
           assert.equal(await page.locator('#fullscreenBtn').isVisible(),true,'Fullscreen control missing');
           await page.keyboard.press('h');
           assert.equal(await page.locator('#settingsPanel').isVisible(),true,'H shortcut should reopen controls');
@@ -220,7 +239,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
-          await page.screenshot({path:'desktop-v112.png',fullPage:true});
+          await page.screenshot({path:'desktop-v113.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -233,6 +252,7 @@ jobs:
           await page.locator('#wheelTabs .wheel-count-shortcut').nth(1).click();
           await page.locator('#wheelTabs .wheel-count-shortcut').nth(1).click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length),3);
+          assert.equal(await page.locator('#wheelCountHint').textContent(),'3 / 3 圓');
           assert.equal(await page.locator('#wheelTabs .wheel-count-shortcut').nth(1).isDisabled(),true);
           assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),3,'Wheel tabs not created');
           await page.locator('#wheelTabs .wheel-tab').nth(1).click();
@@ -317,7 +337,7 @@ jobs:
             const press=i=>{pad.buttons[i].pressed=true;poll();pad.buttons[i].pressed=false;poll()};
             poll();
             const connected=!document.querySelector('#gamepadStatus').hidden;
-            document.querySelector('#plusCircle').click();
+            document.querySelector('#wheelTabs .wheel-count-shortcut:last-child').click();
             const initiallySelected=d.state.selectedWheel;
             press(4);
             const backSelected=d.state.selectedWheel;
@@ -414,7 +434,7 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v112-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v113-clear.png',fullPage:true});
           // Replay remains possible using existing flight controls, with no results card.
           await page.locator('#resetBtn').click();
           assert.equal(await page.locator('#clearNav').isVisible(),false);
@@ -470,9 +490,9 @@ jobs:
             });
             worldSamples.push(sample);return sample;
           };
-          await samplePlanet(0);await page.screenshot({path:'desktop-v112-origin.png',fullPage:true});
-          await samplePlanet(6);await page.screenshot({path:'desktop-v112-frost.png',fullPage:true});
-          await samplePlanet(12);await page.screenshot({path:'desktop-v112-ember.png',fullPage:true});
+          await samplePlanet(0);await page.screenshot({path:'desktop-v113-origin.png',fullPage:true});
+          await samplePlanet(6);await page.screenshot({path:'desktop-v113-frost.png',fullPage:true});
+          await samplePlanet(12);await page.screenshot({path:'desktop-v113-ember.png',fullPage:true});
           assert.ok(worldSamples[0].some((v,i)=>Math.abs(v-worldSamples[1][i])>5),'Second planet background must differ');
           assert.ok(worldSamples[1].some((v,i)=>Math.abs(v-worldSamples[2][i])>5),'Third planet background must differ');
           // All 18 levels clear without a modal, and each next stage unlocks sequentially.
@@ -568,6 +588,15 @@ jobs:
           await page.locator('#dockSettings').click();
           assert.equal(await page.locator('#settingsPanel').isVisible(),true);
           assert.equal(await page.locator('#dockSettings').getAttribute('aria-expanded'),'true');
+          const mobileTouchTargets=await page.evaluate(()=>{
+            const panel=document.querySelector('#settingsPanel');
+            return [...panel.querySelectorAll('.wheel-tab,.wheel-count-shortcut,.dir,.precision-fold summary')]
+              .filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden')
+              .map(el=>({label:el.getAttribute('aria-label')||el.textContent.trim(),
+                        height:el.getBoundingClientRect().height}));
+          });
+          assert.ok(mobileTouchTargets.every(x=>x.height>=40),
+            'Mobile ring controls require >=40px touch targets '+JSON.stringify(mobileTouchTargets));
           assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length),'Wheel tabs must match the current mission');
           assert.equal(await page.locator('#wheelControls .wheel:visible').count(),1);
           assert.equal(await page.locator('#wheelControls .wheel:visible .radius-micro').isVisible(),false,'Microsteps default folded on mobile');
@@ -608,7 +637,7 @@ jobs:
           await page.evaluate(()=>window.__ORBIT_DEBUG__.setLevel(12));
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v112.png',fullPage:true});
+          await page.screenshot({path:'mobile-v113.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -621,7 +650,7 @@ jobs:
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
           assert.equal(await page.locator('#clearNav').isVisible(),false,'Mobile should use dock next, not desktop navigation');
-          await page.screenshot({path:'mobile-v112-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v113-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),13,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
@@ -670,7 +699,7 @@ jobs:
           assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.playing),false);
           await lab.locator('#hintBtn').click();
           assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.assisted),true);
-          await lab.screenshot({path:'lab-v112-desktop.png',fullPage:true});
+          await lab.screenshot({path:'lab-v113-desktop.png',fullPage:true});
           await lab.locator('#reviewNotes').fill('需要增加玩家提示並確認實際難度');
           await lab.locator('#reviewNotes').press('Tab');
           await lab.locator('[data-review="REVISE"]').click();
@@ -698,27 +727,27 @@ jobs:
           }));
           assert.equal(labMobile.overflow,0,'Playtest mobile should have no horizontal scroll');
           assert.ok(labMobile.canvas>200&&labMobile.controls>40);
-          await lab.screenshot({path:'lab-v112-mobile.png',fullPage:true});
+          await lab.screenshot({path:'lab-v113-mobile.png',fullPage:true});
           assert.deepEqual(labErrors,[],'Review lab browser errors');
           await lab.close();
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
-          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl,gamepadAudit,planetUnlockAudit,finalJourney,reduced}));
+          console.log(JSON.stringify({status:'PASS',checks,focusedPanel,mobileTouchTargets,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl,gamepadAudit,planetUnlockAudit,finalJourney,reduced}));
           await browser.close();
           NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v112-level-review-lab-qa
+          name: orbit-v113-control-focus-qa
           path: |
-            desktop-v112.png
-            mobile-v112.png
-            desktop-v112-clear.png
-            mobile-v112-clear.png
-            desktop-v112-origin.png
-            desktop-v112-frost.png
-            desktop-v112-ember.png
+            desktop-v113.png
+            mobile-v113.png
+            desktop-v113-clear.png
+            mobile-v113-clear.png
+            desktop-v113-origin.png
+            desktop-v113-frost.png
+            desktop-v113-ember.png
             research/workshop-candidates.json
-            lab-v112-desktop.png
-            lab-v112-mobile.png
+            lab-v113-desktop.png
+            lab-v113-mobile.png
           if-no-files-found: ignore
