@@ -1,4 +1,4 @@
-name: Orbit V1.5 planet journey QA
+name: Orbit V1.6 star atlas QA
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Planet Journey V1\.5/);
+          assert.match(await page.title(),/Star Atlas V1\.6/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -45,12 +45,19 @@ jobs:
           assert.equal(await page.locator('#planetAchievement').isVisible(),false);
           assert.equal(await page.locator('#gamepadStatus').isVisible(),false);
           assert.equal(await page.locator('#levelList .level-btn').count(),6);
+          assert.equal(await page.locator('#journeySummary').textContent(),'0 / 18 關');
+          assert.equal(await page.locator('#journeyStars').textContent(),'★ 0 / 54');
+          assert.equal(await page.locator('#journeyProgress [role=progressbar]').getAttribute('aria-valuenow'),'0');
+          assert.match(await page.locator('#planetBar .planet-btn').nth(0).getAttribute('aria-label'),/0\/6 關，累積 0\/18 星/);
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.lastLevel),0);
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.unlocked),1);
           assert.deepEqual(checks.max,3);
           assert.equal(checks.visual.ship,'round-scout');
           assert.equal(checks.visual.goal,'supply-station');
           assert.equal(checks.visual.hazard,'navigation-mine');
-          assert.equal(checks.visual.layout,'planet-journey');
+          assert.equal(checks.visual.layout,'star-atlas');
+          assert.equal(checks.visual.journeyProgress,true);
+          assert.equal(checks.visual.resumeLastStage,true);
           assert.equal(checks.visual.gamepad,true);
           assert.equal(checks.visual.planetUnlock,'nonmodal');
           assert.equal(checks.visual.sonicFeedback,true);
@@ -174,7 +181,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
-          await page.screenshot({path:'desktop-v15.png',fullPage:true});
+          await page.screenshot({path:'desktop-v16.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -348,6 +355,10 @@ jobs:
           assert.equal(await page.locator('#completionBonus').isVisible(),true);
           const savedBest=await page.evaluate(()=>JSON.parse(localStorage.getItem('orbit-code-progress')).best['0']);
           assert.deepEqual(savedBest,{stars:3,hits:0,wheels:1,single:true});
+          assert.equal(await page.locator('#journeySummary').textContent(),'1 / 18 關');
+          assert.equal(await page.locator('#journeyStars').textContent(),'★ 3 / 54');
+          assert.equal(await page.locator('#journeyProgress [role=progressbar]').getAttribute('aria-valuenow'),'1');
+          assert.match(await page.locator('#planetBar .planet-btn').nth(0).getAttribute('aria-label'),/1\/6 關，累積 3\/18 星/);
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.pickupFx.length),2,'Pickup animation effects not spawned');
           // Sound is optional; completion remains fully functional when muted.
           assert.equal(await page.evaluate(()=>localStorage.getItem('orbit-code-sounds-v14')),'off');
@@ -358,7 +369,7 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v15-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v16-clear.png',fullPage:true});
           // Replaying with worse collisions must not erase the previous best score.
           await page.locator('#retrySideBtn').click();
           await page.evaluate(()=>{
@@ -373,8 +384,12 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),1,'Next-level action did not switch level');
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready','Next level should be ready');
           assert.equal(await page.locator('#completionPanel').isVisible(),false,'Previous completion still visible');
-          // Persistent progress and tutorial preference survive a fresh visit.
+          // Resume the exact last unlocked mission when opening the site again.
+          assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('orbit-code-progress')).lastLevel),1);
           await page.reload({waitUntil:'networkidle'});
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),1,'Page must resume last played level');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.viewWorld),0);
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready');
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.best[0].stars),3,'Best score did not persist');
           assert.ok(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.unlocked)>=2,'Unlocked stages lost after reload');
           assert.equal(await page.locator('#tutorial').isVisible(),false,'Skipped tutorial should not reappear');
@@ -387,6 +402,9 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.unlocked),7,'Completed planet one should unlock second planet');
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.best[0].stars),3,'Previous best stars lost');
           await page.locator('#planetBar .planet-btn').nth(1).click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),6,'Selecting planet should enter an unlocked stage');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.viewWorld),1);
+          assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('orbit-code-progress')).lastLevel),6);
           assert.match(await page.locator('#levelProgress').textContent(),/霜環星/);
           assert.equal(await page.locator('#levelList .level-btn').count(),6);
           assert.equal(await page.locator('#levelList .level-btn').nth(0).getAttribute('data-locked'),'false');
@@ -407,9 +425,9 @@ jobs:
             });
             worldSamples.push(sample);return sample;
           };
-          await samplePlanet(0);await page.screenshot({path:'desktop-v15-origin.png',fullPage:true});
-          await samplePlanet(6);await page.screenshot({path:'desktop-v15-frost.png',fullPage:true});
-          await samplePlanet(12);await page.screenshot({path:'desktop-v15-ember.png',fullPage:true});
+          await samplePlanet(0);await page.screenshot({path:'desktop-v16-origin.png',fullPage:true});
+          await samplePlanet(6);await page.screenshot({path:'desktop-v16-frost.png',fullPage:true});
+          await samplePlanet(12);await page.screenshot({path:'desktop-v16-ember.png',fullPage:true});
           assert.ok(worldSamples[0].some((v,i)=>Math.abs(v-worldSamples[1][i])>5),'Second planet background must differ');
           assert.ok(worldSamples[1].some((v,i)=>Math.abs(v-worldSamples[2][i])>5),'Third planet background must differ');
           // All 18 levels clear without a modal, and each next stage unlocks sequentially.
@@ -445,6 +463,12 @@ jobs:
           assert.deepEqual(planetUnlockAudit.milestones.map(x=>x.reward),['霜環星','赤曜星']);
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.unlocked),18);
           assert.equal(await page.evaluate(()=>Object.keys(window.__ORBIT_DEBUG__.state.complete).filter(k=>window.__ORBIT_DEBUG__.state.complete[k]).length),18);
+          const finalJourney=await page.evaluate(()=>window.__ORBIT_DEBUG__.journeyTotals());
+          assert.deepEqual(finalJourney,{completed:18,earned:54,available:18,maxStars:54});
+          assert.equal(await page.locator('#journeySummary').textContent(),'18 / 18 關');
+          assert.equal(await page.locator('#journeyStars').textContent(),'★ 54 / 54');
+          assert.equal(await page.locator('#planetBar .planet-complete').count(),3);
+          assert.equal(await page.locator('#journeyProgress [role=progressbar]').getAttribute('aria-valuenow'),'18');
           await page.evaluate(()=>{const d=window.__ORBIT_DEBUG__;d.setLevel(17);d.state.wheels=d.levels[17].refs.map(w=>({...w}));d.start();for(const g of d.levels[17].goals)d.collision(g,g)});
           assert.equal(await page.locator('#nextSideBtn').textContent(),'↻ 再次挑戰');
           // Player-triggered travel still emits the original arrival hook, without any forced cutscene.
@@ -458,6 +482,8 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),6);
           assert.deepEqual(await page.evaluate(()=>window.__ORBIT_ARRIVALS__.map(e=>[e.from,e.to,e.name])),[[0,1,'霜環星']]);
           await page.reload({waitUntil:'networkidle'});
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),6,'Last planet journey stage did not resume');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.viewWorld),1);
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.unlocked),18,'Planet progress lost after reload');
           assert.equal(await page.evaluate(()=>Object.keys(window.__ORBIT_DEBUG__.state.best).length),18,'Best records not persisted');
           await page.evaluate(()=>window.__ORBIT_DEBUG__.setLevel(12));
@@ -528,9 +554,12 @@ jobs:
           assert.match(await page.locator('#levelProgress').textContent(),/霜環星/);
           await page.locator('#planetBar .planet-btn').nth(2).click();
           assert.match(await page.locator('#levelProgress').textContent(),/赤曜星/);
+          assert.match(await page.locator('#mobileJourneyCount').textContent(),/18\/18/);
+          // Returning to the current active mission is deliberate after browsing worlds.
+          await page.evaluate(()=>window.__ORBIT_DEBUG__.setLevel(12));
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v15.png',fullPage:true});
+          await page.screenshot({path:'mobile-v16.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -542,7 +571,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
-          await page.screenshot({path:'mobile-v15-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v16-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),13,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
@@ -554,20 +583,20 @@ jobs:
           await page.locator('#resetBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready');
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
-          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl,gamepadAudit,planetUnlockAudit}));
+          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl,gamepadAudit,planetUnlockAudit,finalJourney}));
           await browser.close();
           NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v15-planet-journey-qa
+          name: orbit-v16-star-atlas-qa
           path: |
-            desktop-v15.png
-            mobile-v15.png
-            desktop-v15-clear.png
-            mobile-v15-clear.png
-            desktop-v15-origin.png
-            desktop-v15-frost.png
-            desktop-v15-ember.png
+            desktop-v16.png
+            mobile-v16.png
+            desktop-v16-clear.png
+            mobile-v16-clear.png
+            desktop-v16-origin.png
+            desktop-v16-frost.png
+            desktop-v16-ember.png
           if-no-files-found: ignore
