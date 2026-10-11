@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071326">
+<title>ORBIT // CODE — 候選關卡試玩室 V1.12</title>
+<meta name="description" content="Orbit Guardians 獨立關卡試玩室；評估候選關卡，不寫入正式玩家進度。">
+<style>
+:root{color-scheme:dark;--bg:#071425;--ink:#e8f7ff;--muted:#99b8ca;--edge:#5684a780;--accent:#8ae2ee;--gold:#f6cc88}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;color:var(--ink);background:var(--bg)}
+body{background:radial-gradient(ellipse 60% 58% at 48% 37%,#173f66 0%,#0d2746 35%,#061323 80%),#061323}
+button,select,input,textarea{font:inherit}
+button,select,input[type=file],textarea,input[type=number]{color:var(--ink)}
+button{cursor:pointer;border:1px solid var(--edge);border-radius:8px;background:#143450bd;padding:10px 12px;font-weight:600;min-height:38px}
+button:hover:not(:disabled){border-color:#a8dbe7;background:#24516b}
+button:disabled{opacity:.42;cursor:default}
+button.primary{background:linear-gradient(120deg,#eac78c,#f5dda9);border-color:#ffe7ad;color:#173348;box-shadow:0 5px 23px #e4b86d45;font-weight:800}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #9ce5ff;outline-offset:3px}
+.site-header{height:68px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px clamp(14px,2vw,30px);border-bottom:1px solid #3f799456}
+.brand{font-size:16px;letter-spacing:.17em;font-weight:850;white-space:nowrap}
+.brand small{display:block;font-size:9px;letter-spacing:.19em;color:#9dcedd;margin-top:4px}
+.review-only{color:#f1daa9;border:1px solid #b99c6680;padding:7px 10px;border-radius:100px;font-size:10px;font-weight:760;white-space:nowrap}
+.workspace{min-height:calc(100dvh - 68px);display:grid;grid-template-columns:minmax(190px,240px) minmax(300px,1fr) minmax(226px,284px);gap:12px;padding:12px}
+.rail{background:linear-gradient(180deg,#0b2138df,#08182ac9);border:1px solid #5f88a056;border-radius:13px;padding:15px;min-width:0}
+.rail h2{font-size:15px;margin:2px 0 12px;letter-spacing:.03em}
+.rail h3{font-size:11px;color:#a9d1df;text-transform:uppercase;letter-spacing:.12em;margin:18px 0 8px}
+.label{font-size:11px;color:var(--muted);display:block;margin:12px 0 6px}
+.rail p{font-size:11px;line-height:1.6;color:#b1cddd}
+select,input[type=number],textarea{background:#081b2e;border:1px solid #668fa475;border-radius:7px;padding:9px;width:100%}
+select{min-height:38px}
+input[type=file]{max-width:100%;font-size:11px}
+input[type=range]{width:100%;accent-color:#82d8ec;min-height:28px;cursor:pointer}
+textarea{resize:vertical;min-height:79px}
+.stack{display:flex;flex-direction:column;gap:8px}
+.grid-two{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.meta{font-size:10px;color:#aac2ce;line-height:1.8;overflow-wrap:anywhere}
+.tag{font-size:10px;display:inline-block;border:1px solid #9cb8c267;border-radius:6px;padding:5px 7px;color:#d0dfe6;margin:3px 3px 0 0}
+#sourceStatus[data-error=true]{color:#f5b6a3}
+#reviewStatus{color:#e7cb93;font-size:10px;line-height:1.6;min-height:20px}
+.board{position:relative;min-height:560px;overflow:hidden;border:1px solid #6292ab5b;border-radius:12px;
+ background:radial-gradient(ellipse at 48% 42%,#1a4367 0%,#0b2b47 38%,#061625 79%);
+ display:flex;flex-direction:column}
+#previewCanvas{width:100%;height:100%;position:absolute;inset:0;display:block;touch-action:none}
+.board-top{position:relative;z-index:1;display:flex;justify-content:space-between;gap:12px;padding:15px;pointer-events:none}
+.board-top h1{font-size:17px;margin:3px 0 3px;max-width:380px}
+.board-top small{font-size:10px;color:#aed5df;letter-spacing:.06em}
+.board-top .progress{color:#bce8e3;font-size:12px;font-weight:750;text-align:right}
+.board-foot{position:absolute;z-index:1;bottom:16px;left:50%;transform:translateX(-50%);
+ display:flex;gap:8px;align-items:center;justify-content:center;width:calc(100% - 22px);pointer-events:none}
+.board-foot button{pointer-events:auto;white-space:nowrap}
+#status{position:absolute;z-index:1;bottom:75px;left:0;right:0;text-align:center;color:#c4e9e7;font-size:11px;pointer-events:none;text-shadow:0 2px 10px #03101c}
+.rings{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.rings button{flex:1;min-width:45px;padding:8px 5px;min-height:33px;font-size:11px}
+.rings button[aria-pressed=true]{border-color:#a6e5ee;color:#eaffff;background:#235770;box-shadow:inset 0 -3px #91ddef}
+.direction-set{display:flex;gap:7px}
+.direction-set button{flex:1;min-width:0;font-size:11px}
+.direction-set button[aria-pressed=true]{border-color:#b9e6ed;background:#23556c}
+#quality{color:#d2e3e4}
+#quality strong{color:#f5da9e}
+.flag{color:#e9ad98}
+.report{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.report button{padding:9px 2px;font-size:10px}
+.report button[aria-pressed=true]{border-color:#e8d597;background:#62513a}
+.footer-note{font-size:10px!important;color:#abc4cf!important;border-top:1px solid #50758d55;margin-top:17px;padding-top:11px}
+@media(max-width:1050px){.workspace{grid-template-columns:minmax(155px,210px) minmax(280px,1fr) minmax(185px,240px);gap:8px;padding:8px}
+.rail{padding:12px}.board{min-height:570px}.site-header{height:60px}.workspace{min-height:calc(100dvh - 60px)}}
+@media(max-width:790px){.workspace{grid-template-columns:1fr 1fr;gap:9px}.board{grid-column:1/-1;grid-row:1;min-height:min(62dvh,540px)}
+.rail{grid-row:2}.site-header{height:auto;min-height:58px}.review-only{font-size:9px}.brand{font-size:13px}
+.board-foot button{padding:10px}.board-top h1{font-size:15px}}
+@media(max-width:410px){.workspace{grid-template-columns:1fr}.board{grid-column:1;min-height:52dvh}.rail{grid-column:1;grid-row:auto}
+.board-foot{gap:5px}.board-foot button{min-height:40px;font-size:11px;padding:8px}.review-only{font-size:8px;padding:5px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="site-header">
+ <div class="brand">ORBIT // CODE <small>LEVEL REVIEW LAB · V1.12</small></div>
+ <span class="review-only">研究候選 · 不影響正式 18 關</span>
+</header>
+<main class="workspace">
+ <aside class="rail">
+  <h2>候選關卡</h2>
+  <label class="label" for="stageSelect">選擇試玩關卡</label>
+  <select id="stageSelect" aria-label="試玩關卡"></select>
+  <div id="sourceStatus" class="meta" role="status">載入展示候選中…</div>
+  <label class="label" for="sourceInput">匯入產生器 JSON（不會上傳）</label>
+  <input id="sourceInput" type="file" accept=".json,application/json">
+  <h3>候選資訊</h3>
+  <div id="quality" class="meta">尚未載入</div>
+  <div id="flags" class="meta"></div>
+  <h3>評審流程</h3>
+  <div class="report" id="reviewBtns">
+   <button type="button" data-review="ACCEPT">可採用</button>
+   <button type="button" data-review="REVISE">待修改</button>
+   <button type="button" data-review="REJECT">不採用</button>
+  </div>
+  <label class="label" for="reviewNotes">評審備註</label>
+  <textarea id="reviewNotes" maxlength="1200" placeholder="關卡難度、玩法差異、操作痛點…"></textarea>
+  <div id="reviewStatus" role="status">僅保存在此瀏覽器</div>
+  <button type="button" id="exportReview">匯出評審 JSON</button>
+  <p class="footer-note">評分僅是規則式預估，不代表玩家實測難度。所有候選都需要人工確認，並經明確審核才可另行加入正式關卡。</p>
+ </aside>
+ <section class="board" aria-label="候選關卡軌道試玩">
+  <canvas id="previewCanvas" aria-label="可拖曳軌道控制點的試玩畫面"></canvas>
+  <div class="board-top">
+   <div><small>INDEPENDENT PLAYTEST</small><h1 id="stageTitle">候選軌道</h1></div>
+   <div class="progress"><div id="goalProgress">補給 0/0</div><div id="dangerProgress">碰撞 0</div></div>
+  </div>
+  <div id="status" role="status">調整半徑與方向，讓太空船收集補給</div>
+  <nav class="board-foot" aria-label="試玩操作">
+   <button id="resetBtn" type="button">↻ 重試</button>
+   <button class="primary" id="playBtn" type="button">▶ 派出太空船</button>
+   <button id="previewBtn" type="button" aria-pressed="true">⌁ 路線：開</button>
+  </nav>
+ </section>
+ <aside class="rail">
+  <h2>軌道設定</h2>
+  <p>和正式遊戲一樣：最多三個圓，可即時更改半徑及旋轉方向。</p>
+  <label class="label">圓周數量 <span id="wheelCount">1</span></label>
+  <div class="grid-two"><button id="minusBtn" type="button">− 減少</button><button id="plusBtn" type="button">＋ 新增</button></div>
+  <div class="rings" id="ringTabs" role="group" aria-label="選擇目前編輯的圓"></div>
+  <label class="label" for="radiusSlider">半徑（0–165）</label>
+  <input type="range" id="radiusSlider" min="0" max="165" step="1" value="90">
+  <input id="radiusInput" type="number" min="0" max="165" step="1" value="90" aria-label="目前圓半徑數值">
+  <label class="label">旋轉方向</label>
+  <div class="direction-set">
+   <button id="cwBtn" type="button" aria-pressed="true">↻ 順時針</button>
+   <button id="ccwBtn" type="button" aria-pressed="false">↺ 逆時針</button>
+  </div>
+  <h3>審核工具</h3>
+  <button type="button" id="hintBtn">◎ 載入參考解法</button>
+  <div id="assistStatus" class="meta"></div>
+  <p class="footer-note">獨立試玩頁不使用正式遊戲的解鎖紀錄或星級，也不會修改正式玩家設定。拖曳軌道圓點亦可調整半徑。</p>
+ </aside>
+</main>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id),TAU=2*Math.PI,BASE=TAU/8;
+const canvas=$('previewCanvas'),ctx=canvas.getContext('2d');
+const COLORS=['#e3f1f8','#81d3ef','#f6cc88'];
+let batch=null,index=0,level=null,wheels=[],selected=0,playing=false,cleared=false,showForecast=true;
+let simTime=0,lastTime=0,hits=new Set(),collisions=0,hazardCooldown=0,assisted=false,drag=null,Width=0,Height=0,DPR=1,scale=1;
+let reviews={};
+try{const r=JSON.parse(localStorage.getItem('orbit-lab-reviews-v1')||'{}');if(r&&typeof r==='object'&&!Array.isArray(r))reviews=r}catch(e){}
+const point=(time,ws)=>ws.reduce((p,w,i)=>({x:p.x+w.r*Math.cos(time*BASE*(i+1)*w.d),y:p.y+w.r*Math.sin(time*BASE*(i+1)*w.d)}),{x:0,y:0});
+const distance=(a,b,p)=>{const dx=b.x-a.x,dy=b.y-a.y,den=dx*dx+dy*dy,t=den?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/den)):0;return Math.hypot(a.x+t*dx-p.x,a.y+t*dy-p.y)};
+const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
+const isWheel=w=>w&&Number.isInteger(w.r)&&w.r>=0&&w.r<=165&&(w.d===1||w.d===-1);
+function validate(input){
+ if(!input||input.schema!=='orbit-research-candidates-v1'||input.status!=='REVIEW_ONLY_NOT_PUBLISHED'||!Array.isArray(input.candidates)||input.candidates.length<1||input.candidates.length>12)throw Error('不是有效的研究候選格式');
+ const copy=JSON.parse(JSON.stringify(input));
+ if(JSON.stringify(copy).length>250000)throw Error('檔案過大');
+ for(const c of copy.candidates){
+  if(!c||typeof c.name!=='string'||c.name.length>90||
+    !Array.isArray(c.start)||!Array.isArray(c.refs)||c.start.length<1||c.start.length>3||
+    c.refs.length<1||c.refs.length>3||!c.start.every(isWheel)||!c.refs.every(isWheel)||
+    !Array.isArray(c.goals)||c.goals.length<2||c.goals.length>6||
+    !c.goals.every(g=>Number.isFinite(g.x)&&Number.isFinite(g.y)&&Math.abs(g.x)<650&&Math.abs(g.y)<650)||
+    !Array.isArray(c.hazards)||c.hazards.length>6||!c.hazards.every(h=>Number.isFinite(h.x)&&Number.isFinite(h.y)&&Number.isFinite(h.r)&&h.r>=0&&h.r<=40)||
+    !Number.isFinite(c.captureRadius)||c.captureRadius<2||c.captureRadius>16||
+    !Number.isFinite(c.max)||c.max<8||c.max>60)throw Error('候選關卡欄位不符合規格');
+  if(c.review&&typeof c.review!=='object')throw Error('審核欄位格式錯誤');
+ }
+ return copy;
+}
+function idFor(){return level&&level.review&&typeof level.review.id==='string'?level.review.id:'candidate-'+index+'-'+level.name}
+function persistReview(){
+ try{localStorage.setItem('orbit-lab-reviews-v1',JSON.stringify(reviews))}catch(e){}
+}
+function loadNotes(){
+ const value=reviews[idFor()]||{};
+ $('reviewNotes').value=value.notes||'';
+ $('reviewBtns').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.review===value.decision)));
+ $('reviewStatus').textContent=value.decision?'已記錄：'+value.decision+'（只保存在此瀏覽器）':'尚未評審';
+}
+function setBatch(input,source){
+ batch=validate(input);
+ $('stageSelect').replaceChildren();
+ batch.candidates.forEach((c,i)=>{
+  const o=document.createElement('option');o.value=String(i);
+  o.textContent=(i+1).toString().padStart(2,'0')+'｜'+c.name;
+  $('stageSelect').append(o);
+ });
+ $('sourceStatus').textContent=source+' · '+batch.candidates.length+' 關 · 僅供研究';
+ $('sourceStatus').dataset.error='false';
+ setStage(0);
+}
+function setStage(i){
+ if(!batch)return;
+ index=clamp(Number(i)||0,0,batch.candidates.length-1);
+ level=batch.candidates[index];$('stageSelect').value=String(index);
+ wheels=level.start.map(w=>({...w}));selected=0;assisted=false;showForecast=true;
+ $('previewBtn').setAttribute('aria-pressed','true');$('previewBtn').textContent='⌁ 路線：開';
+ $('stageTitle').textContent=level.name;
+ const review=level.review||{};
+ $('quality').replaceChildren();
+ const title=document.createElement('div');
+ title.textContent='規則式難度預估：'+(review.roughBand||batch.difficulty||'未評級')+' · 指數 '+(review.challengeIndex??'—');
+ $('quality').append(title);
+ for(const text of ['圓 '+level.refs.length+' 個','補給 '+level.goals.length+' 座','禁區 '+level.hazards.length+' 處']){
+  const el=document.createElement('span');el.className='tag';el.textContent=text;$('quality').append(el);
+ }
+ $('flags').textContent=review.reviewFlags?.length?'待檢查：'+review.reviewFlags.join(', '):'尚未提供人類實測難度';
+ $('assistStatus').textContent='';
+ loadNotes();reset();
+}
+function updateControls(){
+ $('wheelCount').textContent=String(wheels.length);
+ $('plusBtn').disabled=wheels.length>=3;$('minusBtn').disabled=wheels.length<=1;
+ $('ringTabs').replaceChildren();
+ wheels.forEach((_,i)=>{
+  const btn=document.createElement('button');btn.type='button';
+  btn.textContent='圓 '+String(i+1).padStart(2,'0');
+  btn.setAttribute('aria-pressed',String(selected===i));
+  btn.addEventListener('click',()=>{selected=i;updateControls();draw()});
+  $('ringTabs').append(btn);
+ });
+ const w=wheels[selected];if(!w)return;
+ $('radiusSlider').value=String(w.r);$('radiusInput').value=String(w.r);
+ $('cwBtn').setAttribute('aria-pressed',String(w.d===1));
+ $('ccwBtn').setAttribute('aria-pressed',String(w.d===-1));
+}
+function setRadius(v){
+ const n=Number(v);if(!Number.isFinite(n))return;
+ wheels[selected].r=clamp(Math.round(n),0,165);
+ updateControls();draw();
+}
+function setDir(d){
+ wheels[selected].d=d;updateControls();draw();
+}
+function reset(){
+ playing=false;cleared=false;simTime=0;lastTime=0;hits.clear();
+ collisions=0;hazardCooldown=0;
+ $('playBtn').textContent='▶ 派出太空船';
+ $('status').textContent='調整軌道，讓太空船收集所有補給';
+ updateProgress();updateControls();draw();
+}
+function updateProgress(){
+ $('goalProgress').textContent='補給 '+hits.size+'/'+(level?.goals.length??0);
+ $('dangerProgress').textContent='碰撞 '+collisions;
+}
+function sx(x){return Width/2+x*scale}function sy(y){return Height/2+y*scale}
+function fromPoint(x,y){return {x:(x-Width/2)/scale,y:(y-Height/2)/scale}}
+function fit(){
+ const box=canvas.getBoundingClientRect();Width=box.width;Height=box.height;
+ DPR=Math.min(window.devicePixelRatio||1,2);
+ canvas.width=Math.max(1,Math.round(Width*DPR));canvas.height=Math.max(1,Math.round(Height*DPR));
+ ctx.setTransform(DPR,0,0,DPR,0,0);
+ scale=Math.min(Width/660,Height/640);
+ draw();
+}
+function draw(){
+ if(!Width||!Height||!level)return;
+ ctx.clearRect(0,0,Width,Height);
+ const starTime=performance.now();
+ ctx.save();
+ for(let i=0;i<82;i++){
+  const x=(i*129.7+27)%Width,y=(i*89.3+11)%Height;
+  const a=.18+((i*11)%23)/100;
+  ctx.fillStyle='rgba(206,234,250,'+a+')';ctx.fillRect(x,y,i%7===0?1.6:1,1);
+ }
+ ctx.restore();
+ // Forecast remains authoritative: do not smooth geometry or goal positions.
+ if(showForecast){
+  const steps=260;
+  for(let j=1;j<=steps;j++){
+   const a=point((j-1)*8/steps,wheels),b=point(j*8/steps,wheels);
+   const risky=level.hazards.some(h=>distance(a,b,h)<=h.r+4);
+   ctx.beginPath();ctx.moveTo(sx(a.x),sy(a.y));ctx.lineTo(sx(b.x),sy(b.y));
+   ctx.lineWidth=1.6;ctx.strokeStyle=risky?'#fa7774ad':'#9ddcf0a0';
+   ctx.stroke();
+  }
+ }
+ let center={x:0,y:0};
+ wheels.forEach((w,i)=>{
+  const a=simTime*BASE*(i+1)*w.d;
+  const handle={x:center.x+w.r*Math.cos(a),y:center.y+w.r*Math.sin(a)};
+  ctx.save();
+  ctx.beginPath();ctx.arc(sx(center.x),sy(center.y),w.r*scale,0,TAU);
+  ctx.strokeStyle=COLORS[i]+(i===selected?'b5':'59');ctx.lineWidth=i===selected?2:1;
+  ctx.stroke();
+  ctx.beginPath();ctx.arc(sx(handle.x),sy(handle.y),i===selected?7:5,0,TAU);
+  ctx.strokeStyle=COLORS[i];ctx.lineWidth=2;ctx.stroke();
+  ctx.restore();
+  center=handle;
+ });
+ const ship=point(simTime,wheels);
+ ctx.save();
+ ctx.translate(sx(ship.x),sy(ship.y));ctx.rotate(Math.PI/2+simTime*.7);
+ ctx.fillStyle='#e7faff';ctx.strokeStyle='#5ab3d0';ctx.lineWidth=1.5;
+ ctx.beginPath();ctx.moveTo(0,-11);ctx.lineTo(8,7);ctx.lineTo(0,3);ctx.lineTo(-8,7);ctx.closePath();ctx.fill();ctx.stroke();
+ ctx.restore();
+ level.hazards.forEach(h=>{
+  ctx.save();ctx.beginPath();ctx.arc(sx(h.x),sy(h.y),h.r*scale,0,TAU);
+  ctx.fillStyle='#d3485a45';ctx.strokeStyle='#f98584';ctx.lineWidth=1.5;
+  ctx.fill();ctx.stroke();ctx.restore();
+ });
+ level.goals.forEach((g,i)=>{
+  ctx.save();ctx.translate(sx(g.x),sy(g.y));
+  ctx.strokeStyle=hits.has(i)?'#6bb6a0':'#9cf1d1';ctx.lineWidth=1.8;
+  ctx.globalAlpha=hits.has(i)?.28:1;
+  ctx.strokeRect(-7,-7,14,14);ctx.fillStyle='#9cf1d1';ctx.fillRect(-2,-2,4,4);
+  ctx.restore();
+ });
+}
+function collisionChecks(from,to){
+ level.goals.forEach((g,i)=>{if(!hits.has(i)&&distance(from,to,g)<=level.captureRadius)hits.add(i)});
+ const risk=level.hazards.some(h=>distance(from,to,h)<=h.r+4);
+ if(risk&&hazardCooldown<=0){collisions++;hazardCooldown=.7}
+ updateProgress();
+ if(hits.size===level.goals.length&&!cleared){
+  cleared=true;$('status').textContent='✓ 候選解法可完成 · 請記錄實際操作感受';
+ }
+}
+function frame(time){
+ if(playing&&level){
+  const delta=lastTime?Math.min(.05,(time-lastTime)/1000):0;
+  const previous=point(simTime,wheels);
+  simTime+=delta;
+  // Eight seconds is one complete cycle at fixed 1x/2x/3x frequencies.
+  if(simTime>=8)simTime-=8;
+  const next=point(simTime,wheels);
+  if(delta>0)collisionChecks(previous,next);
+  hazardCooldown=Math.max(0,hazardCooldown-delta);
+  if(!cleared&&simTime>=7.99)$('status').textContent='可繼續調整並試跑';
+ }
+ lastTime=time;draw();requestAnimationFrame(frame);
+}
+function handles(){
+ let c={x:0,y:0};const result=[];
+ wheels.forEach((w,i)=>{
+  const angle=simTime*BASE*(i+1)*w.d;
+  const h={x:c.x+w.r*Math.cos(angle),y:c.y+w.r*Math.sin(angle)};
+  result.push({index:i,center:c,handle:h});c=h;
+ });
+ return result;
+}
+function pointer(e){
+ const box=canvas.getBoundingClientRect();
+ return fromPoint(e.clientX-box.left,e.clientY-box.top);
+}
+canvas.addEventListener('pointerdown',e=>{
+ const p=pointer(e),list=handles(),target=list.findLast(h=>Math.hypot(h.handle.x-p.x,h.handle.y-p.y)<22/Math.max(scale,.15));
+ if(!target)return;
+ selected=target.index;drag=target;canvas.setPointerCapture(e.pointerId);
+ updateControls();draw();
+});
+canvas.addEventListener('pointermove',e=>{
+ if(!drag)return;
+ const p=pointer(e);
+ wheels[selected].r=clamp(Math.round(Math.hypot(drag.center.x-p.x,drag.center.y-p.y)),0,165);
+ updateControls();draw();
+});
+for(const type of ['pointerup','pointercancel'])canvas.addEventListener(type,e=>{drag=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId)});
+$('stageSelect').addEventListener('change',e=>setStage(e.target.value));
+$('radiusSlider').addEventListener('input',e=>setRadius(e.target.value));
+$('radiusInput').addEventListener('change',e=>setRadius(e.target.value));
+$('minusBtn').addEventListener('click',()=>{if(wheels.length<=1)return;wheels.pop();selected=Math.min(selected,wheels.length-1);updateControls();draw()});
+$('plusBtn').addEventListener('click',()=>{if(wheels.length>=3)return;wheels.push({r:40,d:1});selected=wheels.length-1;updateControls();draw()});
+$('cwBtn').addEventListener('click',()=>setDir(1));
+$('ccwBtn').addEventListener('click',()=>setDir(-1));
+$('resetBtn').addEventListener('click',reset);
+$('playBtn').addEventListener('click',()=>{
+ playing=!playing;$('playBtn').textContent=playing?'Ⅱ 暫停':'▶ 繼續飛行';lastTime=0;
+});
+$('previewBtn').addEventListener('click',()=>{
+ showForecast=!showForecast;
+ $('previewBtn').textContent=showForecast?'⌁ 路線：開':'⌁ 路線：關';
+ $('previewBtn').setAttribute('aria-pressed',String(showForecast));draw();
+});
+$('hintBtn').addEventListener('click',()=>{
+ wheels=level.refs.map(w=>({...w}));selected=0;assisted=true;
+ $('assistStatus').textContent='已載入候選參考配置（本次評審標記為使用提示）';
+ reset();
+});
+$('reviewBtns').addEventListener('click',e=>{
+ const btn=e.target.closest('button[data-review]');if(!btn||!level)return;
+ const key=idFor(),existing=reviews[key]||{};
+ reviews[key]={...existing,decision:btn.dataset.review,notes:$('reviewNotes').value,
+  usedReference:assisted,sourceSeed:batch.seed??null,levelName:level.name};
+ persistReview();loadNotes();
+});
+$('reviewNotes').addEventListener('change',()=>{
+ if(!level)return;const key=idFor(),old=reviews[key]||{};
+ reviews[key]={...old,notes:$('reviewNotes').value,usedReference:assisted,
+  sourceSeed:batch.seed??null,levelName:level.name};
+ persistReview();loadNotes();
+});
+$('exportReview').addEventListener('click',()=>{
+ const result={schema:'orbit-human-review-v1',purpose:'HUMAN_REVIEW_ONLY',source:batch?.seed??null,
+  reviewCount:Object.keys(reviews).length,reviews};
+ const blob=new Blob([JSON.stringify(result,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='orbit-human-review.json';a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+$('sourceInput').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>250000)throw Error('檔案不可超過 250 KB');
+  const json=JSON.parse(await file.text());setBatch(json,file.name);
+ }catch(err){$('sourceStatus').textContent='匯入失敗：'+err.message;$('sourceStatus').dataset.error='true'}
+});
+window.addEventListener('resize',fit);
+new ResizeObserver(fit).observe(canvas);
+window.__ORBIT_LAB_DEBUG__={validate,setBatch,setStage,point,get state(){return {index,wheels,playing,cleared,collisions,hits:hits.size,assisted,reviewKeys:Object.keys(reviews)}}};
+fetch('./sample-candidates.json').then(r=>{if(!r.ok)throw Error('展示候選檔案未找到');return r.json()})
+ .then(data=>setBatch(data,'內建展示候選')).catch(err=>{$('sourceStatus').textContent=err.message;$('sourceStatus').dataset.error='true'});
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
