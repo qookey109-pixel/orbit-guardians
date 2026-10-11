@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Planet Journey V1.5</title>
+<title>ORBIT // CODE — 軌道守護者｜Star Atlas V1.6</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -898,10 +898,47 @@ body.level-cleared .board{border:0!important}
  .planet-reward{margin-bottom:4px}
 }
 @media(max-height:520px){.planet-achievement{bottom:84px}.gamepad-status{bottom:62px}}
+
+/* V1.6 Star Atlas — progress woven into the existing scene, no new dashboard cards */
+.journey-progress{display:flex;align-items:center;justify-content:space-between;gap:7px;
+ width:100%;height:15px;min-height:15px;padding:3px 1px 0;
+ color:#9fbbce;font-size:9px;letter-spacing:.01em;font-weight:550;
+ text-shadow:0 1px 5px #07172b}
+.journey-progress>span:first-child,.journey-progress>span:last-child{white-space:nowrap;flex:none}
+.journey-progress>span:last-child{color:#e8d29d}
+.journey-track{height:3px;min-width:40px;flex:1;border-radius:5px;overflow:hidden;background:#4f6d8363}
+.journey-track>span{display:block;height:100%;width:0;
+ background:linear-gradient(90deg,#72bbdb,#bce4d2,#f1d395);
+ border-radius:5px;transition:width .35s ease}
+.planet-btn .planet-symbol:before{content:'';position:absolute;inset:-4px;border-radius:50%;
+ background:conic-gradient(#d5edbe var(--planet-completion,0%),#62798e60 0);
+ -webkit-mask:radial-gradient(closest-side,transparent calc(100% - 2px),#000 calc(100% - 1px));
+ mask:radial-gradient(closest-side,transparent calc(100% - 2px),#000 calc(100% - 1px));
+ pointer-events:none}
+.planet-btn.planet-complete .planet-status{color:#c5e9cf;font-weight:720}
+.planet-btn .planet-status{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.planet-btn.selected{filter:drop-shadow(0 1px 6px #66b8dd33)}
+.mobile-journey-count{font-size:10px;color:#b7def0;font-weight:680;margin-left:3px;white-space:nowrap}
+.mobile-journey-count[hidden]{display:none!important}
+@media(min-width:861px){
+ .levels-section{padding-bottom:3px!important}
+ .journey-progress{height:13px;min-height:13px;padding-top:2px}
+ .planet-btn .planet-status{display:block!important;font-size:9px}
+ .planet-btn .planet-symbol{position:relative}
+}
+@media(max-width:860px){
+ body[data-mobile-pane=levels] .journey-progress{margin:9px 0 0;padding-top:3px;height:19px;font-size:11px;gap:10px}
+ body[data-mobile-pane=levels] .journey-track{height:4px}
+ body[data-mobile-pane=levels] .planet-btn .planet-symbol{position:relative}
+ body[data-mobile-pane=levels] .planet-label small{display:block!important;font-size:8px}
+ .mobile-journey-count{font-size:9px}
+}
+@media(max-width:350px){.mobile-journey-count{font-size:8px;margin-left:1px}}
+@media(prefers-reduced-motion:reduce){.journey-track>span{transition:none}}
 </style>
 </head>
 <body><div class="shell">
-<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">PLANET JOURNEY / V1.5</span><button class="hud-toggle" type="button" id="fullscreenBtn" aria-label="切換全螢幕" title="切換全螢幕">⛶</button><button class="hud-toggle" type="button" id="hudControlBtn" aria-controls="settingsPanel" aria-expanded="true" title="顯示／收起軌道設定（H）">⚙ <span>收起控制</span></button></div></header>
+<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">STAR ATLAS / V1.6</span><button class="hud-toggle" type="button" id="fullscreenBtn" aria-label="切換全螢幕" title="切換全螢幕">⛶</button><button class="hud-toggle" type="button" id="hudControlBtn" aria-controls="settingsPanel" aria-expanded="true" title="顯示／收起軌道設定（H）">⚙ <span>收起控制</span></button></div></header>
 <section class="intro"><div><div class="eyebrow">ORBITAL PUZZLE — 3 PLANETS × 6 MISSIONS</div><h1>讓軌道，<span>剛好經過。</span></h1><p>調整最多三個圓的半徑與方向，讓軌跡經過所有訊號，避開危險區。</p></div><div class="intro-flag">最多三個圓 · 拖曳半徑 · 正反轉<br><b>18 個任務 · 三顆星球</b></div></section>
 <main class="layout"><section class="left" aria-label="遊戲畫面與關卡">
 <div class="board"><div class="board-header"><div class="command-title"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div><div class="mission-objective" id="missionObjective">收集 2 座補給站 · 避開禁區</div></div><button class="mission-info-btn" id="missionInfoBtn" type="button" aria-controls="missionStory" aria-expanded="false" title="查看本關簡介">i</button><div class="state-chip" id="stateChip">準備開始</div></div><div class="metrics"><div class="metric"><span>補給進度</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞</span><strong id="hazardMetric">0</strong></div></div><div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn" title="重設試跑（R）">↻ 重試</button><button class="btn active" id="previewBtn" aria-pressed="true" title="顯示／隱藏預測路線">⌁ 路線</button></div></div>
@@ -927,7 +964,13 @@ body.level-cleared .board{border:0!important}
 <div class="game-message" aria-live="polite"><div class="message-icon">✳</div><div><b id="missionTitle">任務：收集物資訊號</b><p id="missionTip">調整第一個圓的半徑。預測線會即時顯示運行路線。</p></div></div>
 <div class="levels-section" id="levelsSection">
 <div class="planet-bar" id="planetBar" role="group" aria-label="星球選擇"></div>
-<div class="levels-head"><h2>任務選擇</h2><span id="levelProgress">已解鎖 1 / 6</span></div><div class="level-list" id="levelList"></div><div class="stage-notice" id="stageNotice" hidden role="status"></div></div></section>
+<div class="levels-head"><h2>任務選擇</h2><span id="levelProgress">已解鎖 1 / 6</span></div><div class="level-list" id="levelList"></div>
+<div class="journey-progress" id="journeyProgress" aria-label="星際旅程總進度">
+ <span id="journeySummary">0 / 18 關</span>
+ <span class="journey-track" role="progressbar" aria-label="已完成的關卡" aria-valuemin="0" aria-valuemax="18" aria-valuenow="0"><span id="journeyMeterFill"></span></span>
+ <span id="journeyStars">★ 0 / 54</span>
+</div>
+<div class="stage-notice" id="stageNotice" hidden role="status"></div></div></section>
 <aside class="panel" id="settingsPanel" aria-label="軌道控制台">
 <div class="completion-panel" id="completionPanel" hidden aria-live="polite">
  <div class="completion-heading"><span class="completion-emblem">✓</span><div><strong id="completionTitle">補給完成</strong><p id="completionHint">全部補給站已接收，軌道繼續運轉</p></div></div>
@@ -943,7 +986,7 @@ body.level-cleared .board{border:0!important}
 </div>
 <button class="btn" id="restoreConfigBtn" type="button" disabled>↶ 還原上次配置</button><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳彩色圓點，或直接輸入數字。各圓周節奏固定。</div>
 <div class="gamepad-help">手把：A 發射／暫停 · B 方向 · LB/RB 選圓 · 十字鍵微調（↑↓ 為 ±5）· X 預測 · Y 重試 · Start 通關後下一關</div></div></details></aside></main>
-<nav class="mobile-dock" aria-label="手機遊戲工具列"><button class="dock-btn" id="dockSettings" aria-controls="settingsPanel" aria-expanded="false" type="button">◯ 軌道設定</button><button class="dock-btn" id="dockLevels" aria-controls="levelsSection" aria-expanded="false" type="button">▤ 選擇關卡</button><button class="dock-btn dock-next" id="nextDockBtn" type="button" hidden>下一關 →</button></nav>
+<nav class="mobile-dock" aria-label="手機遊戲工具列"><button class="dock-btn" id="dockSettings" aria-controls="settingsPanel" aria-expanded="false" type="button">◯ 軌道設定</button><button class="dock-btn" id="dockLevels" aria-controls="levelsSection" aria-expanded="false" type="button">▤ 選擇關卡 <span id="mobileJourneyCount" class="mobile-journey-count" hidden></span></button><button class="dock-btn dock-next" id="nextDockBtn" type="button" hidden>下一關 →</button></nav>
 <footer><span>ORBIT // CODE — 2026 · 靜態網頁，完全在你的裝置運算</span><span><span>不需帳號或 API</span></span></footer>
 </div>
 <script>
@@ -981,9 +1024,12 @@ function pointAt(t,wheels){let x=0,y=0;wheels.forEach((w,i)=>{const a=t*BASE*(i+
 for(const [i,l] of levels.entries()){l.goals=l.times.map(t=>pointAt(t,l.refs));l.captureRadius=l.captureRadius??[10,9,9,8,8,8][i];}
 function clone(ws){return ws.map(w=>({...w}))};function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
 const defaultWheel=()=>({r:60,d:1});
-const state={level:0,unlocked:1,complete:{},best:{},wheels:clone(initial),mode:'ready',t:0,viewWorld:0,cleared:false,done:0,collected:new Set(),hits:0,edits:0,assisted:false,showPrediction:true,showScenery:true,last:0,trail:[],hazardCooldown:0,flash:0,selectedWheel:0,dragging:null,pickupFx:[],dangerFx:[],tutorialStep:-1,enteredAt:0};
+const state={level:0,lastLevel:0,unlocked:1,complete:{},best:{},wheels:clone(initial),mode:'ready',t:0,viewWorld:0,cleared:false,done:0,collected:new Set(),hits:0,edits:0,assisted:false,showPrediction:true,showScenery:true,last:0,trail:[],hazardCooldown:0,flash:0,selectedWheel:0,dragging:null,pickupFx:[],dangerFx:[],tutorialStep:-1,enteredAt:0};
 try{const data=JSON.parse(localStorage.getItem('orbit-code-progress')||'{}');if(Number.isInteger(data.unlocked))state.unlocked=clamp(data.unlocked,1,levels.length);if(data.complete&&typeof data.complete==='object')state.complete=data.complete;
- if(state.unlocked===6&&state.complete[5])state.unlocked=7; // Preserve V0.9 progress and unlock the newly added second planet.
+ if(state.unlocked===6&&state.complete[5])state.unlocked=7; // Preserve V0.9 completed planet migration.
+ // V1.6 resumes a valid unlocked stage while remaining compatible with older saves.
+ if(Number.isInteger(data.lastLevel)&&data.lastLevel>=0&&data.lastLevel<state.unlocked&&data.lastLevel<levels.length)
+   state.lastLevel=data.lastLevel;
  if(data.best&&typeof data.best==='object'&&!Array.isArray(data.best)){
    for(const [k,v] of Object.entries(data.best)){
      if(/^\d+$/.test(k)&&v&&Number.isInteger(v.stars)&&v.stars>=1&&v.stars<=3&&Number.isFinite(v.hits)&&Number.isInteger(v.wheels)){
@@ -1026,7 +1072,7 @@ function restoreCurrentConfig(){
  msg('已恢復上次手動配置','可直接微調半徑或方向；這些設定不會覆蓋你先前的最高星級。');
 }
 function save(){
- try{localStorage.setItem('orbit-code-progress',JSON.stringify({unlocked:state.unlocked,complete:state.complete,best:state.best}))}catch(e){}
+ try{localStorage.setItem('orbit-code-progress',JSON.stringify({unlocked:state.unlocked,complete:state.complete,best:state.best,lastLevel:state.lastLevel}))}catch(e){}
 }
 
 const SOUND_PREF_KEY='orbit-code-sounds-v14';
@@ -1184,28 +1230,61 @@ const stories=[
  "最後的四道訊號，將三顆星球的航路連成完整星圖。"
 ];
 function planetIndex(index){return Math.floor(index/PLANET_SIZE)}
+
+function journeyTotals(){
+ const completed=levels.reduce((count,l,i)=>count+(Boolean(state.complete[i])?1:0),0);
+ const earned=levels.reduce((count,l,i)=>count+(state.best[i]?.stars||0),0);
+ return {completed,earned,available:levels.length,maxStars:levels.length*3};
+}
+function updateJourneyProgress(){
+ const progress=journeyTotals(),bar=$('journeyProgress');
+ $('journeySummary').textContent=`${progress.completed} / ${progress.available} 關`;
+ $('journeyStars').textContent=`★ ${progress.earned} / ${progress.maxStars}`;
+ $('journeyMeterFill').style.width=`${100*progress.completed/progress.available}%`;
+ bar.querySelector('[role=progressbar]').setAttribute('aria-valuenow',String(progress.completed));
+ bar.setAttribute('aria-label',`已通過 ${progress.completed} / ${progress.available} 關，累計 ${progress.earned} / ${progress.maxStars} 顆星`);
+ const mobile=$('mobileJourneyCount');
+ mobile.textContent=`${progress.completed}/${progress.available}`;
+ mobile.hidden=progress.completed===0;
+}
+function firstPlayableInPlanet(wi){
+ const first=wi*PLANET_SIZE,last=Math.min(first+PLANET_SIZE,levels.length);
+ if(first>=state.unlocked)return null;
+ for(let i=first;i<last&&i<state.unlocked;i++){
+  if(!state.complete[i])return i;
+ }
+ return Math.min(last-1,state.unlocked-1);
+}
 function renderPlanets(){
  const bar=$('planetBar');bar.replaceChildren();
  planets.forEach((world,wi)=>{
   const first=wi*PLANET_SIZE,locked=state.unlocked<=first;
   const completed=levels.slice(first,first+PLANET_SIZE).filter((l,k)=>state.complete[first+k]).length;
+  const planetStars=levels.slice(first,first+PLANET_SIZE).reduce((total,l,k)=>total+(state.best[first+k]?.stars||0),0);
   const btn=document.createElement('button');
-  btn.type='button';btn.className='planet-btn planet-'+world.tone+(state.viewWorld===wi?' selected':'')+(locked?' locked':'');
-  btn.title=locked?'完成「'+planets[wi-1].name+'」第 6 關即可解鎖':'前往 '+world.name;
-  btn.innerHTML='<span class="planet-symbol" aria-hidden="true"></span><span class="planet-label"><strong>'+world.name+'</strong><small>'+(locked?'尚未解鎖':completed+' / 6 已完成')+'</small></span><span class="planet-status">'+(locked?'🔒':state.level>=first&&state.level<first+6?'●':'→')+'</span>';
+  btn.type='button';btn.className='planet-btn planet-'+world.tone+(state.viewWorld===wi?' selected':'')+(locked?' locked':'')+(completed===PLANET_SIZE?' planet-complete':'');
+  btn.style.setProperty('--planet-completion',`${Math.round(completed/PLANET_SIZE*100)}%`);
+  btn.setAttribute('aria-label',`${world.name}，已完成 ${completed}/6 關，累積 ${planetStars}/18 星${locked?'，尚未解鎖':''}`);
+  btn.setAttribute('aria-current',String(state.viewWorld===wi?'location':'false'));
+  btn.title=locked?'完成「'+planets[wi-1].name+'」第 6 關即可解鎖':world.name+' · '+completed+'/6 關，★ '+planetStars+'/18';
+  btn.innerHTML='<span class="planet-symbol" aria-hidden="true"></span><span class="planet-label"><strong>'+world.name+'</strong><small>'+(locked?'尚未解鎖':completed+' / 6 · ★ '+planetStars+'/18')+'</small></span><span class="planet-status">'+(locked?'🔒':completed+'/6')+'</span>';
   btn.addEventListener('click',()=>{
    if(locked){
     $('stageNotice').textContent='完成「'+planets[wi-1].name+'」第 6 關，即可前往「'+world.name+'」。';
     $('stageNotice').hidden=false;return;
    }
-   state.viewWorld=wi;renderLevels();
+   const next=firstPlayableInPlanet(wi);
+   if(next!==null){
+    if(planetIndex(state.level)!==wi||state.level!==next)setLevel(next);
+    else{state.viewWorld=wi;renderLevels()}
+   }
   });
   bar.append(btn);
  });
 }
 function setLevel(index){
  if(index<0||index>=state.unlocked)return;
- state.level=index;state.viewWorld=planetIndex(index);
+ state.level=index;state.viewWorld=planetIndex(index);state.lastLevel=index;
  state.selectedWheel=0;state.dragging=null;
  state.enteredAt=performance.now();sceneryKey='';
  state.wheels=clone(levels[index].start);state.assisted=false;
@@ -1218,7 +1297,7 @@ function setLevel(index){
  $('missionStory').hidden=true;$('missionInfoBtn').setAttribute('aria-expanded','false');
  msg(levels[index].desc,levels[index].tip);
  $('stageNotice').hidden=true;
- resetRun();renderWheels();renderLevels();updateRestoreButton();draw();
+ resetRun();renderWheels();renderLevels();updateRestoreButton();save();draw();
 }
 function renderLevels(){
  renderPlanets();
@@ -1244,6 +1323,7 @@ function renderLevels(){
  });
  const completed=levels.slice(first,first+PLANET_SIZE).filter((l,k)=>state.complete[first+k]).length;
  $('levelProgress').textContent=`${planets[worldIndex].name} · 已完成 ${completed} / 6`;
+ updateJourneyProgress();
 }
 
 function updateWheel(index,key,value,countEdit=true){
@@ -1907,7 +1987,7 @@ window.addEventListener('keydown',e=>{
   e.preventDefault();
  }
 });
-new ResizeObserver(resize).observe($('boardArea'));setLevel(0);readSharedOrbit();requestAnimationFrame(tick);
-window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,worlds:planets,PLANET_SIZE,planetIndex,renderPlanets,makeShareUrl,readSharedOrbit,playCue,toggleSound,pollGamepad,announcePlanetUnlocked,hidePlanetAchievement,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'planet-journey',precision:true,gamepad:true,planetUnlock:'nonmodal',sonicFeedback:true,shareableOrbit:true,customConfigs:true,completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',scores:'persistent-best',planets:3,levelsPerPlanet:6}};
+new ResizeObserver(resize).observe($('boardArea'));setLevel(state.lastLevel);readSharedOrbit();requestAnimationFrame(tick);
+window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,worlds:planets,PLANET_SIZE,planetIndex,renderPlanets,makeShareUrl,readSharedOrbit,playCue,toggleSound,pollGamepad,announcePlanetUnlocked,hidePlanetAchievement,journeyTotals,firstPlayableInPlanet,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'star-atlas',precision:true,journeyProgress:true,resumeLastStage:true,gamepad:true,planetUnlock:'nonmodal',sonicFeedback:true,shareableOrbit:true,customConfigs:true,completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',scores:'persistent-best',planets:3,levelsPerPlanet:6}};
 })();
 </script></body></html>
