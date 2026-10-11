@@ -76,8 +76,14 @@ export function similarity(a,b){
  }
  const rawDelta=a.refs.reduce((sum,w,i)=>sum+
    Math.abs(w.r/norm1-b.refs[i].r/norm2),0)/a.refs.length;
- const space=Math.max(0,1-(shape*.7+rawDelta*.3)/.20);
- return round(space,4);
+ const absoluteRadius=a.refs.reduce((sum,w,i)=>sum+Math.abs(w.r-b.refs[i].r),0)/(165*a.refs.length);
+ const timeShift=a.times.reduce((sum,t,i)=>sum+Math.abs(t-b.times[i]),0)/(Math.max(a.max,b.max,8)*a.times.length);
+ const hazardGeometry=a.hazards.length?
+  a.hazards.reduce((sum,h,i)=>sum+Math.hypot(h.x-b.hazards[i].x,h.y-b.hazards[i].y),0)/(460*a.hazards.length):0;
+ // Same wheel shape alone is not a duplicate (one-ring levels all form circles).
+ // Target placement, scale and risk placement must also be similar.
+ const gap=shape*.30+rawDelta*.15+absoluteRadius*.17+timeShift*.26+hazardGeometry*.12;
+ return round(Math.max(0,1-gap/.25),4);
 }
 export function compareToCatalog(candidate,catalog=[],picked=[]){
  const all=[...catalog,...picked],near=all
