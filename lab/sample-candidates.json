@@ -92,8 +92,8 @@
       "review": {
         "id": "orbit-20261011-hard-01",
         "state": "NOT_REVIEWED",
-        "challengeIndex": 91,
-        "roughBand": "expert",
+        "challengeIndex": 72,
+        "roughBand": "hard",
         "startGoalCoverage": 2,
         "startDifferences": 2,
         "directionChanges": 0,
@@ -182,8 +182,8 @@
       "review": {
         "id": "orbit-20261011-hard-02",
         "state": "NOT_REVIEWED",
-        "challengeIndex": 84,
-        "roughBand": "expert",
+        "challengeIndex": 68,
+        "roughBand": "hard",
         "startGoalCoverage": 1,
         "startDifferences": 1,
         "directionChanges": 0,
@@ -272,8 +272,8 @@
       "review": {
         "id": "orbit-20261011-hard-03",
         "state": "NOT_REVIEWED",
-        "challengeIndex": 84,
-        "roughBand": "expert",
+        "challengeIndex": 68,
+        "roughBand": "hard",
         "startGoalCoverage": 2,
         "startDifferences": 1,
         "directionChanges": 0,
