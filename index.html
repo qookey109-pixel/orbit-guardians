@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Endless Orbit V0.8</title>
+<title>ORBIT // CODE — 軌道守護者｜Guided Orbit V0.9</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -350,27 +350,93 @@ body.level-cleared .board-header .metric strong{color:#a5f2dc}
  body.level-cleared .dock-btn{font-size:10px;min-width:0}
  body.level-cleared .dock-next{font-size:11px}
 }
+
+/* V0.9 — clarity, guided discovery, consequences, best scores */
+.command-title>div:first-child{min-width:0}
+.command-title .mission-objective{color:#d2e8f3;font-size:10px;font-weight:500;margin-top:4px;max-width:290px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mission-story{position:absolute;left:16px;top:38px;z-index:2;max-width:min(75%,510px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:#a3c2d3;text-shadow:0 2px 5px #081122}
+.board-header{min-height:63px}
+.completion-panel{gap:9px}
+.completion-stars{letter-spacing:3px;font-size:23px;line-height:1;color:#f9d58e}
+.completion-facts{font-size:11px;line-height:1.5;color:#dcece7}
+.completion-bonus{font-size:10px;color:#a4dfd1;font-weight:650}
+.completion-bonus[hidden]{display:none}
+.completion-actions{display:flex;gap:6px}
+.completion-actions .btn{flex:1;min-width:0;min-height:38px;padding:6px 7px;font-size:11px}
+.completion-actions .completion-next{width:auto;flex:1.3}
+.control-caption{font-size:10px;color:#91a9b9;margin:5px 0 0}
+.panel-footer-label{color:#91a9b9;font-size:10px;border-top:1px solid #324659;padding-top:3px;font-weight:600}
+.level-btn.completed{color:#e0f4e9;border-color:#4f8c84}
+.level-btn.locked{color:#8993a1;opacity:.68;cursor:help}
+.level-btn.locked:hover,.level-btn.locked:focus-visible{opacity:1;background:#1c2736;border-color:#58738b}
+.best-stars{font-size:10px;white-space:nowrap;color:#eecb83;letter-spacing:0}
+.stage-notice[hidden]{display:none}
+.stage-notice{position:absolute;bottom:47px;left:8px;z-index:12;padding:7px 12px;border-radius:7px;background:#19293b;color:#cde4f1;border:1px solid #526d85;font-size:11px;box-shadow:0 6px 18px #0008}
+.tutorial[hidden]{display:none}
+.tutorial{position:absolute;left:16px;top:68px;z-index:7;padding:13px 15px;width:min(285px,calc(100% - 32px));border-radius:10px;background:rgba(5,19,38,.88);border:1px solid #6a9bb0;box-shadow:0 8px 35px #0008;pointer-events:none}
+.tutorial-step{color:#9cd7dc;font-size:10px;letter-spacing:.12em;margin-bottom:7px}
+.tutorial strong{font-size:15px;color:#f3f9fb;font-weight:670}
+.tutorial p{font-size:11px;line-height:1.5;color:#c1d9e5;margin:6px 0 11px}
+.tutorial-skip{pointer-events:auto;border:1px solid #506c81;border-radius:6px;padding:7px 10px;background:#172a3a;color:#c9e4ee;font-size:11px}
+.tutorial-skip:hover{background:#2c4760}
+#startBtn.guide-focus{box-shadow:0 0 0 3px #79d9d49a,0 0 18px #6ad7b965}
+@media(max-width:1190px) and (min-width:861px){
+ .command-title .mission-objective{max-width:175px;font-size:9px}
+ .board-header{min-height:69px}
+ .level-btn .best-stars{font-size:9px}
+}
+@media(max-width:860px){
+ .board-header{min-height:91px}
+ .command-title .mission-objective{font-size:9px;max-width:210px}
+ .mission-story{top:36px;left:11px;font-size:9px;max-width:90%}
+ .tutorial{left:10px;top:68px;padding:10px 12px;width:min(250px,calc(100% - 20px))}
+ body[data-mobile-pane=levels] .stage-notice{position:sticky;bottom:2px;left:auto;margin:8px 0 0;box-shadow:none}
+ body[data-mobile-pane=levels] .level-btn{position:relative}
+ body[data-mobile-pane=levels] .best-stars{position:absolute;right:10px;top:9px}
+ .completion-panel{padding:12px}
+}
+@media(max-width:510px){
+ .command-title .mission-objective{max-width:174px}
+ .mission-story{top:36px}
+ .board-header{min-height:91px}
+}
+@media(max-height:610px) and (max-width:860px){
+ .board-header{min-height:76px}
+ .command-title .mission-objective{margin-top:1px}
+ .mission-story{top:33px}
+ .tutorial{top:49px;padding:8px 10px}
+}
 </style>
 </head>
 <body><div class="shell">
-<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">ENDLESS ORBIT / V0.8</span></div></header>
+<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">GUIDED ORBIT / V0.9</span></div></header>
 <section class="intro"><div><div class="eyebrow">ORBITAL PUZZLE — SIX MISSIONS</div><h1>讓軌道，<span>剛好經過。</span></h1><p>調整最多三個圓的半徑與方向，讓軌跡經過所有訊號，避開危險區。</p></div><div class="intro-flag">最多三個圓 · 拖曳半徑 · 正反轉<br><b>6 個任務 · 無限種路線</b></div></section>
 <main class="layout"><section class="left" aria-label="遊戲畫面與關卡">
-<div class="board"><div class="board-header"><div class="command-title"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div></div><div class="state-chip" id="stateChip">準備開始</div></div><div class="metrics"><div class="metric"><span>補給進度</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞</span><strong id="hazardMetric">0</strong></div></div><div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn">↻ 重設試跑</button><button class="btn active" id="previewBtn" aria-pressed="true">⌁ 預測路線</button></div></div>
+<div class="board"><div class="board-header"><div class="command-title"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div><div class="mission-objective" id="missionObjective">目標：收集 2 座補給站 · 碰撞不會失敗</div></div><div class="state-chip" id="stateChip">準備開始</div></div><div class="metrics"><div class="metric"><span>補給進度</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞</span><strong id="hazardMetric">0</strong></div></div><div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn">↻ 重設試跑</button><button class="btn active" id="previewBtn" aria-pressed="true">⌁ 預測路線</button></div></div>
 <div class="board-canvas" id="boardArea"><canvas id="gameCanvas" aria-label="拖曳圓周上的彩色控制點可以調整半徑；旋轉圓組合和關卡目標軌跡可視化"></canvas><div class="live-readout"><span class="light off" id="liveLight"></span><span id="liveLabel">參數編輯中</span></div><div class="radius-readout" id="radiusReadout" aria-live="polite">圓 01　半徑 90</div><div class="space-caption"><b>ERIS COLONY / SECTOR 07</b><span>REMOTE FLIGHT TELEMETRY</span></div><div class="hud-corners"></div><div class="board-overtext">軌道末端收集訊號 · 不限順序</div><div class="canvas-hint" id="canvasHint">拖曳彩色圓點改變半徑</div>
+<div class="mission-story" id="missionStory">殖民地發來第一道補給訊號，讓圓形軌道連起遠方。</div>
+<div class="tutorial" id="tutorial" hidden aria-live="polite">
+ <div class="tutorial-step" id="tutorialStep">01 / 03</div>
+ <strong id="tutorialTitle">先找到補給站</strong>
+ <p id="tutorialBody">讓飛船經過發光的補給站。</p>
+ <button class="tutorial-skip" id="tutorialSkip" type="button">跳過引導 · 不再顯示</button>
+</div>
 
 </div>
 
 </div>
 
 <div class="game-message" aria-live="polite"><div class="message-icon">✳</div><div><b id="missionTitle">任務：收集物資訊號</b><p id="missionTip">調整第一個圓的半徑。預測線會即時顯示運行路線。</p></div></div>
-<div class="levels-section" id="levelsSection"><div class="levels-head"><h2>任務選擇</h2><span id="levelProgress">已解鎖 1 / 6</span></div><div class="level-list" id="levelList"></div></div></section>
+<div class="levels-section" id="levelsSection"><div class="levels-head"><h2>任務選擇</h2><span id="levelProgress">已解鎖 1 / 6</span></div><div class="level-list" id="levelList"></div><div class="stage-notice" id="stageNotice" hidden role="status"></div></div></section>
 <aside class="panel" id="settingsPanel" aria-label="軌道控制台">
 <div class="completion-panel" id="completionPanel" hidden aria-live="polite">
  <div class="completion-heading"><span class="completion-emblem">✓</span><div><strong id="completionTitle">補給完成</strong><p id="completionHint">全部補給站已接收，軌道繼續運轉</p></div></div>
- <button class="btn primary completion-next" id="nextSideBtn" type="button">下一關 →</button>
+ <div class="completion-stars" id="completionStars" aria-label="通關星級">★★★</div>
+ <div class="completion-facts" id="completionFacts">1 個圓 · 碰撞 0 次</div>
+ <div class="completion-bonus" id="completionBonus" hidden>✦ 單環達人</div>
+ <div class="completion-actions"><button class="btn primary completion-next" id="nextSideBtn" type="button">下一關 →</button><button class="btn completion-retry" id="retrySideBtn" type="button">再試一次</button></div>
 </div>
-<div class="panel-pad"><h2>軌道控制台 <small>／即時生效</small></h2><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><p class="mini-notice">最多使用 3 個圓。圓 1、2、3 固定以 1×、2×、3× 節奏旋轉；你只要控制半徑及方向。</p><div class="wheels-header"><span>每個圓的設定</span><small>半徑 · 順時針 / 逆時針</small></div><div id="wheelControls" class="wheels"></div></div><div class="panel-footer"><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">✦ 背景：經典宇宙</button><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳畫面中的彩色圓點即可調整半徑，也可在此輸入數字。每層圓周會自動使用固定旋轉節奏。</div></div></aside></main>
+<div class="panel-pad"><h2>軌道控制台 <small>／即時生效</small></h2><p class="control-caption">核心設定：圓數、半徑及旋轉方向</p><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><p class="mini-notice">最多使用 3 個圓。圓 1、2、3 固定以 1×、2×、3× 節奏旋轉；你只要控制半徑及方向。</p><div class="wheels-header"><span>每個圓的設定</span><small>半徑 · 順時針 / 逆時針</small></div><div id="wheelControls" class="wheels"></div></div><div class="panel-footer"><div class="panel-footer-label">實驗與外觀</div><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">✦ 背景：經典宇宙</button><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳畫面中的彩色圓點即可調整半徑，也可在此輸入數字。每層圓周會自動使用固定旋轉節奏。</div></div></aside></main>
 <nav class="mobile-dock" aria-label="手機遊戲工具列"><button class="dock-btn" id="dockSettings" aria-controls="settingsPanel" aria-expanded="false" type="button">◯ 軌道設定</button><button class="dock-btn" id="dockLevels" aria-controls="levelsSection" aria-expanded="false" type="button">▤ 選擇關卡</button><button class="dock-btn dock-next" id="nextDockBtn" type="button" hidden>下一關 →</button></nav>
 <footer><span>ORBIT // CODE — 2026 · 靜態網頁，完全在你的裝置運算</span><span><span>不需帳號或 API</span></span></footer>
 </div>
@@ -392,10 +458,20 @@ function pointAt(t,wheels){let x=0,y=0;wheels.forEach((w,i)=>{const a=t*BASE*(i+
 for(const l of levels){l.goals=l.times.map(t=>pointAt(t,l.refs));l.captureRadius=[10,9,9,8,8,8][levels.indexOf(l)];}
 function clone(ws){return ws.map(w=>({...w}))};function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
 const defaultWheel=()=>({r:60,d:1});
-const state={level:0,unlocked:1,complete:{},wheels:clone(initial),mode:'ready',t:0,cleared:false,done:0,collected:new Set(),hits:0,edits:0,assisted:false,showPrediction:true,showScenery:true,last:0,trail:[],hazardCooldown:0,flash:0,selectedWheel:0,dragging:null};
-try{const data=JSON.parse(localStorage.getItem('orbit-code-progress')||'{}');if(Number.isInteger(data.unlocked))state.unlocked=clamp(data.unlocked,1,levels.length);if(data.complete&&typeof data.complete==='object')state.complete=data.complete}catch(e){}
+const state={level:0,unlocked:1,complete:{},best:{},wheels:clone(initial),mode:'ready',t:0,cleared:false,done:0,collected:new Set(),hits:0,edits:0,assisted:false,showPrediction:true,showScenery:true,last:0,trail:[],hazardCooldown:0,flash:0,selectedWheel:0,dragging:null,pickupFx:[],tutorialStep:-1,enteredAt:0};
+try{const data=JSON.parse(localStorage.getItem('orbit-code-progress')||'{}');if(Number.isInteger(data.unlocked))state.unlocked=clamp(data.unlocked,1,levels.length);if(data.complete&&typeof data.complete==='object')state.complete=data.complete;
+ if(data.best&&typeof data.best==='object'&&!Array.isArray(data.best)){
+   for(const [k,v] of Object.entries(data.best)){
+     if(/^\d+$/.test(k)&&v&&Number.isInteger(v.stars)&&v.stars>=1&&v.stars<=3&&Number.isFinite(v.hits)&&Number.isInteger(v.wheels)){
+       state.best[k]={stars:v.stars,hits:Math.max(0,v.hits),wheels:clamp(v.wheels,1,3),single:!!v.single};
+     }
+   }
+ }
+}catch(e){}
 const canvas=$('gameCanvas'),ctx=canvas.getContext('2d');let W=0,H=0,DPR=1,worldScale=1,OX=0,OY=0;
-function save(){try{localStorage.setItem('orbit-code-progress',JSON.stringify({unlocked:state.unlocked,complete:state.complete}))}catch(e){}}
+function save(){
+ try{localStorage.setItem('orbit-code-progress',JSON.stringify({unlocked:state.unlocked,complete:state.complete,best:state.best}))}catch(e){}
+}
 function msg(title,body){$('missionTitle').textContent=title;$('missionTip').textContent=body}
 function setMode(mode){
  state.mode=mode;
@@ -410,14 +486,54 @@ function setMode(mode){
 function resetRun(){
  state.t=0;state.cleared=false;state.done=0;state.collected=new Set();
  state.hits=0;state.edits=0;state.hazardCooldown=0;state.trail=[];
- state.flash=0;state.last=0;
+ state.flash=0;state.last=0;state.pickupFx=[];
  $('completionPanel').hidden=true;
  $('nextDockBtn').hidden=true;
  document.body.classList.remove('level-cleared');
  setMode('ready');syncHUD();
 }
-function setLevel(index){if(index<0||index>=state.unlocked)return;state.level=index;state.selectedWheel=0;state.dragging=null;sceneryKey='';state.wheels=clone(levels[index].start);state.assisted=false;$('levelTag').textContent=`MISSION ${String(index+1).padStart(2,'0')} / ${String(levels.length).padStart(2,'0')}`;$('levelName').textContent=levels[index].name;msg(levels[index].desc,levels[index].tip);resetRun();renderWheels();renderLevels();draw()}
-function renderLevels(){const container=$('levelList');container.replaceChildren();levels.forEach((l,i)=>{const b=document.createElement('button');b.type='button';b.className='level-btn'+(i===state.level?' selected':'');b.disabled=i>=state.unlocked;b.setAttribute('aria-label',i>=state.unlocked?`第 ${i+1} 關，尚未解鎖`:`選擇第 ${i+1} 關：${l.name}`);b.innerHTML=`<span class="tiny">${i>=state.unlocked?'🔒':'LV '+String(i+1).padStart(2,'0')} ${state.complete[i]?' <span class="check">✓</span>':''}</span><b>${l.name}</b>`;b.addEventListener('click',()=>{setLevel(i);if(mobilePane){mobilePane='';syncMobilePanels()}});container.append(b)});$('levelProgress').textContent=`已解鎖 ${state.unlocked} / ${levels.length}`}
+const stories=[
+ '殖民地收到第一道補給訊號。先用單一圓尋找路徑。',
+ '訊號來自內外雙環，這次要同時照顧兩段距離。',
+ '方向能改變整條航線，試著觀察正轉與逆轉的差別。',
+ '三重圓周合成新的航道，讓每個補給站都連起來。',
+ '禁區開始干擾航線。紅色預測線會提示風險。',
+ '最後的多重訊號正在等待，一次整合你學過的軌道技巧。'
+];
+function setLevel(index){
+ if(index<0||index>=state.unlocked)return;
+ state.level=index;state.selectedWheel=0;state.dragging=null;
+ state.enteredAt=performance.now();sceneryKey='';
+ state.wheels=clone(levels[index].start);state.assisted=false;
+ $('levelTag').textContent=`MISSION ${String(index+1).padStart(2,'0')} / ${String(levels.length).padStart(2,'0')}`;
+ $('levelName').textContent=levels[index].name;
+ $('missionObjective').textContent=`目標：收集 ${levels[index].goals.length} 座補給站 · 碰撞不會失敗`;
+ $('missionStory').textContent=stories[index];
+ msg(levels[index].desc,levels[index].tip);
+ $('stageNotice').hidden=true;
+ resetRun();renderWheels();renderLevels();draw();
+}
+function renderLevels(){
+ const container=$('levelList');container.replaceChildren();
+ levels.forEach((l,i)=>{
+  const locked=i>=state.unlocked;
+  const b=document.createElement('button');b.type='button';
+  b.className='level-btn'+(i===state.level?' selected':'')+(locked?' locked':'')+(state.complete[i]?' completed':'');
+  b.setAttribute('aria-disabled',String(locked));
+  const lockMessage=i>0?`先完成第 ${i} 關「${levels[i-1].name}」即可解鎖`:'';
+  b.title=locked?lockMessage:`選擇第 ${i+1} 關：${l.name}`;
+  b.setAttribute('aria-label',locked?`第 ${i+1} 關鎖定。${lockMessage}`:`第 ${i+1} 關：${l.name}${state.best[i]?',最佳 '+state.best[i].stars+' 星':''}`);
+  const best=state.best[i];
+  b.innerHTML=`<span class="tiny">${locked?'🔒':'LV '+String(i+1).padStart(2,'0')}</span><b>${l.name}</b>${best?'<span class="best-stars" aria-hidden="true">'+('★'.repeat(best.stars))+'</span>':(state.complete[i]?'<span class="best-stars">✓</span>':'')}`;
+  b.addEventListener('click',()=>{
+   if(locked){$('stageNotice').textContent=lockMessage;$('stageNotice').hidden=false;return;}
+   setLevel(i);
+   if(mobilePane){mobilePane='';syncMobilePanels()}
+  });
+  container.append(b);
+ });
+ $('levelProgress').textContent=`已解鎖 ${state.unlocked} / ${levels.length}`;
+}
 function updateWheel(index,key,value,countEdit=true){const w=state.wheels[index];if(!w||!['r','d'].includes(key))return false;let n=Number(value);if(!Number.isFinite(n))return false;if(key==='r')n=clamp(Math.round(n),0,165);if(key==='d')n=n===-1?-1:1;if(w[key]===n)return false;w[key]=n;if(countEdit&&(state.mode==='running'||state.mode==='paused'))state.edits++;state.trail=[];syncHUD();draw();return true}
 function selectWheel(i){state.selectedWheel=i;document.querySelectorAll('#wheelControls .wheel').forEach((el,n)=>el.classList.toggle('selected',n===i));syncRadiusReadout();draw()}
 function syncRadiusReadout(){$('radiusReadout').textContent=`圓 ${String(state.selectedWheel+1).padStart(2,'0')}　半徑 ${state.wheels[state.selectedWheel]?.r??0}`}
@@ -547,10 +663,27 @@ function drawGoals(){
 }
 function drawPrediction(){
  if(!state.showPrediction)return;
- // One full 8-second orbital cycle. Preview is independent of gameplay duration.
- const pts=[],origin=state.t,cycle=8;
- for(let i=0;i<=420;i++)pts.push(pointAt(origin+cycle*i/420,state.wheels));
- drawLine(pts,'#a5c3d18c',1.2,0,[3,6]);
+ // Preview one full orbital cycle, with red segments where the ship would pass hazards.
+ const level=levels[state.level],n=240,cycle=8,origin=state.t;
+ const pts=[];
+ for(let i=0;i<=n;i++)pts.push(pointAt(origin+cycle*i/n,state.wheels));
+ ctx.lineWidth=1.65;ctx.lineCap='round';ctx.lineJoin='round';
+ ctx.setLineDash([5,5]);
+ let danger=false,previousDanger=null;
+ for(let i=1;i<=n;i++){
+  const a=pts[i-1],b=pts[i];
+  danger=level.hazards.some(h=>segmentDistance(a,b,h)<=h.r+4);
+  if(danger!==previousDanger){if(i>1)ctx.stroke();ctx.beginPath();ctx.moveTo(sx(a.x),sy(a.y));ctx.strokeStyle=danger?'#ff7776de':'#a5dbf7b2';previousDanger=danger;}
+  ctx.lineTo(sx(b.x),sy(b.y));
+ }
+ ctx.stroke();ctx.setLineDash([]);
+ for(let i=38;i<n;i+=40){
+  const a=pts[i],b=pts[i+1],angle=Math.atan2(b.y-a.y,b.x-a.x);
+  const hazard=level.hazards.some(h=>Math.hypot(a.x-h.x,a.y-h.y)<h.r+7);
+  ctx.save();ctx.translate(sx(a.x),sy(a.y));ctx.rotate(angle);
+  ctx.fillStyle=hazard?'#ff8982e6':'#a9dcf6b9';
+  ctx.beginPath();ctx.moveTo(5,0);ctx.lineTo(-3,-3.2);ctx.lineTo(-3,3.2);ctx.closePath();ctx.fill();ctx.restore();
+ }
 }
 function wheelGeometry(){let x=0,y=0;const rings=[];state.wheels.forEach((w,i)=>{const a=state.t*BASE*(i+1)*w.d,px=x,py=y;x+=w.r*Math.cos(a);y+=w.r*Math.sin(a);rings.push({cx:sx(px),cy:sy(py),tx:sx(x),ty:sy(y),r:w.r*worldScale,angle:a})});return rings}
 function drawWheels(){
@@ -562,11 +695,17 @@ function drawWheels(){
   ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(tx,ty);ctx.lineWidth=selected?1.2:1;ctx.strokeStyle=col+'8f';ctx.stroke();
   ctx.beginPath();ctx.arc(cx,cy,2,0,TAU);ctx.fillStyle=col;ctx.fill();
   if(i<rings.length-1){
-   ctx.beginPath();ctx.arc(tx,ty,selected?6:4.5,0,TAU);ctx.fillStyle=col;ctx.fill();
+   ctx.save();ctx.shadowColor=col;ctx.shadowBlur=selected?8:4;
+   ctx.beginPath();ctx.arc(tx,ty,selected?8:6,0,TAU);ctx.strokeStyle=col;ctx.lineWidth=1.3;ctx.stroke();
+   ctx.beginPath();ctx.arc(tx,ty,selected?5:3.8,0,TAU);ctx.fillStyle=col;ctx.fill();ctx.restore();
    ctx.beginPath();ctx.arc(tx,ty,selected?2.8:2,0,TAU);ctx.fillStyle='#101923';ctx.fill();
   }
  });
- if(state.trail.length>1)drawLine(state.trail,'#ded1b4ba',1.8,0);
+ if(state.trail.length>1){
+  const recent=state.trail.slice(-190);
+  drawLine(recent,'#e0c39c7d',2.5,1);
+  drawLine(recent.slice(-85),'#f3e2bdc9',1.3,0);
+ }
  const tip=pointAt(state.t,state.wheels),tx=sx(tip.x),ty=sy(tip.y);
  const back=pointAt(state.t-.05,state.wheels),front=pointAt(state.t+.05,state.wheels);
  const heading=Math.atan2(front.y-back.y,front.x-back.x)+Math.PI/2;
@@ -598,7 +737,31 @@ function drawWheels(){
  ctx.fillStyle='#466c83';ctx.fillRect(-2.5,9,5,3);
  ctx.restore();
 }
-function draw(){if(!W)return;ctx.clearRect(0,0,W,H);bg();drawPrediction();drawGoals();drawWheels();if(state.flash>0){ctx.fillStyle=`rgba(255,113,108,${state.flash*.13})`;ctx.fillRect(0,0,W,H)}}
+function drawGuide(){
+ if(state.tutorialStep!==0||!levels[state.level]?.goals.length)return;
+ const p=levels[state.level].goals[0],x=sx(p.x),y=sy(p.y);
+ const pulse=reducedMotion?0:2.5*Math.sin(performance.now()*.006);
+ ctx.beginPath();ctx.arc(x,y,18+pulse,0,TAU);
+ ctx.strokeStyle='rgba(161,255,225,.84)';ctx.lineWidth=2;ctx.stroke();
+}
+function drawPickupFx(){
+ const now=performance.now();
+ for(const f of state.pickupFx){
+  const progress=clamp((now-f.at)/800,0,1);
+  const x=sx(f.x),y=sy(f.y),a=1-progress;
+  ctx.save();ctx.globalAlpha=a;
+  ctx.beginPath();ctx.arc(x,y,5+35*progress,0,TAU);
+  ctx.strokeStyle='#bbffe8';ctx.lineWidth=2*(1-progress*.6);ctx.stroke();
+  ctx.fillStyle='#d1fff5';ctx.font='bold 12px system-ui,sans-serif';
+  ctx.textAlign='center';ctx.fillText('+1',x,y-16-16*progress);
+  ctx.restore();
+ }
+}
+function draw(){
+ if(!W)return;
+ ctx.clearRect(0,0,W,H);bg();drawPrediction();drawGoals();drawPickupFx();drawWheels();drawGuide();
+ if(state.flash>0){ctx.fillStyle=`rgba(255,113,108,${state.flash*.13})`;ctx.fillRect(0,0,W,H)}
+}
 function segmentDistance(a,b,p){const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;const u=l?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1):0;return Math.hypot(a.x+u*dx-p.x,a.y+u*dy-p.y)}
 function collision(a,b){
  if(state.cleared)return;
@@ -607,6 +770,7 @@ function collision(a,b){
   if(!state.collected.has(i)&&segmentDistance(a,b,l.goals[i])<=l.captureRadius){
    state.collected.add(i);
    state.done=state.collected.size;
+   state.pickupFx.push({x:l.goals[i].x,y:l.goals[i].y,at:performance.now()});
    state.flash=0;
    if(state.done===l.goals.length){finish(true);return}
   }
@@ -630,24 +794,34 @@ function goNextLevel(){
 }
 function finish(win){
  if(!win||state.mode!=='running'||state.cleared)return;
- const idx=state.level,l=levels[idx];
- state.cleared=true;
+ const idx=state.level,l=levels[idx];state.cleared=true;
  state.complete[idx]=true;
  state.unlocked=Math.max(state.unlocked,Math.min(idx+2,levels.length));
+ // Non-timed rating: no collisions earns 3 stars; 1 collision earns 2.
+ // Assisted solutions may earn up to 2 stars.
+ const stars=Math.min(state.assisted?2:3,state.hits===0?3:state.hits===1?2:1);
+ const snapshot={stars,hits:state.hits,wheels:state.wheels.length,single:state.wheels.length===1};
+ const best=state.best[idx];
+ if(!best||stars>best.stars||(stars===best.stars&&snapshot.hits<best.hits)||
+     (stars===best.stars&&snapshot.hits===best.hits&&snapshot.wheels<best.wheels))state.best[idx]=snapshot;
  save();renderLevels();
  const last=idx===levels.length-1;
- $('completionTitle').textContent=last?'所有任務完成':'補給已全部送達';
- $('completionHint').textContent=last?'六關已完成，宇宙航道持續運行':`成功接收 ${l.goals.length} 個補給站，飛船繼續運行`;
+ $('completionTitle').textContent=last?'全部任務完成':'補給已全部送達';
+ $('completionHint').textContent=last?'六關已完成，宇宙航道仍在運轉':`已接收 ${l.goals.length} 座補給站 · 航道持續運行`;
+ $('completionStars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);
+ $('completionStars').setAttribute('aria-label',`${stars} / 3 星`);
+ $('completionFacts').textContent=`${state.wheels.length} 個圓 · 碰撞 ${state.hits} 次${state.assisted?' · 使用示範參數':''}`;
+ $('completionBonus').hidden=state.wheels.length!==1;
  $('completionPanel').hidden=false;
  $('nextSideBtn').textContent=last?'↻ 再次挑戰':'下一關 →';
  $('nextDockBtn').textContent=last?'↻ 再玩一次':'下一關 →';
  $('nextDockBtn').hidden=false;
  document.body.classList.add('level-cleared');
  msg(last?'全部任務完成':'挑戰成功：'+l.name,'收集完成！飛船仍在運行，準備好就選擇下一關。');
- setMode('running');
- syncHUD();
+ setMode('running');syncHUD();
 }
 function tick(now){
+ syncTutorial(now);
  if(state.mode==='running'){
   if(state.last){
    const dt=Math.min((now-state.last)/1000,.06),old=state.t;
@@ -663,6 +837,7 @@ function tick(now){
     a=b;
    }
    state.flash=Math.max(0,state.flash-dt*2.4);
+   state.pickupFx=state.pickupFx.filter(f=>now-f.at<800);
    syncHUD();
   }
   state.last=now;
@@ -670,6 +845,7 @@ function tick(now){
  draw();requestAnimationFrame(tick);
 }
 function start(){
+ if(state.tutorialStep>=0)hideTutorial();
  if(state.mode==='running'){setMode('paused');return}
  if(state.mode==='paused'||state.mode==='ready'){
   setMode('running');state.last=0;
@@ -684,7 +860,40 @@ function endRadiusDrag(){if(!state.dragging)return;const drag=state.dragging;sta
 canvas.addEventListener('pointerup',endRadiusDrag);canvas.addEventListener('pointercancel',endRadiusDrag);canvas.addEventListener('lostpointercapture',endRadiusDrag);
 $('sceneBtn').addEventListener('click',()=>{state.showScenery=!state.showScenery;sceneryKey='';$('sceneBtn').classList.toggle('active',state.showScenery);$('sceneBtn').setAttribute('aria-pressed',String(state.showScenery));$('sceneBtn').textContent=state.showScenery?'✦ 背景：經典宇宙':'○ 背景：簡約';draw()});$('startBtn').addEventListener('click',start);$('resetBtn').addEventListener('click',resetRun);$('previewBtn').addEventListener('click',()=>{state.showPrediction=!state.showPrediction;$('previewBtn').classList.toggle('active',state.showPrediction);$('previewBtn').setAttribute('aria-pressed',String(state.showPrediction));$('canvasHint').textContent=state.showPrediction?'拖曳彩色圓點改變半徑':'拖曳圓點改半徑 · 預測已關';draw()});
 $('plusCircle').addEventListener('click',()=>{if(state.wheels.length<MAX_WHEELS){state.wheels.push(defaultWheel());state.selectedWheel=state.wheels.length-1;if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];renderWheels();syncHUD();draw()}});$('minusCircle').addEventListener('click',()=>{if(state.wheels.length>1){state.wheels.pop();state.selectedWheel=Math.min(state.selectedWheel,state.wheels.length-1);if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];renderWheels();syncHUD();draw()}});
-$('referenceBtn').addEventListener('click',()=>{state.wheels=clone(levels[state.level].refs);state.assisted=true;resetRun();renderWheels();msg('已載入示範參數','這組參數能收集所有訊號，不必依照固定順序。按「開始試跑」，觀察各圓如何合成一條成功的路線。')});$('randomBtn').addEventListener('click',()=>{state.wheels=Array.from({length:clamp(state.wheels.length,1,MAX_WHEELS)},()=>({r:Math.round(35+Math.random()*125),d:Math.random()<.5?-1:1}));resetRun();renderWheels();msg('隨機配置已生成','從預測線判斷它會經過哪些目標，再自由修改參數。')});$('nextSideBtn').addEventListener('click',goNextLevel);$('nextDockBtn').addEventListener('click',goNextLevel);
+$('referenceBtn').addEventListener('click',()=>{state.wheels=clone(levels[state.level].refs);state.assisted=true;resetRun();renderWheels();msg('已載入示範參數','這組參數是教學示範，不代表唯一正解；按「開始試跑」觀察合成的航線。')});$('randomBtn').addEventListener('click',()=>{state.wheels=Array.from({length:clamp(state.wheels.length,1,MAX_WHEELS)},()=>({r:Math.round(35+Math.random()*125),d:Math.random()<.5?-1:1}));resetRun();renderWheels();msg('隨機實驗參數（非正解）','這是隨機探索組合，並非官方解。可從預測線觀察後繼續微調。')});$('nextSideBtn').addEventListener('click',goNextLevel);$('nextDockBtn').addEventListener('click',goNextLevel);
+$('retrySideBtn').addEventListener('click',resetRun);
+
+
+const tutorialCopy=[
+ ['01 / 03','找到補給站','讓飛船經過發光的補給站，即可接收補給。'],
+ ['02 / 03','觀察預測航道','拖曳彩色圓點調整半徑；線上的箭頭代表飛行方向。'],
+ ['03 / 03','派出偵察艇','路徑確認後，按「派出太空船」開始。']
+];
+let tutorialStart=0,tutorialDone=false;
+try{tutorialDone=localStorage.getItem('orbit-code-tutorial-v09')==='done'}catch(e){}
+function hideTutorial(remember=true){
+ state.tutorialStep=-1;
+ $('tutorial').hidden=true;
+ $('startBtn').classList.remove('guide-focus');
+ if(remember){tutorialDone=true;try{localStorage.setItem('orbit-code-tutorial-v09','done')}catch(e){}}
+}
+function syncTutorial(now){
+ if(tutorialDone||state.mode!=='ready'||state.level!==0||state.unlocked>1){if(!tutorialDone&&state.unlocked>1)hideTutorial();return;}
+ if(!tutorialStart)tutorialStart=now;
+ const elapsed=now-tutorialStart;
+ if(elapsed>7500){hideTutorial();return;}
+ const step=Math.min(2,Math.floor(elapsed/2500));
+ if(step!==state.tutorialStep){
+   state.tutorialStep=step;
+   const [num,title,body]=tutorialCopy[step];
+   $('tutorialStep').textContent=num;
+   $('tutorialTitle').textContent=title;
+   $('tutorialBody').textContent=body;
+   $('tutorial').hidden=false;
+   $('startBtn').classList.toggle('guide-focus',step===2);
+ }
+}
+$('tutorialSkip').addEventListener('click',()=>hideTutorial());
 
 let mobilePane='';
 const mobileMedia=window.matchMedia('(max-width:860px)');
@@ -705,6 +914,6 @@ syncMobilePanels();
 
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&mobilePane){const prior=mobilePane;mobilePane='';syncMobilePanels();(prior==='settings'?$('dockSettings'):$('dockLevels')).focus();return}if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(document.activeElement?.tagName))return;if(e.code==='Space'){e.preventDefault();start()}else if(e.key.toLowerCase()==='r')resetRun()});
 new ResizeObserver(resize).observe($('boardArea'));setLevel(0);requestAnimationFrame(tick);
-window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'integrated',completion:'nonmodal',timeLimit:false}};
+window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'integrated',completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',scores:'persistent-best'}};
 })();
 </script></body></html>
