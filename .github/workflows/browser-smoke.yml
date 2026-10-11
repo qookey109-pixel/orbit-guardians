@@ -275,10 +275,11 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),false);
           await page.locator('#sceneBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
+          // Planet three starts with two/three wheels; normalize before checking controls.
+          while(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length)>1)await page.locator('#minusCircle').click();
           await page.locator('#plusCircle').click();
           await page.locator('#plusCircle').click();
-          await page.locator('#minusCircle').click();
-          await page.locator('#plusCircle').click();
+          assert.equal(await page.locator('#plusCircle').isDisabled(),true);
           const wheelCount=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length);
           assert.equal(wheelCount,3,'Mobile circle control broken');
           await page.locator('#dockLevels').click();
