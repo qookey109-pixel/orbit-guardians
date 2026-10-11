@@ -519,7 +519,7 @@ function renderLevels(){
   const locked=i>=state.unlocked;
   const b=document.createElement('button');b.type='button';
   b.className='level-btn'+(i===state.level?' selected':'')+(locked?' locked':'')+(state.complete[i]?' completed':'');
-  b.setAttribute('aria-disabled',String(locked));
+  b.dataset.locked=String(locked); // Locked stages remain actionable to explain unlock requirements.
   const lockMessage=i>0?`先完成第 ${i} 關「${levels[i-1].name}」即可解鎖`:'';
   b.title=locked?lockMessage:`選擇第 ${i+1} 關：${l.name}`;
   b.setAttribute('aria-label',locked?`第 ${i+1} 關鎖定。${lockMessage}`:`第 ${i+1} 關：${l.name}${state.best[i]?',最佳 '+state.best[i].stars+' 星':''}`);
