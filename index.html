@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Integrated Command Deck V0.7.3</title>
+<title>ORBIT // CODE — 軌道守護者｜Endless Orbit V0.8</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -325,22 +325,53 @@ input[type=range]{height:14px;margin:0 0 2px}
  .level-btn{min-height:26px}
  .levels-section{min-height:32px;padding-top:3px}
 }
+
+/* V0.8 Endless Orbit — no countdown and no modal completion screen */
+.board-header .metrics{gap:11px}
+.board-header .metric strong{color:#e7d2a0}
+.time-track{display:none}
+.completion-panel[hidden],.dock-next[hidden]{display:none!important}
+.completion-panel{display:flex;flex-direction:column;gap:12px;padding:14px 12px 13px;border-bottom:1px solid #466d78;background:linear-gradient(130deg,rgba(30,76,80,.5),rgba(19,42,61,.65));}
+.completion-heading{display:flex;align-items:flex-start;gap:10px}
+.completion-emblem{display:grid;place-items:center;flex:none;height:26px;width:26px;border-radius:50%;background:#90d7c7;color:#123538;font-size:15px;font-weight:760}
+.completion-heading strong{display:block;font-size:13px;color:#e4fff6;font-weight:680;margin-top:1px}
+.completion-heading p{font-size:11px;line-height:1.5;color:#afd3d4;margin:6px 0 0}
+.completion-next{width:100%;min-height:43px;font-size:13px}
+body.level-cleared .command-title .state-chip{border-color:#89d4bf;color:#b7ebd6}
+body.level-cleared .board{border-color:#4a8f8c}
+body.level-cleared .board-header .metric strong{color:#a5f2dc}
+@media(max-width:860px){
+ body.level-cleared .mobile-dock{grid-template-columns:.9fr .9fr 1.15fr}
+ .dock-next{background:#c8d9a8;border-color:#dfecbe;color:#18312d;font-weight:750}
+ body.level-cleared .command-title .state-chip{display:none}
+}
+@media(max-width:510px){
+ body.level-cleared .mobile-dock{gap:5px}
+ body.level-cleared .dock-btn{font-size:10px;min-width:0}
+ body.level-cleared .dock-next{font-size:11px}
+}
 </style>
 </head>
 <body><div class="shell">
-<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">PIXEL ADVENTURE / V0.7.3</span></div></header>
+<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">ENDLESS ORBIT / V0.8</span></div></header>
 <section class="intro"><div><div class="eyebrow">ORBITAL PUZZLE — SIX MISSIONS</div><h1>讓軌道，<span>剛好經過。</span></h1><p>調整最多三個圓的半徑與方向，讓軌跡經過所有訊號，避開危險區。</p></div><div class="intro-flag">最多三個圓 · 拖曳半徑 · 正反轉<br><b>6 個任務 · 無限種路線</b></div></section>
 <main class="layout"><section class="left" aria-label="遊戲畫面與關卡">
-<div class="board"><div class="board-header"><div class="command-title"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div></div><div class="state-chip" id="stateChip">準備開始</div></div><div class="metrics"><div class="metric"><span>剩餘秒數</span><strong class="lime" id="timerMetric">17.0<small>s</small></strong></div><div class="metric"><span>已收集訊號</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞次數</span><strong id="hazardMetric">0</strong></div><div class="metric"><span>調整參數</span><strong class="pink" id="editMetric">0</strong></div></div><div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn">↻ 重設試跑</button><button class="btn active" id="previewBtn" aria-pressed="true">⌁ 預測路線</button></div></div>
+<div class="board"><div class="board-header"><div class="command-title"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div></div><div class="state-chip" id="stateChip">準備開始</div></div><div class="metrics"><div class="metric"><span>補給進度</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞</span><strong id="hazardMetric">0</strong></div></div><div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn">↻ 重設試跑</button><button class="btn active" id="previewBtn" aria-pressed="true">⌁ 預測路線</button></div></div>
 <div class="board-canvas" id="boardArea"><canvas id="gameCanvas" aria-label="拖曳圓周上的彩色控制點可以調整半徑；旋轉圓組合和關卡目標軌跡可視化"></canvas><div class="live-readout"><span class="light off" id="liveLight"></span><span id="liveLabel">參數編輯中</span></div><div class="radius-readout" id="radiusReadout" aria-live="polite">圓 01　半徑 90</div><div class="space-caption"><b>ERIS COLONY / SECTOR 07</b><span>REMOTE FLIGHT TELEMETRY</span></div><div class="hud-corners"></div><div class="board-overtext">軌道末端收集訊號 · 不限順序</div><div class="canvas-hint" id="canvasHint">拖曳彩色圓點改變半徑</div>
-<div class="overlay" id="resultOverlay" hidden><div class="result" role="dialog" aria-modal="true" aria-labelledby="resultTitle"><div class="result-kicker" id="resultKicker">MISSION COMPLETE</div><h2 id="resultTitle">物資成功送達</h2><div class="result-stars" id="resultStars">✦ ✦ ✦</div><p id="resultBody"></p><div class="result-actions"><button class="btn" id="retryResult">重新挑戰</button><button class="btn primary" id="nextResult">下一關 →</button></div></div></div></div>
-<div class="time-track"><div class="time-fill" id="timeFill"></div></div>
+
+</div>
+
 </div>
 
 <div class="game-message" aria-live="polite"><div class="message-icon">✳</div><div><b id="missionTitle">任務：收集物資訊號</b><p id="missionTip">調整第一個圓的半徑。預測線會即時顯示運行路線。</p></div></div>
 <div class="levels-section" id="levelsSection"><div class="levels-head"><h2>任務選擇</h2><span id="levelProgress">已解鎖 1 / 6</span></div><div class="level-list" id="levelList"></div></div></section>
-<aside class="panel" id="settingsPanel" aria-label="軌道控制台"><div class="panel-pad"><h2>軌道控制台 <small>／即時生效</small></h2><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><p class="mini-notice">最多使用 3 個圓。圓 1、2、3 固定以 1×、2×、3× 節奏旋轉；你只要控制半徑及方向。</p><div class="wheels-header"><span>每個圓的設定</span><small>半徑 · 順時針 / 逆時針</small></div><div id="wheelControls" class="wheels"></div></div><div class="panel-footer"><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">✦ 背景：經典宇宙</button><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳畫面中的彩色圓點即可調整半徑，也可在此輸入數字。每層圓周會自動使用固定旋轉節奏。</div></div></aside></main>
-<nav class="mobile-dock" aria-label="手機遊戲工具列"><button class="dock-btn" id="dockSettings" aria-controls="settingsPanel" aria-expanded="false" type="button">◯ 軌道設定</button><button class="dock-btn" id="dockLevels" aria-controls="levelsSection" aria-expanded="false" type="button">▤ 選擇關卡</button></nav>
+<aside class="panel" id="settingsPanel" aria-label="軌道控制台">
+<div class="completion-panel" id="completionPanel" hidden aria-live="polite">
+ <div class="completion-heading"><span class="completion-emblem">✓</span><div><strong id="completionTitle">補給完成</strong><p id="completionHint">全部補給站已接收，軌道繼續運轉</p></div></div>
+ <button class="btn primary completion-next" id="nextSideBtn" type="button">下一關 →</button>
+</div>
+<div class="panel-pad"><h2>軌道控制台 <small>／即時生效</small></h2><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><p class="mini-notice">最多使用 3 個圓。圓 1、2、3 固定以 1×、2×、3× 節奏旋轉；你只要控制半徑及方向。</p><div class="wheels-header"><span>每個圓的設定</span><small>半徑 · 順時針 / 逆時針</small></div><div id="wheelControls" class="wheels"></div></div><div class="panel-footer"><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">✦ 背景：經典宇宙</button><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳畫面中的彩色圓點即可調整半徑，也可在此輸入數字。每層圓周會自動使用固定旋轉節奏。</div></div></aside></main>
+<nav class="mobile-dock" aria-label="手機遊戲工具列"><button class="dock-btn" id="dockSettings" aria-controls="settingsPanel" aria-expanded="false" type="button">◯ 軌道設定</button><button class="dock-btn" id="dockLevels" aria-controls="levelsSection" aria-expanded="false" type="button">▤ 選擇關卡</button><button class="dock-btn dock-next" id="nextDockBtn" type="button" hidden>下一關 →</button></nav>
 <footer><span>ORBIT // CODE — 2026 · 靜態網頁，完全在你的裝置運算</span><span><span>不需帳號或 API</span></span></footer>
 </div>
 <script>
@@ -354,20 +385,37 @@ const levels=[
  {start:[{r:130,d:1}],name:'內外雙環',desc:'利用兩個不同半徑的圓，在內外距離之間穿梭。',tip:'只有一個圓通常無法同時掃過不同半徑的訊號。多加一個圓看看。',max:25,refs:[{r:130,d:1},{r:68,d:-1}],times:[2.2,6.5,10.7],radius:20,hazards:[]},
  {start:[{r:128,d:1},{r:88,d:1}],name:'方向的秘密',desc:'只用兩個圓，改變旋轉方向就能畫出新的交點。',tip:'每層轉速是固定的，試著切換第二個圓的方向，觀察路線差異。',max:27,refs:[{r:128,d:-1},{r:88,d:1}],times:[2.6,6.2,11.4],radius:19,hazards:[]},
  {start:[{r:112,d:1},{r:78,d:-1}],name:'三重共鳴',desc:'三個圓已是上限，調整半徑與方向，碰到任意四個訊號即可。',tip:'圓的數量、半徑與旋轉方向會共同決定軌跡的形狀。',max:30,refs:[{r:112,d:1},{r:78,d:-1},{r:50,d:1}],times:[3,6,9,12],radius:18,hazards:[]},
- {start:[{r:120,d:1},{r:86,d:1},{r:45,d:1}],name:'紅色禁區',desc:'最多三個圓，收集所有訊號並避開紅色危險區。',tip:'紅色障礙每撞一次就扣 4 秒。留意調整後的預測軌跡。',max:34,refs:[{r:120,d:1},{r:86,d:-1},{r:45,d:1}],times:[3,7.5,13,20],radius:18,hazards:[{x:-200,y:60,r:18},{x:195,y:-75,r:17}]},
+ {start:[{r:120,d:1},{r:86,d:1},{r:45,d:1}],name:'紅色禁區',desc:'最多三個圓，收集所有訊號並避開紅色危險區。',tip:'撞到紅色障礙會累計碰撞次數，但不會中止探索。留意調整後的預測軌跡。',max:34,refs:[{r:120,d:1},{r:86,d:-1},{r:45,d:1}],times:[3,7.5,13,20],radius:18,hazards:[{x:-200,y:60,r:18},{x:195,y:-75,r:17}]},
  {start:[{r:112,d:1},{r:72,d:1},{r:58,d:1}],name:'最終和聲',desc:'只用三個圓，避開三處危險區，碰觸四個物資訊號。',tip:'最後一關不靠加圓數：三層半徑與兩處逆轉的組合才是關鍵。',max:38,refs:[{r:112,d:1},{r:72,d:-1},{r:58,d:-1}],times:[2.4,7.1,12.4,19.3],radius:17,hazards:[{x:-142,y:0,r:18},{x:155,y:95,r:18},{x:0,y:-165,r:16}]}
 ];
 function pointAt(t,wheels){let x=0,y=0;wheels.forEach((w,i)=>{const a=t*BASE*(i+1)*w.d;x+=w.r*Math.cos(a);y+=w.r*Math.sin(a)});return{x,y}}
 for(const l of levels){l.goals=l.times.map(t=>pointAt(t,l.refs));l.captureRadius=[10,9,9,8,8,8][levels.indexOf(l)];}
 function clone(ws){return ws.map(w=>({...w}))};function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
 const defaultWheel=()=>({r:60,d:1});
-const state={level:0,unlocked:1,complete:{},wheels:clone(initial),mode:'ready',t:0,remaining:levels[0].max,done:0,collected:new Set(),hits:0,edits:0,assisted:false,showPrediction:true,showScenery:true,last:0,trail:[],hazardCooldown:0,flash:0,selectedWheel:0,dragging:null};
+const state={level:0,unlocked:1,complete:{},wheels:clone(initial),mode:'ready',t:0,cleared:false,done:0,collected:new Set(),hits:0,edits:0,assisted:false,showPrediction:true,showScenery:true,last:0,trail:[],hazardCooldown:0,flash:0,selectedWheel:0,dragging:null};
 try{const data=JSON.parse(localStorage.getItem('orbit-code-progress')||'{}');if(Number.isInteger(data.unlocked))state.unlocked=clamp(data.unlocked,1,levels.length);if(data.complete&&typeof data.complete==='object')state.complete=data.complete}catch(e){}
 const canvas=$('gameCanvas'),ctx=canvas.getContext('2d');let W=0,H=0,DPR=1,worldScale=1,OX=0,OY=0;
 function save(){try{localStorage.setItem('orbit-code-progress',JSON.stringify({unlocked:state.unlocked,complete:state.complete}))}catch(e){}}
 function msg(title,body){$('missionTitle').textContent=title;$('missionTip').textContent=body}
-function setMode(mode){state.mode=mode;const label={ready:'參數編輯中',running:'訊號運行中',paused:'已暫停',won:'挑戰成功',lost:'時間結束'}[mode];$('liveLabel').textContent=label;$('liveLight').classList.toggle('off',mode!=='running');const chip=$('stateChip');chip.textContent={ready:'等待試跑',running:'LIVE',paused:'已暫停',won:'已完成',lost:'失敗'}[mode];chip.classList.toggle('pink',mode==='lost');$('startBtn').textContent=mode==='running'?'Ⅱ 暫停運轉':mode==='paused'?'▶ 繼續試跑':mode==='won'?'▶ 再玩一次':mode==='lost'?'▶ 重新試跑':'▶ 派出太空船'}
-function resetRun(){state.t=0;state.done=0;state.collected=new Set();state.hits=0;state.remaining=levels[state.level].max;state.edits=0;state.hazardCooldown=0;state.trail=[];state.flash=0;state.last=0;$('resultOverlay').hidden=true;setMode('ready');syncHUD()}
+function setMode(mode){
+ state.mode=mode;
+ const label=state.cleared?'補給完成 · 軌道持續運轉':{ready:'參數編輯中',running:'訊號運行中',paused:'已暫停'}[mode];
+ $('liveLabel').textContent=label;
+ $('liveLight').classList.toggle('off',mode!=='running');
+ const chip=$('stateChip');
+ chip.textContent=state.cleared?'✓ 補給完成':{ready:'等待試跑',running:'LIVE',paused:'已暫停'}[mode];
+ chip.classList.remove('pink');
+ $('startBtn').textContent=mode==='running'?'Ⅱ 暫停運轉':mode==='paused'?'▶ 繼續運轉':'▶ 派出太空船';
+}
+function resetRun(){
+ state.t=0;state.cleared=false;state.done=0;state.collected=new Set();
+ state.hits=0;state.edits=0;state.hazardCooldown=0;state.trail=[];
+ state.flash=0;state.last=0;
+ $('completionPanel').hidden=true;
+ $('nextDockBtn').hidden=true;
+ document.body.classList.remove('level-cleared');
+ setMode('ready');syncHUD();
+}
 function setLevel(index){if(index<0||index>=state.unlocked)return;state.level=index;state.selectedWheel=0;state.dragging=null;sceneryKey='';state.wheels=clone(levels[index].start);state.assisted=false;$('levelTag').textContent=`MISSION ${String(index+1).padStart(2,'0')} / ${String(levels.length).padStart(2,'0')}`;$('levelName').textContent=levels[index].name;msg(levels[index].desc,levels[index].tip);resetRun();renderWheels();renderLevels();draw()}
 function renderLevels(){const container=$('levelList');container.replaceChildren();levels.forEach((l,i)=>{const b=document.createElement('button');b.type='button';b.className='level-btn'+(i===state.level?' selected':'');b.disabled=i>=state.unlocked;b.setAttribute('aria-label',i>=state.unlocked?`第 ${i+1} 關，尚未解鎖`:`選擇第 ${i+1} 關：${l.name}`);b.innerHTML=`<span class="tiny">${i>=state.unlocked?'🔒':'LV '+String(i+1).padStart(2,'0')} ${state.complete[i]?' <span class="check">✓</span>':''}</span><b>${l.name}</b>`;b.addEventListener('click',()=>{setLevel(i);if(mobilePane){mobilePane='';syncMobilePanels()}});container.append(b)});$('levelProgress').textContent=`已解鎖 ${state.unlocked} / ${levels.length}`}
 function updateWheel(index,key,value,countEdit=true){const w=state.wheels[index];if(!w||!['r','d'].includes(key))return false;let n=Number(value);if(!Number.isFinite(n))return false;if(key==='r')n=clamp(Math.round(n),0,165);if(key==='d')n=n===-1?-1:1;if(w[key]===n)return false;w[key]=n;if(countEdit&&(state.mode==='running'||state.mode==='paused'))state.edits++;state.trail=[];syncHUD();draw();return true}
@@ -376,7 +424,11 @@ function syncRadiusReadout(){$('radiusReadout').textContent=`圓 ${String(state.
 function syncRadiusUI(i){const r=state.wheels[i]?.r;if(r===undefined)return;const range=document.getElementById(`w${i}-r`);if(range)range.value=r;const num=document.querySelector(`[data-radius-number="${i}"]`);if(num)num.value=r;syncRadiusReadout()}
 function controlPair({text,key,min,max,step,val,w,i}){const parent=document.createElement('div');const line=document.createElement('div');line.className='ctrl-row';const label=document.createElement('label');label.textContent=text;label.htmlFor=`w${i}-${key}`;const num=document.createElement('input');num.type='number';num.className='num';if(key==='r')num.dataset.radiusNumber=i;num.min=min;num.max=max;num.step=step;num.value=val;num.setAttribute('aria-label',`第 ${i+1} 個圓的${text}`);const range=document.createElement('input');range.type='range';range.id=`w${i}-${key}`;range.min=min;range.max=max;range.step=step;range.value=val;range.style.setProperty('--wheel',COLORS[i]);range.setAttribute('aria-label',`第 ${i+1} 個圓的${text}滑桿`);range.addEventListener('input',()=>{selectWheel(i);num.value=range.value;updateWheel(i,key,range.value);syncRadiusReadout()});num.addEventListener('change',()=>{const n=clamp(Number(num.value)||min,min,max);num.value=n;range.value=n;selectWheel(i);updateWheel(i,key,n);syncRadiusReadout()});line.append(label,num);parent.append(line,range);return parent}
 function renderWheels(){const pane=$('wheelControls');pane.replaceChildren();state.selectedWheel=clamp(state.selectedWheel,0,state.wheels.length-1);$('wheelNumber').textContent=state.wheels.length;$('minusCircle').disabled=state.wheels.length<=1;$('plusCircle').disabled=state.wheels.length>=MAX_WHEELS;state.wheels.forEach((w,i)=>{const el=document.createElement('section');el.className='wheel'+(i===state.selectedWheel?' selected':'');el.style.setProperty('--wheel',COLORS[i]);const head=document.createElement('div');head.className='wheel-title';head.innerHTML=`<span><span class="wheel-swatch"></span>圓 ${String(i+1).padStart(2,'0')}</span><small>固定 ${i+1}× 節奏</small>`;head.addEventListener('click',()=>selectWheel(i));const form=document.createElement('div');form.className='wheel-details';form.append(controlPair({text:'半徑',key:'r',min:0,max:165,step:1,val:w.r,w,i}));const dirLabel=document.createElement('div');dirLabel.className='ctrl-row';dirLabel.textContent='旋轉方向';form.append(dirLabel);const dirs=document.createElement('div');dirs.className='dir-switch';const d1=document.createElement('button'),d2=document.createElement('button');d1.className=d2.className='dir';d1.type=d2.type='button';d1.textContent='↻ 順時針';d2.textContent='↺ 逆時針';const sync=()=>{d1.classList.toggle('on',w.d===1);d2.classList.toggle('on',w.d===-1);d1.setAttribute('aria-pressed',String(w.d===1));d2.setAttribute('aria-pressed',String(w.d===-1))};d1.addEventListener('click',()=>{selectWheel(i);updateWheel(i,'d',1);sync()});d2.addEventListener('click',()=>{selectWheel(i);updateWheel(i,'d',-1);sync()});sync();dirs.append(d1,d2);form.append(dirs);el.append(head,form);pane.append(el)});syncRadiusReadout()}
-function syncHUD(){const l=levels[state.level];$('timerMetric').innerHTML=`${state.remaining.toFixed(1)}<small>s</small>`;$('goalMetric').textContent=`${state.done} / ${l.goals.length}`;$('hazardMetric').textContent=state.hits;$('editMetric').textContent=state.edits;$('timeFill').style.width=`${clamp(state.remaining/l.max*100,0,100)}%`;const warning=state.remaining<5;$('timeFill').style.background=warning?'var(--red)':'var(--lime)';$('timerMetric').style.color=warning?'var(--red)':'var(--lime)'}
+function syncHUD(){
+ const l=levels[state.level];
+ $('goalMetric').textContent=`${state.done} / ${l.goals.length}`;
+ $('hazardMetric').textContent=state.hits;
+}
 function resize(){const box=$('boardArea').getBoundingClientRect();W=box.width;H=box.height;DPR=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);worldScale=Math.min((W-28)/610,(H-32)/530);OX=W/2;OY=H/2;sceneryKey="";draw()}
 function sx(x){return OX+x*worldScale}function sy(y){return OY+y*worldScale}function drawLine(points,color,width=1,blur=0,dash=[]){if(points.length<2)return;ctx.beginPath();ctx.moveTo(sx(points[0].x),sy(points[0].y));for(let i=1;i<points.length;i++)ctx.lineTo(sx(points[i].x),sy(points[i].y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin='round';ctx.lineCap='round';ctx.setLineDash(dash);ctx.shadowColor=color;ctx.shadowBlur=blur;ctx.stroke();ctx.shadowBlur=0;ctx.setLineDash([])}
 const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -495,9 +547,9 @@ function drawGoals(){
 }
 function drawPrediction(){
  if(!state.showPrediction)return;
- const pts=[],origin=state.t,max=levels[state.level].max;
- const secs=Math.min(max,Math.max(8,state.remaining));
- for(let i=0;i<=420;i++)pts.push(pointAt(origin+secs*i/420,state.wheels));
+ // One full 8-second orbital cycle. Preview is independent of gameplay duration.
+ const pts=[],origin=state.t,cycle=8;
+ for(let i=0;i<=420;i++)pts.push(pointAt(origin+cycle*i/420,state.wheels));
  drawLine(pts,'#a5c3d18c',1.2,0,[3,6]);
 }
 function wheelGeometry(){let x=0,y=0;const rings=[];state.wheels.forEach((w,i)=>{const a=state.t*BASE*(i+1)*w.d,px=x,py=y;x+=w.r*Math.cos(a);y+=w.r*Math.sin(a);rings.push({cx:sx(px),cy:sy(py),tx:sx(x),ty:sy(y),r:w.r*worldScale,angle:a})});return rings}
@@ -548,19 +600,91 @@ function drawWheels(){
 }
 function draw(){if(!W)return;ctx.clearRect(0,0,W,H);bg();drawPrediction();drawGoals();drawWheels();if(state.flash>0){ctx.fillStyle=`rgba(255,113,108,${state.flash*.13})`;ctx.fillRect(0,0,W,H)}}
 function segmentDistance(a,b,p){const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;const u=l?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1):0;return Math.hypot(a.x+u*dx-p.x,a.y+u*dy-p.y)}
-function collision(a,b){const l=levels[state.level];for(let i=0;i<l.goals.length;i++){if(!state.collected.has(i)&&segmentDistance(a,b,l.goals[i])<=l.captureRadius){state.collected.add(i);state.done=state.collected.size;state.flash=0;if(state.done===l.goals.length){finish(true);return}}}if(state.hazardCooldown<=0){for(const h of l.hazards){if(segmentDistance(a,b,h)<=h.r+4){state.hits++;state.remaining=Math.max(0,state.remaining-4);state.hazardCooldown=.9;state.flash=1;msg('注意：碰到紅色禁區！','扣除 4 秒。調整半徑或反轉方向，讓下一輪避開障礙。');break}}}}
-function finish(win){if(state.mode!=='running')return;setMode(win?'won':'lost');const idx=state.level,l=levels[idx];const overlay=$('resultOverlay');overlay.hidden=false;$('resultKicker').textContent=win?'MISSION COMPLETE':'SIGNAL LOST';$('resultTitle').textContent=win?'物資成功送達':'航道任務未完成';if(win){state.complete[idx]=true;state.unlocked=Math.max(state.unlocked,Math.min(idx+2,levels.length));save();renderLevels();const points=Math.max(100,Math.round(800+state.remaining*18-state.hits*95-Math.min(state.edits,20)*10-(state.assisted?150:0)));$('resultStars').textContent=state.hits===0&&state.edits===0&&!state.assisted?'✦ ✦ ✦':state.hits<=1?'✦ ✦':'✦';$('resultBody').textContent=`不分順序收齊 ${l.goals.length} 個訊號，剩餘 ${state.remaining.toFixed(1)} 秒。得分 ${points}。${state.assisted?'本次使用了示範參數。':'艾瑞斯殖民地已收到物資！'}`;$('nextResult').hidden=idx===levels.length-1;$('nextResult').textContent='下一關 →';msg('挑戰成功：'+l.name,'下一關已解鎖，你可以挑戰更複雜的傅立葉路線。')}else{$('resultStars').textContent='✦';$('resultBody').textContent=`已收集 ${state.done} / ${l.goals.length} 個訊號。試著調整圓周設定，讓光點更快到達目標。`;$('nextResult').hidden=true;msg('時間結束，試試另一種配置',l.tip)}syncHUD()}
-function tick(now){if(state.mode==='running'){if(state.last){const dt=Math.min((now-state.last)/1000,.06),old=state.t;state.t+=dt;state.remaining-=dt;state.hazardCooldown=Math.max(0,state.hazardCooldown-dt);const steps=Math.max(1,Math.ceil(dt/.01));let a=pointAt(old,state.wheels);for(let j=1;j<=steps;j++){const tt=old+(dt*j/steps),b=pointAt(tt,state.wheels);state.trail.push(b);if(state.trail.length>2000)state.trail.shift();collision(a,b);a=b;if(state.mode!=='running')break}if(state.mode==='running'&&state.remaining<=0){state.remaining=0;finish(false)}state.flash=Math.max(0,state.flash-dt*2.4);syncHUD()}state.last=now}else state.last=0;draw();requestAnimationFrame(tick)}
-function start(){if(state.mode==='won'||state.mode==='lost')resetRun();if(state.mode==='running'){setMode('paused');return}if(state.mode==='paused'||state.mode==='ready'){setMode('running');state.last=0;collision(pointAt(state.t,state.wheels),pointAt(state.t,state.wheels))}}
+function collision(a,b){
+ if(state.cleared)return;
+ const l=levels[state.level];
+ for(let i=0;i<l.goals.length;i++){
+  if(!state.collected.has(i)&&segmentDistance(a,b,l.goals[i])<=l.captureRadius){
+   state.collected.add(i);
+   state.done=state.collected.size;
+   state.flash=0;
+   if(state.done===l.goals.length){finish(true);return}
+  }
+ }
+ if(state.hazardCooldown<=0){
+  for(const h of l.hazards){
+   if(segmentDistance(a,b,h)<=h.r+4){
+    state.hits++;
+    state.hazardCooldown=.9;
+    state.flash=1;
+    msg('注意：遇到紅色禁區','碰撞會記錄次數，但沒有時間限制。試著調整半徑或旋轉方向來避開障礙。');
+    break;
+   }
+  }
+ }
+}
+function goNextLevel(){
+ if(!state.cleared)return;
+ if(state.level+1<levels.length)setLevel(state.level+1);
+ else resetRun();
+}
+function finish(win){
+ if(!win||state.mode!=='running'||state.cleared)return;
+ const idx=state.level,l=levels[idx];
+ state.cleared=true;
+ state.complete[idx]=true;
+ state.unlocked=Math.max(state.unlocked,Math.min(idx+2,levels.length));
+ save();renderLevels();
+ const last=idx===levels.length-1;
+ $('completionTitle').textContent=last?'所有任務完成':'補給已全部送達';
+ $('completionHint').textContent=last?'六關已完成，宇宙航道持續運行':`成功接收 ${l.goals.length} 個補給站，飛船繼續運行`;
+ $('completionPanel').hidden=false;
+ $('nextSideBtn').textContent=last?'↻ 再次挑戰':'下一關 →';
+ $('nextDockBtn').textContent=last?'↻ 再玩一次':'下一關 →';
+ $('nextDockBtn').hidden=false;
+ document.body.classList.add('level-cleared');
+ msg(last?'全部任務完成':'挑戰成功：'+l.name,'收集完成！飛船仍在運行，準備好就選擇下一關。');
+ setMode('running');
+ syncHUD();
+}
+function tick(now){
+ if(state.mode==='running'){
+  if(state.last){
+   const dt=Math.min((now-state.last)/1000,.06),old=state.t;
+   state.t+=dt;
+   state.hazardCooldown=Math.max(0,state.hazardCooldown-dt);
+   const steps=Math.max(1,Math.ceil(dt/.01));
+   let a=pointAt(old,state.wheels);
+   for(let j=1;j<=steps;j++){
+    const tt=old+dt*j/steps,b=pointAt(tt,state.wheels);
+    state.trail.push(b);
+    if(state.trail.length>2000)state.trail.shift();
+    collision(a,b);
+    a=b;
+   }
+   state.flash=Math.max(0,state.flash-dt*2.4);
+   syncHUD();
+  }
+  state.last=now;
+ }else state.last=0;
+ draw();requestAnimationFrame(tick);
+}
+function start(){
+ if(state.mode==='running'){setMode('paused');return}
+ if(state.mode==='paused'||state.mode==='ready'){
+  setMode('running');state.last=0;
+  if(!state.cleared)collision(pointAt(state.t,state.wheels),pointAt(state.t,state.wheels));
+ }
+}
 // Direct manipulation of each epicycle radius in the canvas; direction and frequency remain fixed during drag.
 function pointerXY(ev){const b=canvas.getBoundingClientRect();return{x:(ev.clientX-b.left)*(W/b.width),y:(ev.clientY-b.top)*(H/b.height)}}
-canvas.addEventListener('pointerdown',ev=>{if(state.mode==='won'||state.mode==='lost')return;const p=pointerXY(ev),rings=wheelGeometry();let best=-1,score=Infinity;for(let i=rings.length-1;i>=0;i--){const r=rings[i],tipDist=Math.hypot(p.x-r.tx,p.y-r.ty);const edgeDist=Math.abs(Math.hypot(p.x-r.cx,p.y-r.cy)-r.r);const d=tipDist<=24?tipDist:edgeDist<=11&&r.r>8?edgeDist+18:Infinity;if(d<score){score=d;best=i}}if(best<0)return;selectWheel(best);state.dragging={index:best,startR:state.wheels[best].r};canvas.setPointerCapture(ev.pointerId);canvas.classList.add('dragging');ev.preventDefault();});
+canvas.addEventListener('pointerdown',ev=>{const p=pointerXY(ev),rings=wheelGeometry();let best=-1,score=Infinity;for(let i=rings.length-1;i>=0;i--){const r=rings[i],tipDist=Math.hypot(p.x-r.tx,p.y-r.ty);const edgeDist=Math.abs(Math.hypot(p.x-r.cx,p.y-r.cy)-r.r);const d=tipDist<=24?tipDist:edgeDist<=11&&r.r>8?edgeDist+18:Infinity;if(d<score){score=d;best=i}}if(best<0)return;selectWheel(best);state.dragging={index:best,startR:state.wheels[best].r};canvas.setPointerCapture(ev.pointerId);canvas.classList.add('dragging');ev.preventDefault();});
 canvas.addEventListener('pointermove',ev=>{if(!state.dragging)return;const p=pointerXY(ev),ring=wheelGeometry()[state.dragging.index],v=Math.hypot(p.x-ring.cx,p.y-ring.cy)/worldScale;const i=state.dragging.index;updateWheel(i,'r',v,false);syncRadiusUI(i);ev.preventDefault()});
 function endRadiusDrag(){if(!state.dragging)return;const drag=state.dragging;state.dragging=null;canvas.classList.remove('dragging');if(drag.startR!==state.wheels[drag.index].r&&(state.mode==='running'||state.mode==='paused')){state.edits++;syncHUD()}syncRadiusUI(drag.index)}
 canvas.addEventListener('pointerup',endRadiusDrag);canvas.addEventListener('pointercancel',endRadiusDrag);canvas.addEventListener('lostpointercapture',endRadiusDrag);
 $('sceneBtn').addEventListener('click',()=>{state.showScenery=!state.showScenery;sceneryKey='';$('sceneBtn').classList.toggle('active',state.showScenery);$('sceneBtn').setAttribute('aria-pressed',String(state.showScenery));$('sceneBtn').textContent=state.showScenery?'✦ 背景：經典宇宙':'○ 背景：簡約';draw()});$('startBtn').addEventListener('click',start);$('resetBtn').addEventListener('click',resetRun);$('previewBtn').addEventListener('click',()=>{state.showPrediction=!state.showPrediction;$('previewBtn').classList.toggle('active',state.showPrediction);$('previewBtn').setAttribute('aria-pressed',String(state.showPrediction));$('canvasHint').textContent=state.showPrediction?'拖曳彩色圓點改變半徑':'拖曳圓點改半徑 · 預測已關';draw()});
 $('plusCircle').addEventListener('click',()=>{if(state.wheels.length<MAX_WHEELS){state.wheels.push(defaultWheel());state.selectedWheel=state.wheels.length-1;if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];renderWheels();syncHUD();draw()}});$('minusCircle').addEventListener('click',()=>{if(state.wheels.length>1){state.wheels.pop();state.selectedWheel=Math.min(state.selectedWheel,state.wheels.length-1);if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];renderWheels();syncHUD();draw()}});
-$('referenceBtn').addEventListener('click',()=>{state.wheels=clone(levels[state.level].refs);state.assisted=true;resetRun();renderWheels();msg('已載入示範參數','這組參數能收集所有訊號，不必依照固定順序。按「開始試跑」，觀察各圓如何合成一條成功的路線。')});$('randomBtn').addEventListener('click',()=>{state.wheels=Array.from({length:clamp(state.wheels.length,1,MAX_WHEELS)},()=>({r:Math.round(35+Math.random()*125),d:Math.random()<.5?-1:1}));resetRun();renderWheels();msg('隨機配置已生成','從預測線判斷它會經過哪些目標，再自由修改參數。')});$('retryResult').addEventListener('click',resetRun);$('nextResult').addEventListener('click',()=>{if(state.level+1<levels.length)setLevel(state.level+1)});
+$('referenceBtn').addEventListener('click',()=>{state.wheels=clone(levels[state.level].refs);state.assisted=true;resetRun();renderWheels();msg('已載入示範參數','這組參數能收集所有訊號，不必依照固定順序。按「開始試跑」，觀察各圓如何合成一條成功的路線。')});$('randomBtn').addEventListener('click',()=>{state.wheels=Array.from({length:clamp(state.wheels.length,1,MAX_WHEELS)},()=>({r:Math.round(35+Math.random()*125),d:Math.random()<.5?-1:1}));resetRun();renderWheels();msg('隨機配置已生成','從預測線判斷它會經過哪些目標，再自由修改參數。')});$('nextSideBtn').addEventListener('click',goNextLevel);$('nextDockBtn').addEventListener('click',goNextLevel);
 
 let mobilePane='';
 const mobileMedia=window.matchMedia('(max-width:860px)');
@@ -581,6 +705,6 @@ syncMobilePanels();
 
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&mobilePane){const prior=mobilePane;mobilePane='';syncMobilePanels();(prior==='settings'?$('dockSettings'):$('dockLevels')).focus();return}if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(document.activeElement?.tagName))return;if(e.code==='Space'){e.preventDefault();start()}else if(e.key.toLowerCase()==='r')resetRun()});
 new ResizeObserver(resize).observe($('boardArea'));setLevel(0);requestAnimationFrame(tick);
-window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'integrated'}};
+window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'integrated',completion:'nonmodal',timeLimit:false}};
 })();
 </script></body></html>
