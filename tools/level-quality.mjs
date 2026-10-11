@@ -38,10 +38,11 @@ export function qualityMetrics(level){
  const goalSpread=round(minGoalSpacing);
  // Fixed, explainable weights for sorting review workload, not player skill.
  const challengeIndex=Math.min(100,
-  13+(r-1)*16+Math.max(0,goals.length-2)*7+
-  hazards.length*8+directionChanges*5+
-  Math.min(12,startDifferences*5)+Math.min(8,Math.floor(span/30)));
- const roughBand=challengeIndex<35?'easy':challengeIndex<58?'medium':challengeIndex<80?'hard':'expert';
+  12+(r-1)*14+Math.max(0,goals.length-2)*6+
+  hazards.length*5+directionChanges*4+
+  Math.min(9,startDifferences*3)+Math.min(8,Math.floor(span/45)));
+ // These bands are heuristic triage labels, not measured player success rates.
+ const roughBand=challengeIndex<30?'easy':challengeIndex<56?'medium':challengeIndex<86?'hard':'expert';
  const issues=[];
  if(startGoalCoverage===goals.length)issues.push('START_ALREADY_SOLVES');
  if(minGoalSpacing<=level.captureRadius*4)issues.push('TARGETS_TOO_CLOSE');
