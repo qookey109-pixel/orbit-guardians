@@ -343,7 +343,7 @@ jobs:
           await page.locator('#dockSettings').click();
           assert.equal(await page.locator('#settingsPanel').isVisible(),true);
           assert.equal(await page.locator('#dockSettings').getAttribute('aria-expanded'),'true');
-          assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),3);
+          assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length),'Wheel tabs must match the current mission');
           assert.equal(await page.locator('#wheelControls .wheel:visible').count(),1);
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced settings should be folded on mobile');
           await page.locator('#advancedOptions summary').click();
