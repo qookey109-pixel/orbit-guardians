@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Seamless World V1.1.2</title>
+<title>ORBIT // CODE — 軌道守護者｜Console HUD V1.2</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -696,15 +696,110 @@ body.level-cleared .board{border:0!important}
    background:linear-gradient(180deg,rgba(2,9,23,.4),transparent 19%,transparent 67%,rgba(2,9,23,.4))
  }
 }
+
+/* V1.2 Console HUD — visual hierarchy inspired by a console game overlay, never by a webpage dashboard. */
+.mission-story[hidden],.advanced-options:not([open]) .panel-footer,.wheel[hidden]{display:none!important}
+.command-title{gap:6px}
+.command-title .level-name{font-weight:720;letter-spacing:.015em}
+.command-title .level-tag{font-weight:670;letter-spacing:.10em}
+.command-title .mission-objective{font-weight:530;color:#e0ebec;margin-top:5px!important}
+.mission-info-btn{
+  flex:none;align-self:flex-start;width:22px;height:22px;border-radius:50%;
+  border:1px solid #abd4e48a;background:#102c448a;color:#e7f4fa;
+  font:700 11px system-ui,sans-serif;cursor:pointer;margin:2px 0 0;
+}
+.mission-info-btn[aria-expanded=true]{background:#a5cfde;color:#112532}
+.mission-story:not([hidden]){z-index:15!important;max-width:320px;left:clamp(12px,2vw,30px)!important;top:139px!important;
+ padding:11px 13px;background:rgba(6,21,39,.9);border:1px solid #668eab88;border-radius:7px;
+ box-shadow:0 12px 32px #0008;font-size:11px;line-height:1.6;color:#e1f0f9}
+.live-readout{opacity:.74;font-size:9px!important}
+.console-header{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.console-header h2{font-size:14px!important;font-weight:680;margin:0!important;letter-spacing:.03em}
+.console-kicker{font-size:8px;font-weight:720;letter-spacing:.09em;color:#a3d9df;writing-mode:vertical-rl}
+.panel .control-caption{font-size:10px!important;color:#a4bdc8;margin:3px 0 6px}
+.panel .wheels-header{margin:8px 0 6px}
+.wheel-tabs{display:flex;gap:5px;margin:0 0 8px;min-height:36px}
+.wheel-tab{flex:1;min-width:0;min-height:34px;border:1px solid #6f95a45a;background:#0b2439a3;
+ color:#aabfcf;border-radius:6px;font-size:11px;font-weight:680;cursor:pointer}
+.wheel-tab.selected{border:1px solid var(--wheel);background:linear-gradient(180deg,#34627b5c,#102738ac);color:#f3f7ff;
+ box-shadow:inset 0 -2px var(--wheel)}
+.wheel-tab:focus-visible,.mission-info-btn:focus-visible,.advanced-options summary:focus-visible{outline:2px solid #d0edfe;outline-offset:3px}
+.wheels{display:block!important}
+.wheel{padding:1px 0 3px!important;border:0!important;background:none!important}
+.wheel-title{font-weight:640;display:flex;justify-content:space-between;align-items:center;padding:3px 0 7px}
+.wheel-title span,.wheel-title small{color:#d9e9f1}
+.wheel-title .wheel-swatch{width:8px;height:8px}
+.wheel-details{padding:0}
+.panel-pad{padding:13px 12px 6px!important}
+.panel{max-height:calc(100dvh - 220px)!important}
+.advanced-options{flex:none;margin:8px 11px 6px;border-top:1px solid #84adc244}
+.advanced-options summary{list-style:none;display:flex;align-items:center;justify-content:space-between;
+ min-height:37px;cursor:pointer;color:#e0eefa;font-size:11px;font-weight:670;gap:7px}
+.advanced-options summary::-webkit-details-marker{display:none}
+.advanced-options summary:before{content:'＋';font-weight:500;color:#aad5e3;font-size:15px}
+.advanced-options[open] summary:before{content:'−'}
+.advanced-options summary span{font-size:9px;font-weight:420;color:#93b5c5;text-align:right}
+.advanced-options .panel-footer{padding:8px 0 5px!important;margin:0!important;border:0!important;background:none!important}
+.advanced-options .panel-footer-label{display:none}
+@media(min-width:861px){
+ .panel{top:211px!important;width:clamp(210px,17.4vw,254px)!important}
+ .levels-section{top:50px!important;width:min(410px,34vw)!important;gap:0!important}
+ .planet-bar{gap:2px}
+ .planet-btn{height:29px!important;min-height:29px!important;border-bottom-color:#b8d5e83d!important}
+ .planet-btn .planet-symbol{width:14px!important;height:14px!important}
+ .planet-btn .planet-label small{display:none!important}
+ .level-list{gap:0!important}
+ .level-btn{height:22px!important;min-height:22px!important;max-height:22px!important}
+ .level-btn .tiny{font-size:9px}
+ .board-header .actionbar{gap:8px!important}
+ .board-header #resetBtn{order:1;min-width:69px!important}
+ .board-header #startBtn{order:2;min-width:163px!important;font-size:13px!important;font-weight:730}
+ .board-header #previewBtn{order:3;min-width:69px!important}
+ .board-header .actionbar .btn:not(.primary){background:#0a233bb5!important}
+ .board-header .actionbar .btn{border-radius:7px}
+}
+@media(max-width:1060px) and (min-width:861px){
+ .levels-section{top:47px!important;width:min(420px,56vw)!important}
+ .planet-btn .planet-label strong{font-size:10px}
+ .command-title{top:71px!important;max-width:39vw}
+ .panel{top:218px!important}
+ .mission-story:not([hidden]){top:180px!important}
+}
+@media(max-width:860px){
+ .command-title{max-width:55vw}
+ .mission-info-btn{width:20px;height:20px;margin-top:0}
+ .mission-story:not([hidden]){left:10px!important;top:128px!important;max-width:min(280px,75vw)}
+ .panel{max-height:min(55dvh,490px)!important}
+ body[data-mobile-pane=settings] .panel{display:flex!important}
+ .panel-pad{padding:11px 13px 6px!important}
+ .console-kicker{writing-mode:horizontal-tb;font-size:8px}
+ .panel .control-caption{display:none}
+ .wheel-tabs{min-height:37px}
+ .wheel-tab{min-height:36px}
+ .advanced-options{margin:6px 13px}
+ .advanced-options summary{min-height:39px}
+ .board-header #resetBtn{order:1}
+ .board-header #startBtn{order:2}
+ .board-header #previewBtn{order:3}
+ .board-header .actionbar .btn.primary{min-width:130px!important}
+}
+@media(max-width:400px){
+ .board-header .actionbar .btn.primary{min-width:121px!important}
+ .mission-info-btn{width:19px;height:19px;font-size:10px}
+ .command-title .level-name{font-size:13px}
+}
+@media(max-width:350px){
+ .board-header .actionbar .btn.primary{min-width:110px!important}
+}
 </style>
 </head>
 <body><div class="shell">
-<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">SEAMLESS WORLD / V1.1.2</span><button class="hud-toggle" type="button" id="fullscreenBtn" aria-label="切換全螢幕" title="切換全螢幕">⛶</button><button class="hud-toggle" type="button" id="hudControlBtn" aria-controls="settingsPanel" aria-expanded="true" title="顯示／收起軌道設定（H）">⚙ <span>收起控制</span></button></div></header>
+<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">CONSOLE HUD / V1.2</span><button class="hud-toggle" type="button" id="fullscreenBtn" aria-label="切換全螢幕" title="切換全螢幕">⛶</button><button class="hud-toggle" type="button" id="hudControlBtn" aria-controls="settingsPanel" aria-expanded="true" title="顯示／收起軌道設定（H）">⚙ <span>收起控制</span></button></div></header>
 <section class="intro"><div><div class="eyebrow">ORBITAL PUZZLE — 3 PLANETS × 6 MISSIONS</div><h1>讓軌道，<span>剛好經過。</span></h1><p>調整最多三個圓的半徑與方向，讓軌跡經過所有訊號，避開危險區。</p></div><div class="intro-flag">最多三個圓 · 拖曳半徑 · 正反轉<br><b>18 個任務 · 三顆星球</b></div></section>
 <main class="layout"><section class="left" aria-label="遊戲畫面與關卡">
-<div class="board"><div class="board-header"><div class="command-title"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div><div class="mission-objective" id="missionObjective">目標：收集 2 座補給站 · 碰撞不會失敗</div></div><div class="state-chip" id="stateChip">準備開始</div></div><div class="metrics"><div class="metric"><span>補給進度</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞</span><strong id="hazardMetric">0</strong></div></div><div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn">↻ 重設試跑</button><button class="btn active" id="previewBtn" aria-pressed="true">⌁ 預測路線</button></div></div>
+<div class="board"><div class="board-header"><div class="command-title"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div><div class="mission-objective" id="missionObjective">收集 2 座補給站 · 避開禁區</div></div><button class="mission-info-btn" id="missionInfoBtn" type="button" aria-controls="missionStory" aria-expanded="false" title="查看本關簡介">i</button><div class="state-chip" id="stateChip">準備開始</div></div><div class="metrics"><div class="metric"><span>補給進度</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞</span><strong id="hazardMetric">0</strong></div></div><div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn" title="重設試跑（R）">↻ 重試</button><button class="btn active" id="previewBtn" aria-pressed="true" title="顯示／隱藏預測路線">⌁ 路線</button></div></div>
 <div class="board-canvas" id="boardArea"><canvas id="gameCanvas" aria-label="拖曳圓周上的彩色控制點可以調整半徑；旋轉圓組合和關卡目標軌跡可視化"></canvas><div class="live-readout"><span class="light off" id="liveLight"></span><span id="liveLabel">參數編輯中</span></div><div class="radius-readout" id="radiusReadout" aria-live="polite">圓 01　半徑 90</div><div class="space-caption"><b>ERIS COLONY / SECTOR 07</b><span>REMOTE FLIGHT TELEMETRY</span></div><div class="hud-corners"></div><div class="board-overtext">軌道末端收集訊號 · 不限順序</div><div class="canvas-hint" id="canvasHint">拖曳彩色圓點改變半徑</div>
-<div class="mission-story" id="missionStory">殖民地發來第一道補給訊號，讓圓形軌道連起遠方。</div>
+<div class="mission-story" id="missionStory" hidden>殖民地發來第一道補給訊號，讓圓形軌道連起遠方。</div>
 <div class="tutorial" id="tutorial" hidden aria-live="polite">
  <div class="tutorial-step" id="tutorialStep">01 / 03</div>
  <strong id="tutorialTitle">先找到補給站</strong>
@@ -728,7 +823,7 @@ body.level-cleared .board{border:0!important}
  <div class="completion-bonus" id="completionBonus" hidden>✦ 單環達人</div>
  <div class="completion-actions"><button class="btn primary completion-next" id="nextSideBtn" type="button">下一關 →</button><button class="btn completion-retry" id="retrySideBtn" type="button">再試一次</button></div>
 </div>
-<div class="panel-pad"><h2>軌道控制台 <small>／即時生效</small></h2><p class="control-caption">核心設定：圓數、半徑及旋轉方向</p><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><p class="mini-notice">最多使用 3 個圓。圓 1、2、3 固定以 1×、2×、3× 節奏旋轉；你只要控制半徑及方向。</p><div class="wheels-header"><span>每個圓的設定</span><small>半徑 · 順時針 / 逆時針</small></div><div id="wheelControls" class="wheels"></div></div><div class="panel-footer"><div class="panel-footer-label">實驗與外觀</div><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">✦ 背景：經典宇宙</button><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳畫面中的彩色圓點即可調整半徑，也可在此輸入數字。每層圓周會自動使用固定旋轉節奏。</div></div></aside></main>
+<div class="panel-pad"><div class="console-header"><span class="console-kicker">ORBIT CONTROL</span><h2>軌道設定</h2></div><p class="control-caption">選擇圓周並調整航線</p><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><p class="mini-notice">最多使用 3 個圓。圓 1、2、3 固定以 1×、2×、3× 節奏旋轉；你只要控制半徑及方向。</p><div class="wheels-header"><span>調整圓周</span><small>1× / 2× / 3×</small></div><div class="wheel-tabs" id="wheelTabs" role="tablist" aria-label="選擇要調整的圓周"></div><div id="wheelControls" class="wheels"></div></div><details class="advanced-options" id="advancedOptions"><summary>進階選項 <span>背景 / 示範 / 實驗</span></summary><div class="panel-footer"><div class="panel-footer-label">實驗與外觀</div><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">✦ 背景：經典宇宙</button><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳畫面中的彩色圓點即可調整半徑，也可在此輸入數字。每層圓周會自動使用固定旋轉節奏。</div></div></details></aside></main>
 <nav class="mobile-dock" aria-label="手機遊戲工具列"><button class="dock-btn" id="dockSettings" aria-controls="settingsPanel" aria-expanded="false" type="button">◯ 軌道設定</button><button class="dock-btn" id="dockLevels" aria-controls="levelsSection" aria-expanded="false" type="button">▤ 選擇關卡</button><button class="dock-btn dock-next" id="nextDockBtn" type="button" hidden>下一關 →</button></nav>
 <footer><span>ORBIT // CODE — 2026 · 靜態網頁，完全在你的裝置運算</span><span><span>不需帳號或 API</span></span></footer>
 </div>
@@ -852,8 +947,9 @@ function setLevel(index){
  document.body.dataset.planet=world.tone;
  $('levelTag').textContent=`星球 ${state.viewWorld+1} / 3 · MISSION ${String(local+1).padStart(2,'0')} / 06`;
  $('levelName').textContent=`${world.name} · ${levels[index].name}`;
- $('missionObjective').textContent=`目標：收集 ${levels[index].goals.length} 座補給站 · 碰撞不會失敗`;
+ $('missionObjective').textContent=`收集 ${levels[index].goals.length} 座補給站 · 避開紅色禁區`;
  $('missionStory').textContent=stories[index];
+ $('missionStory').hidden=true;$('missionInfoBtn').setAttribute('aria-expanded','false');
  msg(levels[index].desc,levels[index].tip);
  $('stageNotice').hidden=true;
  resetRun();renderWheels();renderLevels();draw();
@@ -885,11 +981,31 @@ function renderLevels(){
 }
 
 function updateWheel(index,key,value,countEdit=true){const w=state.wheels[index];if(!w||!['r','d'].includes(key))return false;let n=Number(value);if(!Number.isFinite(n))return false;if(key==='r')n=clamp(Math.round(n),0,165);if(key==='d')n=n===-1?-1:1;if(w[key]===n)return false;w[key]=n;if(countEdit&&(state.mode==='running'||state.mode==='paused'))state.edits++;state.trail=[];syncHUD();draw();return true}
-function selectWheel(i){state.selectedWheel=i;document.querySelectorAll('#wheelControls .wheel').forEach((el,n)=>el.classList.toggle('selected',n===i));syncRadiusReadout();draw()}
+function selectWheel(i){
+ if(i<0||i>=state.wheels.length)return;
+ state.selectedWheel=i;
+ document.querySelectorAll('#wheelControls .wheel').forEach((el,n)=>{
+  const active=n===i;el.classList.toggle('selected',active);
+  el.hidden=!active;
+ });
+ document.querySelectorAll('#wheelTabs .wheel-tab').forEach((el,n)=>{
+  const active=n===i;el.classList.toggle('selected',active);
+  el.setAttribute('aria-selected',String(active));el.tabIndex=active?0:-1;
+ });
+ syncRadiusReadout();draw();
+}
 function syncRadiusReadout(){$('radiusReadout').textContent=`圓 ${String(state.selectedWheel+1).padStart(2,'0')}　半徑 ${state.wheels[state.selectedWheel]?.r??0}`}
 function syncRadiusUI(i){const r=state.wheels[i]?.r;if(r===undefined)return;const range=document.getElementById(`w${i}-r`);if(range)range.value=r;const num=document.querySelector(`[data-radius-number="${i}"]`);if(num)num.value=r;syncRadiusReadout()}
 function controlPair({text,key,min,max,step,val,w,i}){const parent=document.createElement('div');const line=document.createElement('div');line.className='ctrl-row';const label=document.createElement('label');label.textContent=text;label.htmlFor=`w${i}-${key}`;const num=document.createElement('input');num.type='number';num.className='num';if(key==='r')num.dataset.radiusNumber=i;num.min=min;num.max=max;num.step=step;num.value=val;num.setAttribute('aria-label',`第 ${i+1} 個圓的${text}`);const range=document.createElement('input');range.type='range';range.id=`w${i}-${key}`;range.min=min;range.max=max;range.step=step;range.value=val;range.style.setProperty('--wheel',COLORS[i]);range.setAttribute('aria-label',`第 ${i+1} 個圓的${text}滑桿`);range.addEventListener('input',()=>{selectWheel(i);num.value=range.value;updateWheel(i,key,range.value);syncRadiusReadout()});num.addEventListener('change',()=>{const n=clamp(Number(num.value)||min,min,max);num.value=n;range.value=n;selectWheel(i);updateWheel(i,key,n);syncRadiusReadout()});line.append(label,num);parent.append(line,range);return parent}
-function renderWheels(){const pane=$('wheelControls');pane.replaceChildren();state.selectedWheel=clamp(state.selectedWheel,0,state.wheels.length-1);$('wheelNumber').textContent=state.wheels.length;$('minusCircle').disabled=state.wheels.length<=1;$('plusCircle').disabled=state.wheels.length>=MAX_WHEELS;state.wheels.forEach((w,i)=>{const el=document.createElement('section');el.className='wheel'+(i===state.selectedWheel?' selected':'');el.style.setProperty('--wheel',COLORS[i]);const head=document.createElement('div');head.className='wheel-title';head.innerHTML=`<span><span class="wheel-swatch"></span>圓 ${String(i+1).padStart(2,'0')}</span><small>固定 ${i+1}× 節奏</small>`;head.addEventListener('click',()=>selectWheel(i));const form=document.createElement('div');form.className='wheel-details';form.append(controlPair({text:'半徑',key:'r',min:0,max:165,step:1,val:w.r,w,i}));const dirLabel=document.createElement('div');dirLabel.className='ctrl-row';dirLabel.textContent='旋轉方向';form.append(dirLabel);const dirs=document.createElement('div');dirs.className='dir-switch';const d1=document.createElement('button'),d2=document.createElement('button');d1.className=d2.className='dir';d1.type=d2.type='button';d1.textContent='↻ 順時針';d2.textContent='↺ 逆時針';const sync=()=>{d1.classList.toggle('on',w.d===1);d2.classList.toggle('on',w.d===-1);d1.setAttribute('aria-pressed',String(w.d===1));d2.setAttribute('aria-pressed',String(w.d===-1))};d1.addEventListener('click',()=>{selectWheel(i);updateWheel(i,'d',1);sync()});d2.addEventListener('click',()=>{selectWheel(i);updateWheel(i,'d',-1);sync()});sync();dirs.append(d1,d2);form.append(dirs);el.append(head,form);pane.append(el)});syncRadiusReadout()}
+function renderWheels(){
+ const pane=$('wheelControls'),tabs=$('wheelTabs');pane.replaceChildren();tabs.replaceChildren();
+ state.selectedWheel=clamp(state.selectedWheel,0,state.wheels.length-1);
+ $('wheelNumber').textContent=state.wheels.length;$('minusCircle').disabled=state.wheels.length<=1;$('plusCircle').disabled=state.wheels.length>=MAX_WHEELS;state.wheels.forEach((w,i)=>{const tab=document.createElement('button');tab.type='button';tab.className='wheel-tab'+(i===state.selectedWheel?' selected':'');
+ tab.style.setProperty('--wheel',COLORS[i]);tab.setAttribute('role','tab');
+ tab.setAttribute('aria-label',`編輯圓 ${String(i+1).padStart(2,'0')}`);
+ tab.textContent=`圓 ${String(i+1).padStart(2,'0')}`;tab.addEventListener('click',()=>selectWheel(i));tabs.append(tab);
+ const el=document.createElement('section');el.className='wheel'+(i===state.selectedWheel?' selected':'');
+ el.hidden=i!==state.selectedWheel;el.style.setProperty('--wheel',COLORS[i]);const head=document.createElement('div');head.className='wheel-title';head.innerHTML=`<span><span class="wheel-swatch"></span>圓 ${String(i+1).padStart(2,'0')}</span><small>固定 ${i+1}× 節奏</small>`;head.addEventListener('click',()=>selectWheel(i));const form=document.createElement('div');form.className='wheel-details';form.append(controlPair({text:'半徑',key:'r',min:0,max:165,step:1,val:w.r,w,i}));const dirLabel=document.createElement('div');dirLabel.className='ctrl-row';dirLabel.textContent='旋轉方向';form.append(dirLabel);const dirs=document.createElement('div');dirs.className='dir-switch';const d1=document.createElement('button'),d2=document.createElement('button');d1.className=d2.className='dir';d1.type=d2.type='button';d1.textContent='↻ 順時針';d2.textContent='↺ 逆時針';const sync=()=>{d1.classList.toggle('on',w.d===1);d2.classList.toggle('on',w.d===-1);d1.setAttribute('aria-pressed',String(w.d===1));d2.setAttribute('aria-pressed',String(w.d===-1))};d1.addEventListener('click',()=>{selectWheel(i);updateWheel(i,'d',1);sync()});d2.addEventListener('click',()=>{selectWheel(i);updateWheel(i,'d',-1);sync()});sync();dirs.append(d1,d2);form.append(dirs);el.append(head,form);pane.append(el)});selectWheel(state.selectedWheel)}
 function syncHUD(){
  const l=levels[state.level];
  $('goalMetric').textContent=`${state.done} / ${l.goals.length}`;
@@ -1273,6 +1389,11 @@ function syncTutorial(now){
  }
 }
 $('tutorialSkip').addEventListener('click',()=>hideTutorial());
+$('missionInfoBtn').addEventListener('click',()=>{
+ const description=$('missionStory'),opening=description.hidden;
+ description.hidden=!opening;
+ $('missionInfoBtn').setAttribute('aria-expanded',String(opening));
+});
 
 let mobilePane='';
 
@@ -1330,6 +1451,6 @@ window.addEventListener('keydown',e=>{
  else if(e.key.toLowerCase()==='r')resetRun();
 });
 new ResizeObserver(resize).observe($('boardArea'));setLevel(0);requestAnimationFrame(tick);
-window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,worlds:planets,PLANET_SIZE,planetIndex,renderPlanets,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'seamless-world',completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',scores:'persistent-best',planets:3,levelsPerPlanet:6}};
+window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,worlds:planets,PLANET_SIZE,planetIndex,renderPlanets,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'console-hud',completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',scores:'persistent-best',planets:3,levelsPerPlanet:6}};
 })();
 </script></body></html>
