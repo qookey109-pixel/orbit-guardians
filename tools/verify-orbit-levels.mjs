@@ -78,6 +78,7 @@ for(const [index,level] of levels.entries()){
     prev=next;
   }
   assert.equal(goalHits.size,goals.length,'Reference route does not reach every goal in '+id+' '+level.name);
+  assert.equal(hazardHits.size,0,'Reference route collides with a red hazard in '+id+' '+level.name);
   audit.push({stage:id,planet:Math.floor(index/PLANET_SIZE)+1,name:level.name,
     goals:goalHits.size,wheels:level.refs.length,hazardContacts:hazardHits.size});
 }
