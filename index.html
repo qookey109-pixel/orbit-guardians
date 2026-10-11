@@ -1319,13 +1319,15 @@ syncMobilePanels();
 
 window.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&mobilePane){const prior=mobilePane;mobilePane='';syncMobilePanels();(prior==='settings'?$('dockSettings'):$('dockLevels')).focus();return}
- if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(document.activeElement?.tagName))return;
- if(e.code==='Space'){e.preventDefault();start()}
- else if(e.key.toLowerCase()==='r')resetRun();
- else if(e.key.toLowerCase()==='h'){
+ const focusTag=document.activeElement?.tagName;
+ if(e.key.toLowerCase()==='h'&&!['INPUT','TEXTAREA','SELECT'].includes(focusTag)){
   if(mobileMedia.matches){mobilePane=mobilePane==='settings'?'':'settings';syncMobilePanels()}
   else{document.body.classList.toggle('rail-hidden');syncHudControl()}
+  return;
  }
+ if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(focusTag))return;
+ if(e.code==='Space'){e.preventDefault();start()}
+ else if(e.key.toLowerCase()==='r')resetRun();
 });
 new ResizeObserver(resize).observe($('boardArea'));setLevel(0);requestAnimationFrame(tick);
 window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,worlds:planets,PLANET_SIZE,planetIndex,renderPlanets,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'seamless-world',completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',scores:'persistent-best',planets:3,levelsPerPlanet:6}};
