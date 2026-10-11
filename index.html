@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Focus HUD V1.8</title>
+<title>ORBIT // CODE — 軌道守護者｜Motion Polish V1.9</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -992,6 +992,16 @@ body.level-cleared .board{border:0!important}
 @media(max-width:860px){.orbit-tooltip{font-size:10px;max-width:180px}.wheel-count-shortcut{min-height:38px;height:38px}
  .actionbar #startBtn{min-width:143px!important;font-size:12px!important}}
 @media(max-width:350px){.actionbar #startBtn{min-width:122px!important}}
+
+/* V1.9 — native Canvas micro-feedback; no external animation dependencies. */
+.preview-toggle[aria-pressed=true] .preview-led{animation:orbit-signal-led 2.8s ease-in-out infinite}
+@keyframes orbit-signal-led{0%,100%{box-shadow:0 0 5px #61e9ab77}50%{box-shadow:0 0 11px #61e9abc4}}
+.wheel-tab.selected{transition:border-color .16s ease,background-color .16s ease,box-shadow .16s ease}
+.micro-btn,.wheel-count-shortcut{transition:background-color .13s ease,transform .13s ease}
+@media(prefers-reduced-motion:reduce){
+ .preview-toggle[aria-pressed=true] .preview-led{animation:none!important}
+ .wheel-tab.selected,.micro-btn,.wheel-count-shortcut{transition:none!important}
+}
 </style>
 </head>
 <body><div class="shell">
@@ -1078,7 +1088,7 @@ function pointAt(t,wheels){let x=0,y=0;wheels.forEach((w,i)=>{const a=t*BASE*(i+
 for(const [i,l] of levels.entries()){l.goals=l.times.map(t=>pointAt(t,l.refs));l.captureRadius=l.captureRadius??[10,9,9,8,8,8][i];}
 function clone(ws){return ws.map(w=>({...w}))};function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
 const defaultWheel=()=>({r:60,d:1});
-const state={level:0,lastLevel:0,unlocked:1,complete:{},best:{},wheels:clone(initial),mode:'ready',t:0,viewWorld:0,cleared:false,done:0,collected:new Set(),hits:0,edits:0,assisted:false,showPrediction:true,showScenery:true,last:0,trail:[],hazardCooldown:0,flash:0,selectedWheel:0,dragging:null,pickupFx:[],dangerFx:[],tutorialStep:-1,enteredAt:0};
+const state={level:0,lastLevel:0,unlocked:1,complete:{},best:{},wheels:clone(initial),mode:'ready',t:0,viewWorld:0,cleared:false,done:0,collected:new Set(),hits:0,edits:0,assisted:false,showPrediction:true,showScenery:true,last:0,trail:[],hazardCooldown:0,flash:0,selectedWheel:0,dragging:null,pickupFx:[],dangerFx:[],motionAt:0,tutorialStep:-1,enteredAt:0};
 try{const data=JSON.parse(localStorage.getItem('orbit-code-progress')||'{}');if(Number.isInteger(data.unlocked))state.unlocked=clamp(data.unlocked,1,levels.length);if(data.complete&&typeof data.complete==='object')state.complete=data.complete;
  if(state.unlocked===6&&state.complete[5])state.unlocked=7; // Preserve V0.9 completed planet migration.
  // V1.6 resumes a valid unlocked stage while remaining compatible with older saves.
@@ -1386,7 +1396,7 @@ function updateWheel(index,key,value,countEdit=true){
  w[key]=n;
  if(countEdit&&(state.mode==='running'||state.mode==='paused'))state.edits++;
  state.trail=[];
- if(countEdit)rememberCurrentConfig();
+ if(countEdit){rememberCurrentConfig();state.motionAt=performance.now()}
  syncHUD();draw();
  return true;
 }
@@ -1638,6 +1648,21 @@ function drawPrediction(){
   ctx.lineTo(sx(b.x),sy(b.y));
  }
  ctx.stroke();ctx.setLineDash([]);
+ // Short motion cue overlays, but never hides, the complete hazard-aware preview.
+ if(!reducedMotion&&state.motionAt>0){
+  const age=performance.now()-state.motionAt;
+  if(age>=0&&age<640){
+   const phase=age/640*.72;
+   const a=pointAt(origin+cycle*phase,state.wheels);
+   const b=pointAt(origin+cycle*(phase+.013),state.wheels);
+   const dangerous=level.hazards.some(h=>segmentDistance(a,b,h)<=h.r+4);
+   ctx.save();ctx.globalAlpha=.75*(1-age/640);
+   ctx.strokeStyle=dangerous?'#ffaaa1':'#d5f7ff';
+   ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=8;ctx.lineWidth=2.9;
+   ctx.beginPath();ctx.moveTo(sx(a.x),sy(a.y));ctx.lineTo(sx(b.x),sy(b.y));ctx.stroke();
+   ctx.restore();
+  }
+ }
  for(let i=38;i<n;i+=40){
   const a=pts[i],b=pts[i+1],angle=Math.atan2(b.y-a.y,b.x-a.x);
   const hazard=level.hazards.some(h=>Math.hypot(a.x-h.x,a.y-h.y)<h.r+7);
@@ -1673,6 +1698,14 @@ function drawWheels(){
    ctx.beginPath();ctx.arc(tx,ty,selected?10:6,0,TAU);ctx.strokeStyle=col;ctx.lineWidth=selected?2:1.3;ctx.stroke();
    ctx.beginPath();ctx.arc(tx,ty,selected?5:3.8,0,TAU);ctx.fillStyle=col;ctx.fill();ctx.restore();
    ctx.beginPath();ctx.arc(tx,ty,selected?2.8:2,0,TAU);ctx.fillStyle='#101923';ctx.fill();
+  }
+  // The selected ring's drag affordance stays visible underneath the spaceship.
+  if(selected&&state.mode==='ready'){
+   const active=state.dragging?.index===i;
+   const breath=reducedMotion?0:Math.sin(performance.now()*.006)*1.5;
+   ctx.save();ctx.beginPath();ctx.arc(tx,ty,13+(active?3:breath),0,TAU);
+   ctx.strokeStyle=active?col+'eb':col+'8b';ctx.lineWidth=active?2:1.25;
+   ctx.shadowColor=col;ctx.shadowBlur=active?12:4;ctx.stroke();ctx.restore();
   }
  });
  if(state.trail.length>1){
@@ -1726,6 +1759,15 @@ function drawPickupFx(){
   ctx.save();ctx.globalAlpha=a;
   ctx.beginPath();ctx.arc(x,y,5+35*progress,0,TAU);
   ctx.strokeStyle='#bbffe8';ctx.lineWidth=2*(1-progress*.6);ctx.stroke();
+  if(!reducedMotion){
+   // Six deterministic sparks; no extra sprites, randomness or textures.
+   for(let i=0;i<6;i++){
+    const angle=i*TAU/6+.2,dist=8+27*progress;
+    const px=x+Math.cos(angle)*dist,py=y+Math.sin(angle)*dist;
+    ctx.beginPath();ctx.arc(px,py,Math.max(.55,2.4*(1-progress)),0,TAU);
+    ctx.fillStyle=i%2?'#83dce9':'#f7dfab';ctx.fill();
+   }
+  }
   ctx.fillStyle='#d1fff5';ctx.font='bold 12px system-ui,sans-serif';
   ctx.textAlign='center';ctx.fillText('+1',x,y-16-16*progress);
   ctx.restore();
@@ -1872,13 +1914,13 @@ function endRadiusDrag(){
  state.dragging=null;canvas.classList.remove('dragging');
  if(drag.startR!==state.wheels[drag.index].r){
   if(state.mode==='running'||state.mode==='paused'){state.edits++;syncHUD()}
-  rememberCurrentConfig();
+  rememberCurrentConfig();state.motionAt=performance.now();
  }
  syncRadiusUI(drag.index);
 }
 canvas.addEventListener('pointerup',endRadiusDrag);canvas.addEventListener('pointercancel',endRadiusDrag);canvas.addEventListener('lostpointercapture',endRadiusDrag);
 $('sceneBtn').addEventListener('click',()=>{state.showScenery=!state.showScenery;sceneryKey='';$('sceneBtn').classList.toggle('active',state.showScenery);$('sceneBtn').setAttribute('aria-pressed',String(state.showScenery));$('sceneBtn').textContent=state.showScenery?'✦ 背景：經典宇宙':'○ 背景：簡約';draw()});$('startBtn').addEventListener('click',start);$('resetBtn').addEventListener('click',resetRun);$('previewBtn').addEventListener('click',()=>{state.showPrediction=!state.showPrediction;$('previewBtn').classList.toggle('active',state.showPrediction);$('previewBtn').setAttribute('aria-pressed',String(state.showPrediction));$('previewText').textContent=state.showPrediction?'路線：開':'路線：關';$('canvasHint').textContent=state.showPrediction?'拖曳圓點 · 1–3 選圓 · ← → 微調':'預測已關 · 按 P 重新顯示';draw()});
-$('plusCircle').addEventListener('click',()=>{if(state.wheels.length<MAX_WHEELS){state.wheels.push(defaultWheel());state.selectedWheel=state.wheels.length-1;if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];renderWheels();rememberCurrentConfig();syncHUD();draw()}});$('minusCircle').addEventListener('click',()=>{if(state.wheels.length>1){state.wheels.pop();state.selectedWheel=Math.min(state.selectedWheel,state.wheels.length-1);if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];renderWheels();rememberCurrentConfig();syncHUD();draw()}});
+$('plusCircle').addEventListener('click',()=>{if(state.wheels.length<MAX_WHEELS){state.wheels.push(defaultWheel());state.selectedWheel=state.wheels.length-1;if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];state.motionAt=performance.now();renderWheels();rememberCurrentConfig();syncHUD();draw()}});$('minusCircle').addEventListener('click',()=>{if(state.wheels.length>1){state.wheels.pop();state.selectedWheel=Math.min(state.selectedWheel,state.wheels.length-1);if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];state.motionAt=performance.now();renderWheels();rememberCurrentConfig();syncHUD();draw()}});
 $('restoreConfigBtn').addEventListener('click',restoreCurrentConfig);
 $('soundBtn').addEventListener('click',toggleSound);
 $('shareBtn').addEventListener('click',shareOrbit);
@@ -2044,6 +2086,6 @@ window.addEventListener('keydown',e=>{
  }
 });
 new ResizeObserver(resize).observe($('boardArea'));setLevel(state.lastLevel);readSharedOrbit();requestAnimationFrame(tick);
-window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,worlds:planets,PLANET_SIZE,planetIndex,renderPlanets,makeShareUrl,readSharedOrbit,playCue,toggleSound,pollGamepad,announcePlanetUnlocked,hidePlanetAchievement,journeyTotals,firstPlayableInPlanet,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'focus-hud',precision:true,quietHUD:true,journeyProgress:true,settlement:false,starRating:false,resumeLastStage:true,gamepad:true,planetUnlock:'nonmodal',sonicFeedback:true,shareableOrbit:true,customConfigs:true,completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',scores:'persistent-best',planets:3,levelsPerPlanet:6}};
+window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,worlds:planets,PLANET_SIZE,planetIndex,renderPlanets,makeShareUrl,readSharedOrbit,playCue,toggleSound,pollGamepad,announcePlanetUnlocked,hidePlanetAchievement,journeyTotals,firstPlayableInPlanet,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'focus-hud',precision:true,quietHUD:true,journeyProgress:true,settlement:false,starRating:false,resumeLastStage:true,gamepad:true,planetUnlock:'nonmodal',sonicFeedback:true,shareableOrbit:true,customConfigs:true,completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',motion:'native-canvas',motionDurationMs:640,scores:'persistent-best',planets:3,levelsPerPlanet:6}};
 })();
 </script></body></html>
