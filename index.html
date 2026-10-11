@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Immersive HUD V1.1</title>
+<title>ORBIT // CODE — 軌道守護者｜Seamless World V1.1.2</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -638,10 +638,68 @@ body.level-cleared .board{border:0!important}
  .board-header .actionbar .btn{padding:5px 6px!important;font-size:9px!important}
  .board-header .actionbar .btn.primary{min-width:96px!important}
 }
+
+/* V1.1.2 — Seamless World: the entire viewport is the game; controls are readable, floating HUD elements. */
+@media (min-width:861px){
+ .panel{
+   background:linear-gradient(90deg,rgba(5,15,32,0) 0%,rgba(4,15,29,.14) 22%,rgba(4,17,32,.39) 100%)!important;
+   backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+   border:0!important;box-shadow:none!important;
+ }
+ .panel h2,.panel label,.panel .wheel-title,.panel .wheels-header{color:#edf6f9;text-shadow:0 1px 6px #020816ee}
+ .panel .control-caption,.panel small{color:#bed6e2;text-shadow:0 1px 6px #020816ee}
+ .panel-pad{padding-right:10px!important}
+ .panel-footer{background:linear-gradient(180deg,transparent,rgba(4,17,31,.12));border-color:#86a9c14a}
+ .count-row,.wheel{border-color:#91acc336!important}
+ .levels-section{background:transparent!important}
+ .level-btn{
+   border:0!important;border-bottom:1px solid rgba(166,204,220,.25)!important;
+   border-radius:0!important;background:transparent!important;
+   box-shadow:none!important;
+ }
+ .level-btn:hover:not(.locked){background:linear-gradient(0deg,rgba(95,174,198,.22),transparent)!important}
+ .level-btn.selected{background:linear-gradient(0deg,rgba(84,164,189,.29),transparent)!important;
+   border-bottom:2px solid #c4edf1!important}
+ .level-btn.completed{border-bottom-color:#a3d1ae9e!important}
+ .board-header .actionbar{
+   background:transparent!important;border:0!important;box-shadow:none!important;
+   backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+   padding:0!important;gap:8px!important
+ }
+ .board-header .actionbar .btn{
+   box-shadow:0 5px 20px rgba(0,6,16,.3);
+   background:rgba(12,36,58,.74);border-color:#739ab25f
+ }
+ .board-header .actionbar .btn.primary{background:#e6cea3;border-color:#ffdfad}
+}
+@media(max-width:860px){
+ .mobile-dock{
+   background:none!important;border:0!important;left:7px!important;right:7px!important;
+   bottom:0!important;padding:5px 0 max(7px,env(safe-area-inset-bottom))!important
+ }
+ .mobile-dock .dock-btn{
+   border-radius:999px!important;
+   background:rgba(10,39,66,.82)!important;
+   border:1px solid #8cb9ca80!important;
+   box-shadow:0 4px 18px rgba(0,7,21,.35);
+   backdrop-filter:blur(9px)
+ }
+ body.level-cleared .mobile-dock .dock-next{
+   background:#deebc4!important;color:#20332c!important;border-color:#e1eac4!important
+ }
+ .board-header .actionbar{
+   background:rgba(9,28,47,.67)!important;border-color:#9abed240!important;
+   box-shadow:0 5px 22px rgba(0,6,19,.35)
+ }
+ .board-header .actionbar .btn{border-radius:8px}
+ .board-canvas:after{
+   background:linear-gradient(180deg,rgba(2,9,23,.4),transparent 19%,transparent 67%,rgba(2,9,23,.4))
+ }
+}
 </style>
 </head>
 <body><div class="shell">
-<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">IMMERSIVE HUD / V1.1</span><button class="hud-toggle" type="button" id="fullscreenBtn" aria-label="切換全螢幕" title="切換全螢幕">⛶</button><button class="hud-toggle" type="button" id="hudControlBtn" aria-controls="settingsPanel" aria-expanded="true">⚙ <span>收起控制</span></button></div></header>
+<header><a class="brand" href="#" aria-label="ORBIT CODE"><span class="logo">◎</span><span><b>ORBIT // CODE</b><small>PURE FORM / ORBITAL PUZZLE</small></span></a><div class="header-right"><span class="status-pill">● BROWSER ENGINE · FREE</span><span class="nav-link">SEAMLESS WORLD / V1.1.2</span><button class="hud-toggle" type="button" id="fullscreenBtn" aria-label="切換全螢幕" title="切換全螢幕">⛶</button><button class="hud-toggle" type="button" id="hudControlBtn" aria-controls="settingsPanel" aria-expanded="true" title="顯示／收起軌道設定（H）">⚙ <span>收起控制</span></button></div></header>
 <section class="intro"><div><div class="eyebrow">ORBITAL PUZZLE — 3 PLANETS × 6 MISSIONS</div><h1>讓軌道，<span>剛好經過。</span></h1><p>調整最多三個圓的半徑與方向，讓軌跡經過所有訊號，避開危險區。</p></div><div class="intro-flag">最多三個圓 · 拖曳半徑 · 正反轉<br><b>18 個任務 · 三顆星球</b></div></section>
 <main class="layout"><section class="left" aria-label="遊戲畫面與關卡">
 <div class="board"><div class="board-header"><div class="command-title"><div><div class="level-tag" id="levelTag">MISSION 01 / 06</div><div class="level-name" id="levelName">第一次接觸</div><div class="mission-objective" id="missionObjective">目標：收集 2 座補給站 · 碰撞不會失敗</div></div><div class="state-chip" id="stateChip">準備開始</div></div><div class="metrics"><div class="metric"><span>補給進度</span><strong id="goalMetric">0 / 2</strong></div><div class="metric"><span>碰撞</span><strong id="hazardMetric">0</strong></div></div><div class="actionbar"><button class="btn primary" id="startBtn">▶ 派出太空船</button><button class="btn" id="resetBtn">↻ 重設試跑</button><button class="btn active" id="previewBtn" aria-pressed="true">⌁ 預測路線</button></div></div>
@@ -1259,8 +1317,17 @@ if(mobileMedia.addEventListener)mobileMedia.addEventListener('change',syncMobile
 else mobileMedia.addListener(syncMobilePanels);
 syncMobilePanels();
 
-window.addEventListener('keydown',e=>{if(e.key==='Escape'&&mobilePane){const prior=mobilePane;mobilePane='';syncMobilePanels();(prior==='settings'?$('dockSettings'):$('dockLevels')).focus();return}if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(document.activeElement?.tagName))return;if(e.code==='Space'){e.preventDefault();start()}else if(e.key.toLowerCase()==='r')resetRun()});
+window.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&mobilePane){const prior=mobilePane;mobilePane='';syncMobilePanels();(prior==='settings'?$('dockSettings'):$('dockLevels')).focus();return}
+ if(['INPUT','TEXTAREA','BUTTON','SELECT'].includes(document.activeElement?.tagName))return;
+ if(e.code==='Space'){e.preventDefault();start()}
+ else if(e.key.toLowerCase()==='r')resetRun();
+ else if(e.key.toLowerCase()==='h'){
+  if(mobileMedia.matches){mobilePane=mobilePane==='settings'?'':'settings';syncMobilePanels()}
+  else{document.body.classList.toggle('rail-hidden');syncHudControl()}
+ }
+});
 new ResizeObserver(resize).observe($('boardArea'));setLevel(0);requestAnimationFrame(tick);
-window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,worlds:planets,PLANET_SIZE,planetIndex,renderPlanets,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'immersive-hud',completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',scores:'persistent-best',planets:3,levelsPerPlanet:6}};
+window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,worlds:planets,PLANET_SIZE,planetIndex,renderPlanets,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'seamless-world',completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',scores:'persistent-best',planets:3,levelsPerPlanet:6}};
 })();
 </script></body></html>
