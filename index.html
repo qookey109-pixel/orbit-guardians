@@ -616,6 +616,28 @@ body.level-cleared .board{border:0!important}
  body[data-mobile-pane=settings] .panel,body[data-mobile-pane=levels] .levels-section{bottom:46px!important;max-height:min(58dvh,330px)!important}
  .mobile-dock{padding-top:4px;padding-bottom:max(4px,env(safe-area-inset-bottom))}
 }
+
+/* V1.1.1 — final HUD fit: no unused sidebar panel height; compact mobile flight actions. */
+@media(min-width:861px){
+ .panel{bottom:auto!important;height:auto!important;max-height:calc(100dvh - 282px)!important;min-height:0!important}
+ .panel-pad{flex:0 0 auto}
+ .panel-footer{flex:0 0 auto;margin-top:0!important;padding-top:12px!important}
+ .panel .completion-panel{flex:0 0 auto}
+}
+@media(max-width:860px){
+ .board-header .actionbar{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:center!important;width:max-content!important;max-width:calc(100vw - 12px)!important;padding:4px!important;gap:4px!important;min-width:0!important}
+ .board-header .actionbar .btn{display:inline-flex!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;max-width:none!important;padding:5px 8px!important}
+ .board-header .actionbar .btn.primary{min-width:119px!important}
+}
+@media(max-width:510px){
+ .board-header .actionbar{gap:3px!important}
+ .board-header .actionbar .btn{font-size:10px!important;padding:5px 7px!important}
+ .board-header .actionbar .btn.primary{min-width:109px!important}
+}
+@media(max-width:350px){
+ .board-header .actionbar .btn{padding:5px 6px!important;font-size:9px!important}
+ .board-header .actionbar .btn.primary{min-width:96px!important}
+}
 </style>
 </head>
 <body><div class="shell">
@@ -1198,7 +1220,7 @@ let mobilePane='';
 
 const hudControl=$('hudControlBtn');
 function syncHudControl(){
- const shown=!document.body.classList.contains('rail-hidden');
+ const shown=mobileMedia.matches?mobilePane==='settings':!document.body.classList.contains('rail-hidden');
  hudControl.setAttribute('aria-expanded',String(shown));
  hudControl.classList.toggle('is-on',shown);
  hudControl.querySelector('span').textContent=shown?'收起控制':'軌道控制';
@@ -1223,6 +1245,7 @@ const mobileMedia=window.matchMedia('(max-width:860px)');
 function syncMobilePanels(){
  const isMobile=mobileMedia.matches;
  if(!isMobile)mobilePane='';
+ else document.body.classList.remove('rail-hidden');
  document.body.dataset.mobilePane=isMobile?mobilePane:'';
  $('dockSettings').setAttribute('aria-expanded',String(isMobile&&mobilePane==='settings'));
  $('dockLevels').setAttribute('aria-expanded',String(isMobile&&mobilePane==='levels'));
