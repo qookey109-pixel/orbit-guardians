@@ -911,8 +911,14 @@ function collision(a,b){
 }
 function goNextLevel(){
  if(!state.cleared)return;
- if(state.level+1<levels.length)setLevel(state.level+1);
- else resetRun();
+ const from=planetIndex(state.level),next=state.level+1;
+ if(next<levels.length){
+  setLevel(next);
+  const to=planetIndex(next);
+  // A stable event for the custom planet-travel animation to be added later.
+  // Gameplay remains instant and fully functional until animation assets arrive.
+  if(to!==from)window.dispatchEvent(new CustomEvent('orbit:planet-arrival',{detail:{from,to,name:planets[to].name}}));
+ }else resetRun();
 }
 function finish(win){
  if(!win||state.mode!=='running'||state.cleared)return;
