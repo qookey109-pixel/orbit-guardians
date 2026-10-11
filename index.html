@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Level Review Lab V1.12</title>
+<title>ORBIT // CODE — 軌道守護者｜Control Focus V1.13</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -1007,6 +1007,100 @@ body.level-cleared .board{border:0!important}
 #radiusReadout{font-variant-numeric:tabular-nums}
 #previewBtn{transition:border-color .16s ease,background-color .16s ease,box-shadow .16s ease}
 @media(prefers-reduced-motion:reduce){#previewBtn{transition:none!important}}
+
+/* V1.13 Control Focus — one count control, strong rail hierarchy and tactile inputs.
+   No gameplay data, route geometry or viewport-scrolling behavior changes. */
+#settingsPanel{
+ background:linear-gradient(155deg,rgba(11,29,48,.97),rgba(7,20,37,.94))!important;
+ border:1px solid rgba(156,196,216,.68)!important;
+ box-shadow:0 11px 36px rgba(0,6,18,.56),inset 0 1px rgba(224,240,252,.13),0 0 0 1px rgba(225,193,135,.11)!important;
+ backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+#settingsPanel .panel-pad{padding:12px 12px 5px!important}
+#settingsPanel .console-header{
+ display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+ margin:1px 0 11px;min-height:37px;padding:3px 0 3px 11px;
+ border-left:3px solid #dec38b
+}
+#settingsPanel .console-header .console-kicker{
+ writing-mode:horizontal-tb;letter-spacing:.15em;font-size:8px;
+ line-height:1.3;color:#e2c98e;font-weight:760
+}
+#settingsPanel .console-header h2{margin:0!important;font-size:16px!important;font-weight:780;line-height:1.23;color:#f2f8ff}
+#settingsPanel .wheels-header{display:flex;justify-content:space-between;align-items:center;
+ margin:6px 0 7px!important;font-size:11px;color:#c7e1eb;font-weight:650}
+#settingsPanel #wheelCountHint{font-size:10px;color:#e5d0a4;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+#settingsPanel .wheel-tabs{margin:0 0 7px;gap:5px!important}
+#settingsPanel .wheel-tab{font-weight:680;min-height:38px;letter-spacing:.015em}
+#settingsPanel .wheel-tab.selected{
+ border-color:var(--wheel);font-weight:800;
+ background:linear-gradient(165deg,rgba(91,156,186,.25),rgba(21,45,71,.72));
+ box-shadow:inset 0 -3px var(--wheel),0 0 15px rgba(149,211,225,.19)
+}
+#settingsPanel .wheel-count-shortcut{
+ flex-basis:36px;min-width:36px;min-height:38px;height:38px;
+ border-color:#86b3c49c;background:#14354c;color:#e9f5ff;border-radius:7px;
+}
+#settingsPanel .wheel.selected{
+ padding:7px 9px 9px!important;border:1px solid rgba(135,189,205,.31)!important;
+ background:linear-gradient(140deg,rgba(147,196,215,.105),rgba(64,111,137,.055))!important;
+ border-radius:9px;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--wheel) 23%,transparent)
+}
+#settingsPanel .wheel-title{padding:2px 0 6px;gap:6px}
+#settingsPanel .wheel-title span{color:#e6f6fc;font-weight:740}
+#settingsPanel .wheel-title small{font-size:9px;color:#a7c6d6}
+#settingsPanel .wheel .ctrl-row{display:flex;align-items:center;justify-content:space-between;
+ gap:6px;margin:3px 0 5px;color:#c9e0eb;font-size:11px}
+#settingsPanel .wheel .num{
+ width:65px;min-height:33px;font-size:16px;font-weight:780;
+ font-variant-numeric:tabular-nums;color:#d1f6fc;text-align:center;
+ background:rgba(14,44,64,.87);border:1px solid rgba(136,204,222,.67);
+ border-radius:6px;padding:3px 4px
+}
+#settingsPanel .wheel input[type=range]{
+ width:100%;height:20px;margin:3px 0 3px;accent-color:var(--wheel);
+ cursor:pointer;touch-action:pan-y
+}
+#settingsPanel .wheel input[type=range]::-webkit-slider-thumb{
+ width:20px;height:20px;border:2px solid #e7f9ff;box-shadow:0 0 8px rgba(117,217,235,.5)
+}
+#settingsPanel .wheel input[type=range]::-moz-range-thumb{
+ width:19px;height:19px;border:2px solid #e7f9ff;box-shadow:0 0 8px rgba(117,217,235,.5)
+}
+#settingsPanel .precision-fold{margin:5px 0 4px;border-top-color:#8daebc42}
+#settingsPanel .precision-fold summary{min-height:29px;font-size:10px}
+#settingsPanel .dir-switch{gap:6px;margin:4px 0 0}
+#settingsPanel .wheel .dir{min-height:36px;padding:6px 3px;font-size:10px;font-weight:650;
+ border:1px solid rgba(118,162,185,.56);border-radius:6px;background:#0b263c;color:#aecbd8}
+#settingsPanel .wheel .dir.on{color:#e9faff;border-color:var(--wheel);
+ background:linear-gradient(180deg,rgba(66,121,150,.51),rgba(21,53,77,.85));
+ box-shadow:inset 0 -2px var(--wheel),0 0 12px rgba(115,200,222,.17)}
+#settingsPanel .advanced-options{margin:7px 12px 6px;border-top:1px solid #87afc064}
+#settingsPanel .advanced-options summary{min-height:34px;font-size:10px;color:#bcd4e0}
+#hudControlBtn[aria-expanded=false]{
+ border-color:#e3c68b!important;color:#fff0c9;
+ background:rgba(33,56,74,.93);box-shadow:0 0 0 1px #debe7655,0 2px 17px #b99f594b
+}
+#hudControlBtn[aria-expanded=false]:hover{background:rgba(51,80,97,.95)}
+@media(min-width:861px){#settingsPanel{max-height:calc(100dvh - 223px)!important}}
+@media(max-width:860px){
+ #settingsPanel{max-height:min(60dvh,520px)!important}
+ #settingsPanel .panel-pad{padding:11px 12px 5px!important}
+ #settingsPanel .console-header{min-height:36px;margin:0 0 8px}
+ #settingsPanel .wheel-tab{min-height:42px}
+ #settingsPanel .wheel-count-shortcut{min-width:42px;flex-basis:42px;min-height:42px;height:42px}
+ #settingsPanel .wheel .dir{min-height:42px;font-size:11px}
+ #settingsPanel .wheel .num{min-height:40px;font-size:17px}
+ #settingsPanel .wheel input[type=range]{min-height:36px}
+ #settingsPanel .precision-fold summary{min-height:40px}
+ #settingsPanel .advanced-options summary{min-height:40px}
+}
+@media(max-height:600px) and (max-width:860px){
+ #settingsPanel{max-height:min(61dvh,390px)!important}
+}
+@media(prefers-reduced-motion:reduce){
+ #settingsPanel .wheel-tab.selected,#hudControlBtn[aria-expanded=false]{transition:none}
+}
 </style>
 </head>
 <body><div class="shell">
@@ -1049,7 +1143,7 @@ body.level-cleared .board{border:0!important}
 <div class="stage-notice" id="stageNotice" hidden role="status"></div></div></section>
 <aside class="panel" id="settingsPanel" aria-label="軌道控制台">
 
-<div class="panel-pad"><div class="console-header"><span class="console-kicker">ORBIT CONTROL</span><h2>軌道設定</h2></div><p class="control-caption">選擇圓周並調整航線</p><p class="panel-intro">全程最多三個圓。用滑鼠或手指拖曳半徑，搭配順時針／逆時針設計路線；試跑中修改會計入調整次數。</p><div class="count-row"><label for="wheelNumber">使用圓周數</label><div class="count-stepper"><button class="step" id="minusCircle" aria-label="減少一個圓">−</button><output id="wheelNumber" aria-live="polite">1</output><button class="step" id="plusCircle" aria-label="增加一個圓">+</button></div></div><div class="wheels-header"><span>選擇圓周</span><small>最多 3 圓</small></div><div class="wheel-tabs" id="wheelTabs" role="group" aria-label="選擇圓周與增減數量"></div><div id="wheelControls" class="wheels"></div></div><details class="advanced-options" id="advancedOptions"><summary>進階設定 <span>微調 / 音效 / 實驗</span></summary><div class="panel-footer"><div class="panel-footer-label">實驗與外觀</div><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">✦ 背景：經典宇宙</button><div class="flight-utilities">
+<div class="panel-pad"><div class="console-header"><span class="console-kicker">ORBIT CONTROL</span><h2>軌道設定</h2></div><div class="wheels-header"><span>選擇圓周</span><small id="wheelCountHint" aria-live="polite">1 / 3 圓</small></div><div class="wheel-tabs" id="wheelTabs" role="group" aria-label="選擇圓周與增減數量"></div><div id="wheelControls" class="wheels"></div></div><details class="advanced-options" id="advancedOptions"><summary>更多設定 <span>音效 / 分享 / 實驗</span></summary><div class="panel-footer"><div class="panel-footer-label">實驗與外觀</div><button class="btn active scene-toggle" id="sceneBtn" aria-pressed="true">✦ 背景：經典宇宙</button><div class="flight-utilities">
  <button class="btn sound-toggle" id="soundBtn" type="button" aria-pressed="false" aria-label="切換遊戲音效">♪ 音效：關</button>
  <button class="btn share-orbit" id="shareBtn" type="button" aria-label="複製目前關卡及軌道參數連結">↗ 分享航線</button>
 </div>
@@ -1475,22 +1569,33 @@ function controlPair({text,key,min,max,step,val,w,i}){
  }
  return parent;
 }
+
+function changeWheelCount(delta){
+ // The tab-strip's +/- is the single source of wheel-count changes.
+ if(delta!==1&&delta!==-1)return;
+ const next=state.wheels.length+delta;
+ if(next<1||next>MAX_WHEELS)return;
+ if(delta>0){state.wheels.push(defaultWheel());state.selectedWheel=next-1}
+ else{state.wheels.pop();state.selectedWheel=Math.min(state.selectedWheel,next-1)}
+ if(state.mode==='running'||state.mode==='paused')state.edits++;
+ state.trail=[];state.motionAt=performance.now();
+ renderWheels();rememberCurrentConfig();syncHUD();draw();
+}
 function renderWheels(){
  const pane=$('wheelControls'),tabs=$('wheelTabs');pane.replaceChildren();tabs.replaceChildren();
  state.selectedWheel=clamp(state.selectedWheel,0,state.wheels.length-1);
- $('wheelNumber').textContent=state.wheels.length;$('minusCircle').disabled=state.wheels.length<=1;$('plusCircle').disabled=state.wheels.length>=MAX_WHEELS;state.wheels.forEach((w,i)=>{const tab=document.createElement('button');tab.type='button';tab.className='wheel-tab'+(i===state.selectedWheel?' selected':'');
+ $('wheelCountHint').textContent=`${state.wheels.length} / ${MAX_WHEELS} 圓`;state.wheels.forEach((w,i)=>{const tab=document.createElement('button');tab.type='button';tab.className='wheel-tab'+(i===state.selectedWheel?' selected':'');
  tab.style.setProperty('--wheel',COLORS[i]);tab.setAttribute('role','button');
  tab.setAttribute('aria-label',`編輯圓 ${String(i+1).padStart(2,'0')}`);
  tab.textContent=`圓 ${String(i+1).padStart(2,'0')}`;tab.addEventListener('click',()=>selectWheel(i,true));tabs.append(tab);
  const el=document.createElement('section');el.className='wheel'+(i===state.selectedWheel?' selected':'');
  el.hidden=i!==state.selectedWheel;el.style.setProperty('--wheel',COLORS[i]);const head=document.createElement('div');head.className='wheel-title';head.innerHTML=`<span><span class="wheel-swatch"></span>圓 ${String(i+1).padStart(2,'0')}</span><small>固定 ${i+1}× 節奏</small>`;head.addEventListener('click',()=>selectWheel(i));const form=document.createElement('div');form.className='wheel-details';form.append(controlPair({text:'半徑',key:'r',min:0,max:165,step:1,val:w.r,w,i}));const dirLabel=document.createElement('div');dirLabel.className='ctrl-row';dirLabel.textContent='旋轉方向';form.append(dirLabel);const dirs=document.createElement('div');dirs.className='dir-switch';const d1=document.createElement('button'),d2=document.createElement('button');d1.className=d2.className='dir';d1.type=d2.type='button';d1.textContent='↻ 順時針';d2.textContent='↺ 逆時針';const sync=()=>{d1.classList.toggle('on',w.d===1);d2.classList.toggle('on',w.d===-1);d1.setAttribute('aria-pressed',String(w.d===1));d2.setAttribute('aria-pressed',String(w.d===-1))};d1.addEventListener('click',()=>{selectWheel(i);updateWheel(i,'d',1);sync()});d2.addEventListener('click',()=>{selectWheel(i);updateWheel(i,'d',-1);sync()});sync();dirs.append(d1,d2);form.append(dirs);el.append(head,form);pane.append(el)});
- const dec=$('minusCircle'),inc=$('plusCircle');
  const navMinus=document.createElement('button');navMinus.type='button';navMinus.className='wheel-count-shortcut';
  navMinus.textContent='−';navMinus.title='減少一個圓';navMinus.setAttribute('aria-label','減少一個圓');
- navMinus.disabled=state.wheels.length<=1;navMinus.addEventListener('click',()=>dec.click());
+ navMinus.disabled=state.wheels.length<=1;navMinus.addEventListener('click',()=>changeWheelCount(-1));
  const navPlus=document.createElement('button');navPlus.type='button';navPlus.className='wheel-count-shortcut';
  navPlus.textContent='+';navPlus.title='新增圓周';navPlus.setAttribute('aria-label','新增圓周');
- navPlus.disabled=state.wheels.length>=MAX_WHEELS;navPlus.addEventListener('click',()=>inc.click());
+ navPlus.disabled=state.wheels.length>=MAX_WHEELS;navPlus.addEventListener('click',()=>changeWheelCount(1));
  tabs.append(navMinus,navPlus);
  selectWheel(state.selectedWheel)
 }
@@ -1943,7 +2048,7 @@ $('sceneBtn').addEventListener('click',()=>{state.showScenery=!state.showScenery
  $('canvasHint').textContent=state.showPrediction?'拖曳圓點 · 1–3 選圓 · ← → 微調':'預測已關 · 按 P 重新顯示';
  draw();
 });
-$('plusCircle').addEventListener('click',()=>{if(state.wheels.length<MAX_WHEELS){state.wheels.push(defaultWheel());state.selectedWheel=state.wheels.length-1;if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];state.motionAt=performance.now();renderWheels();rememberCurrentConfig();syncHUD();draw()}});$('minusCircle').addEventListener('click',()=>{if(state.wheels.length>1){state.wheels.pop();state.selectedWheel=Math.min(state.selectedWheel,state.wheels.length-1);if(state.mode==='running'||state.mode==='paused')state.edits++;state.trail=[];state.motionAt=performance.now();renderWheels();rememberCurrentConfig();syncHUD();draw()}});
+
 $('restoreConfigBtn').addEventListener('click',restoreCurrentConfig);
 $('soundBtn').addEventListener('click',toggleSound);
 $('shareBtn').addEventListener('click',shareOrbit);
