@@ -24,6 +24,7 @@ jobs:
           node tools/test-level-workshop.mjs
           node tools/generate-level-candidates.mjs --seed 20261011 --difficulty hard --count 3 --output research/workshop-candidates.json
           node tools/test-level-workshop.mjs research/workshop-candidates.json
+          node tools/test-level-review-lab.mjs
           echo "REVIEW_SAMPLE_JSON_BEGIN"
           cat research/workshop-candidates.json
           echo "REVIEW_SAMPLE_JSON_END"
@@ -646,6 +647,60 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'paused');
           await page.locator('#resetBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready');
+          // Standalone review lab: playable candidates never touch formal progression.
+          const lab=await browser.newPage({viewport:{width:1366,height:768},acceptDownloads:true});
+          const labErrors=[];lab.on('pageerror',e=>labErrors.push(String(e)));
+          await lab.goto('http://127.0.0.1:8765/lab/',{waitUntil:'networkidle'});
+          await lab.waitForFunction(()=>window.__ORBIT_LAB_DEBUG__?.state?.wheels?.length===3);
+          assert.equal(await lab.locator('#stageSelect option').count(),3,'Review-only demos missing');
+          assert.equal(await lab.locator('#sourceStatus').getAttribute('data-error'),'false');
+          assert.match(await lab.locator('#quality').textContent(),/hard/);
+          assert.equal(await lab.locator('#plusBtn').isDisabled(),true,'No more than 3 circles');
+          assert.equal(await lab.evaluate(()=>localStorage.getItem('orbit-code-progress')),null);
+          const labInitial=await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.wheels[0].r);
+          await lab.locator('#radiusSlider').fill('120');
+          assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.wheels[0].r),120);
+          await lab.locator('#previewBtn').click();
+          assert.equal(await lab.locator('#previewBtn').getAttribute('aria-pressed'),'false');
+          await lab.locator('#previewBtn').click();
+          assert.equal(await lab.locator('#previewBtn').getAttribute('aria-pressed'),'true');
+          await lab.locator('#playBtn').click();
+          assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.playing),true);
+          await lab.locator('#playBtn').click();
+          assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.playing),false);
+          await lab.locator('#hintBtn').click();
+          assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.assisted),true);
+          await lab.screenshot({path:'lab-v112-desktop.png',fullPage:true});
+          await lab.locator('#reviewNotes').fill('需要增加玩家提示並確認實際難度');
+          await lab.locator('#reviewNotes').press('Tab');
+          await lab.locator('[data-review="REVISE"]').click();
+          assert.equal(await lab.locator('[data-review="REVISE"]').getAttribute('aria-pressed'),'true');
+          assert.equal(await lab.evaluate(()=>JSON.parse(localStorage.getItem('orbit-lab-reviews-v1'))['orbit-20261011-hard-01'].decision),'REVISE');
+          assert.equal(await lab.evaluate(()=>localStorage.getItem('orbit-code-progress')),null,
+            'Review lab must not alter formal progress');
+          const reviewDownload=lab.waitForEvent('download');
+          await lab.locator('#exportReview').click();
+          assert.equal((await reviewDownload).suggestedFilename(),'orbit-human-review.json');
+          await lab.locator('#sourceInput').setInputFiles('research/workshop-candidates.json');
+          await lab.waitForFunction(()=>document.querySelector('#sourceStatus')?.textContent.includes('workshop-candidates.json'));
+          assert.equal(await lab.locator('#stageSelect option').count(),3);
+          await lab.locator('#sourceInput').setInputFiles({
+            name:'broken.json',mimeType:'application/json',buffer:Buffer.from('{"schema":"invalid","candidates":[]}')
+          });
+          await lab.waitForFunction(()=>document.querySelector('#sourceStatus')?.dataset.error==='true');
+          await lab.locator('#sourceInput').setInputFiles('research/workshop-candidates.json');
+          await lab.waitForFunction(()=>document.querySelector('#sourceStatus')?.dataset.error==='false');
+          await lab.setViewportSize({width:390,height:844});
+          const labMobile=await lab.evaluate(()=>({
+            overflow:document.documentElement.scrollWidth-innerWidth,
+            canvas:document.querySelector('#previewCanvas').getBoundingClientRect().height,
+            controls:document.querySelector('#radiusSlider').getBoundingClientRect().width
+          }));
+          assert.equal(labMobile.overflow,0,'Playtest mobile should have no horizontal scroll');
+          assert.ok(labMobile.canvas>200&&labMobile.controls>40);
+          await lab.screenshot({path:'lab-v112-mobile.png',fullPage:true});
+          assert.deepEqual(labErrors,[],'Review lab browser errors');
+          await lab.close();
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
           console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl,gamepadAudit,planetUnlockAudit,finalJourney,reduced}));
           await browser.close();
@@ -664,4 +719,6 @@ jobs:
             desktop-v112-frost.png
             desktop-v112-ember.png
             research/workshop-candidates.json
+            lab-v112-desktop.png
+            lab-v112-mobile.png
           if-no-files-found: ignore
