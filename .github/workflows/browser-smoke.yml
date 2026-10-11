@@ -240,6 +240,7 @@ jobs:
           assert.match(await page.locator('#flightToast').textContent(),/已載入分享的航線/);
           await page.locator('#advancedOptions summary').click();
           await page.locator('#shareBtn').click();
+          await page.waitForFunction(()=>/航線連結|瀏覽器未允許複製/.test(document.querySelector('#flightToast')?.textContent||''),null,{timeout:4000});
           assert.match(await page.locator('#flightToast').textContent(),/航線連結|瀏覽器未允許複製/);
           await page.goto('http://127.0.0.1:8765/?stage=17&orbit=120p-40n',{waitUntil:'networkidle'});
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),0,'Sharing must not bypass locked stages');
