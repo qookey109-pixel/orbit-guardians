@@ -12,6 +12,8 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {strict as assert} from 'node:assert';
 import {pointAt,segmentDistance,minimumRouteDistance,verifyReference} from './orbit-geometry.mjs';
+import {rankCandidate} from './level-quality.mjs';
+import {loadPublishedLevels} from './load-published-levels.mjs';
 
 const modes=Object.freeze({
  easy:{wheels:1,goals:2,hazards:0,captureRadius:10},
@@ -99,7 +101,7 @@ export function generateCandidates({seed=20261011,difficulty='hard',count=3,goal
  assert.ok(Number.isInteger(goalCount)&&goalCount>=2&&goalCount<=5,'Goals must be 2..5');
  assert.ok(Number.isInteger(hazardCount)&&hazardCount>=0&&hazardCount<=3,'Hazards must be 0..3');
 
- const rng=seeded(seed),candidates=[],attemptLimit=count*1200;
+ const rng=seeded(seed),candidates=[],published=loadPublishedLevels().levels,attemptLimit=count*1600;
  for(let attempt=0;attempt<attemptLimit&&candidates.length<count;attempt++){
   const refs=referenceWheels(rng,difficulty);
   const start=startWheels(rng,refs);
@@ -118,6 +120,10 @@ export function generateCandidates({seed=20261011,difficulty='hard',count=3,goal
    hazards:danger,goals:positions
   };
   try{verifyReference(item,{step:.008,requireSafe:true})}catch(e){continue}
+  const quality=rankCandidate(item,published,candidates);
+  if(quality.reviewFlags.length)continue;
+  item.review={id:`orbit-${seed}-${difficulty}-${String(number).padStart(2,'0')}`,
+    state:'NOT_REVIEWED',...quality};
   candidates.push(item);
  }
  assert.equal(candidates.length,count,'Unable to generate requested safe, separated and nontrivial candidates');
@@ -126,7 +132,8 @@ export function generateCandidates({seed=20261011,difficulty='hard',count=3,goal
   status:'REVIEW_ONLY_NOT_PUBLISHED',
   seed,difficulty,count,goals:goalCount,hazards:hazardCount,
   criteria:{maxWheels:3,captureRadius:mode.captureRadius,previewIndependent:true,
-    allGoalsReachable:true,referenceHazardContacts:0,startNotAlreadySolved:true},
+    allGoalsReachable:true,referenceHazardContacts:0,startNotAlreadySolved:true,
+    nearDuplicateThreshold:.88,reviewGate:'READY_FOR_HUMAN_PLAYTEST',automaticPublication:false},
   candidates
  };
 }
