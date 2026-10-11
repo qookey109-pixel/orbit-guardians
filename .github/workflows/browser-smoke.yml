@@ -1,4 +1,4 @@
-name: Orbit V1.7 clear flight QA
+name: Orbit V1.8 focus HUD QA
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Clear Flight V1\.7/);
+          assert.match(await page.title(),/Focus HUD V1\.8/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -54,7 +54,17 @@ jobs:
           assert.equal(checks.visual.ship,'round-scout');
           assert.equal(checks.visual.goal,'supply-station');
           assert.equal(checks.visual.hazard,'navigation-mine');
-          assert.equal(checks.visual.layout,'clear-flight');
+          assert.equal(checks.visual.layout,'focus-hud');
+          assert.equal(checks.visual.quietHUD,true);
+          assert.equal(await page.locator('.header-right .nav-link').count(),0);
+          assert.equal(await page.locator('.live-readout').isVisible(),false);
+          assert.equal(await page.locator('.state-chip').isVisible(),false);
+          assert.equal(await page.locator('.canvas-hint').isVisible(),false);
+          assert.equal(await page.locator('.count-row').isVisible(),false);
+          assert.equal(await page.locator('.planet-btn.locked .planet-status:visible').count(),0);
+          assert.equal(await page.locator('#wheelTabs .wheel-count-shortcut').count(),2);
+          assert.equal(await page.locator('#previewBtn').getAttribute('aria-pressed'),'true');
+          assert.equal(await page.locator('#previewText').textContent(),'路線：開');
           assert.equal(checks.visual.settlement,false);
           assert.equal(checks.visual.starRating,false);
           assert.equal(await page.locator('#completionPanel').count(),0,'Settlement panel should be removed');
@@ -191,7 +201,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
-          await page.screenshot({path:'desktop-v17.png',fullPage:true});
+          await page.screenshot({path:'desktop-v18.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -218,6 +228,9 @@ jobs:
           assert.notEqual(beforeRadius,84,'Radius test should change a value');
           // Microsteps control only the selected wheel and synchronize slider and numeric value.
           assert.equal(await page.locator('#wheelControls .wheel:visible .micro-btn').count(),4);
+          assert.equal(await page.locator('#wheelControls .wheel:visible .radius-micro').isVisible(),false);
+          await page.locator('#wheelControls .wheel:visible .precision-fold summary').click();
+          assert.equal(await page.locator('#wheelControls .wheel:visible .radius-micro').isVisible(),true);
           const r0=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           await page.locator('#wheelControls .wheel:visible .micro-btn').nth(3).click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r),r0+5);
@@ -225,6 +238,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r),r0+4);
           assert.equal(Number(await page.locator('#wheelControls .wheel:visible input[type="number"]').inputValue()),r0+4);
           // Console shortcuts: number keys choose ring, arrows fine-tune, shift uses 5px steps, P previews.
+          await page.locator('#wheelControls .wheel:visible .precision-fold summary').click();
           await page.keyboard.press('2');
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.selectedWheel),1);
           await page.keyboard.press('Shift+ArrowRight');
@@ -377,7 +391,7 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v17-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v18-clear.png',fullPage:true});
           // Replay remains possible using existing flight controls, with no results card.
           await page.locator('#resetBtn').click();
           assert.equal(await page.locator('#clearNav').isVisible(),false);
@@ -433,9 +447,9 @@ jobs:
             });
             worldSamples.push(sample);return sample;
           };
-          await samplePlanet(0);await page.screenshot({path:'desktop-v17-origin.png',fullPage:true});
-          await samplePlanet(6);await page.screenshot({path:'desktop-v17-frost.png',fullPage:true});
-          await samplePlanet(12);await page.screenshot({path:'desktop-v17-ember.png',fullPage:true});
+          await samplePlanet(0);await page.screenshot({path:'desktop-v18-origin.png',fullPage:true});
+          await samplePlanet(6);await page.screenshot({path:'desktop-v18-frost.png',fullPage:true});
+          await samplePlanet(12);await page.screenshot({path:'desktop-v18-ember.png',fullPage:true});
           assert.ok(worldSamples[0].some((v,i)=>Math.abs(v-worldSamples[1][i])>5),'Second planet background must differ');
           assert.ok(worldSamples[1].some((v,i)=>Math.abs(v-worldSamples[2][i])>5),'Third planet background must differ');
           // All 18 levels clear without a modal, and each next stage unlocks sequentially.
@@ -533,10 +547,13 @@ jobs:
           assert.equal(await page.locator('#dockSettings').getAttribute('aria-expanded'),'true');
           assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length),'Wheel tabs must match the current mission');
           assert.equal(await page.locator('#wheelControls .wheel:visible').count(),1);
-          assert.equal(await page.locator('#wheelControls .wheel:visible .micro-btn').count(),4,'Microsteps must be visible on mobile');
+          assert.equal(await page.locator('#wheelControls .wheel:visible .radius-micro').isVisible(),false,'Microsteps default folded on mobile');
+          await page.locator('#wheelControls .wheel:visible .precision-fold summary').click();
+          assert.equal(await page.locator('#wheelControls .wheel:visible .micro-btn:visible').count(),4,'Microsteps must expand on mobile');
           const mobileBefore=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[window.__ORBIT_DEBUG__.state.selectedWheel].r);
           await page.locator('#wheelControls .wheel:visible .micro-btn').nth(2).click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[window.__ORBIT_DEBUG__.state.selectedWheel].r),mobileBefore+1);
+          await page.locator('#wheelControls .wheel:visible .precision-fold summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced settings should be folded on mobile');
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),true,'Mobile advanced background switch hidden');
@@ -568,7 +585,7 @@ jobs:
           await page.evaluate(()=>window.__ORBIT_DEBUG__.setLevel(12));
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v17.png',fullPage:true});
+          await page.screenshot({path:'mobile-v18.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -581,7 +598,7 @@ jobs:
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
           assert.equal(await page.locator('#clearNav').isVisible(),false,'Mobile should use dock next, not desktop navigation');
-          await page.screenshot({path:'mobile-v17-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v18-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),13,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
@@ -600,13 +617,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v17-clear-flight-qa
+          name: orbit-v18-focus-hud-qa
           path: |
-            desktop-v17.png
-            mobile-v17.png
-            desktop-v17-clear.png
-            mobile-v17-clear.png
-            desktop-v17-origin.png
-            desktop-v17-frost.png
-            desktop-v17-ember.png
+            desktop-v18.png
+            mobile-v18.png
+            desktop-v18-clear.png
+            mobile-v18-clear.png
+            desktop-v18-origin.png
+            desktop-v18-frost.png
+            desktop-v18-ember.png
           if-no-files-found: ignore
