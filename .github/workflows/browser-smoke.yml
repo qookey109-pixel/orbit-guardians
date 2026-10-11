@@ -262,8 +262,8 @@ jobs:
         with:
           name: orbit-v09-guided-feedback-progress-qa
           path: |
-            desktop-v08.png
-            mobile-v08.png
-            desktop-v08-clear.png
-            mobile-v08-clear.png
+            desktop-v09.png
+            mobile-v09.png
+            desktop-v09-clear.png
+            mobile-v09-clear.png
           if-no-files-found: ignore
