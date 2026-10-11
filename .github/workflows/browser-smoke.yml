@@ -1,4 +1,4 @@
-name: Orbit V1.10 canvas interaction QA
+name: Orbit V1.11 level workshop QA
 
 on:
   push:
@@ -17,8 +17,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Independently verify mission geometry
+      - name: Independently verify published mission geometry
         run: node tools/verify-orbit-levels.mjs
+      - name: Validate offline Level Workshop and generate review-only sample
+        run: |
+          node tools/test-level-workshop.mjs
+          node tools/generate-level-candidates.mjs --seed 20261011 --difficulty hard --count 3 --output research/workshop-candidates.json
+          node tools/test-level-workshop.mjs research/workshop-candidates.json
       - name: Install browser
         run: |
           npm install --no-save playwright@1.55.1
@@ -34,7 +39,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Canvas Interaction V1\.10/);
+          assert.match(await page.title(),/Level Workshop V1\.11/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -60,7 +65,11 @@ jobs:
           assert.equal(checks.visual.motion,'native-canvas');
           assert.equal(checks.visual.motionDurationMs,640);
           assert.equal(checks.visual.predictionRevealMs,520);
-          assert.equal(await page.locator('script[src]').count(),0,'Unexpected externally loaded animation dependency');
+          const scripts=await page.locator('script[src]').evaluateAll(els=>els.map(el=>new URL(el.src).pathname));
+          assert.deepEqual(scripts,['/src/levels.js'],'Only the first-party static mission catalog may load');
+          assert.equal(await page.evaluate(()=>window.ORBIT_LEVEL_DATA?.levels?.length),18);
+          assert.equal(await page.evaluate(()=>window.ORBIT_LEVEL_DATA.levels===window.__ORBIT_DEBUG__.levels),true,
+            'The game and independent catalog must use exactly the same 18 level objects');
           assert.equal(checks.visual.quietHUD,true);
           assert.equal(await page.locator('.header-right .nav-link').count(),0);
           assert.equal(await page.locator('.live-readout').isVisible(),false);
@@ -207,7 +216,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
-          await page.screenshot({path:'desktop-v110.png',fullPage:true});
+          await page.screenshot({path:'desktop-v111.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -401,7 +410,7 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v110-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v111-clear.png',fullPage:true});
           // Replay remains possible using existing flight controls, with no results card.
           await page.locator('#resetBtn').click();
           assert.equal(await page.locator('#clearNav').isVisible(),false);
@@ -457,9 +466,9 @@ jobs:
             });
             worldSamples.push(sample);return sample;
           };
-          await samplePlanet(0);await page.screenshot({path:'desktop-v110-origin.png',fullPage:true});
-          await samplePlanet(6);await page.screenshot({path:'desktop-v110-frost.png',fullPage:true});
-          await samplePlanet(12);await page.screenshot({path:'desktop-v110-ember.png',fullPage:true});
+          await samplePlanet(0);await page.screenshot({path:'desktop-v111-origin.png',fullPage:true});
+          await samplePlanet(6);await page.screenshot({path:'desktop-v111-frost.png',fullPage:true});
+          await samplePlanet(12);await page.screenshot({path:'desktop-v111-ember.png',fullPage:true});
           assert.ok(worldSamples[0].some((v,i)=>Math.abs(v-worldSamples[1][i])>5),'Second planet background must differ');
           assert.ok(worldSamples[1].some((v,i)=>Math.abs(v-worldSamples[2][i])>5),'Third planet background must differ');
           // All 18 levels clear without a modal, and each next stage unlocks sequentially.
@@ -595,7 +604,7 @@ jobs:
           await page.evaluate(()=>window.__ORBIT_DEBUG__.setLevel(12));
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v110.png',fullPage:true});
+          await page.screenshot({path:'mobile-v111.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -608,7 +617,7 @@ jobs:
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
           assert.equal(await page.locator('#clearNav').isVisible(),false,'Mobile should use dock next, not desktop navigation');
-          await page.screenshot({path:'mobile-v110-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v111-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),13,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
@@ -642,13 +651,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v110-canvas-interaction-qa
+          name: orbit-v111-level-workshop-qa
           path: |
-            desktop-v110.png
-            mobile-v110.png
-            desktop-v110-clear.png
-            mobile-v110-clear.png
-            desktop-v110-origin.png
-            desktop-v110-frost.png
-            desktop-v110-ember.png
+            desktop-v111.png
+            mobile-v111.png
+            desktop-v111-clear.png
+            mobile-v111-clear.png
+            desktop-v111-origin.png
+            desktop-v111-frost.png
+            desktop-v111-ember.png
+            research/workshop-candidates.json
           if-no-files-found: ignore
