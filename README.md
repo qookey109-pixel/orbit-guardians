@@ -1,6 +1,6 @@
 # ORBIT // CODE — 軌道守護者
 
-**Canvas Interaction V1.10** · 傅立葉圓周軌道益智遊戲 · 繁體中文
+**Level Workshop V1.11** · 傅立葉圓周軌道益智遊戲 · 繁體中文
 
 🎮 **[立即遊玩（GitHub Pages）](https://qookey109-pixel.github.io/orbit-guardians/)**
 
@@ -59,6 +59,22 @@
 - 舊版六關的解鎖及最佳成績使用相同 localStorage keys 和 flat level indices。舊資料中若第六關已完成但 unlocked=6，會自動開放第七關。
 - **動畫留待後續加入**：跨星球時觸發 `orbit:planet-arrival` CustomEvent，其 `detail` 為 `{from,to,name}`（從 0 起算的星球索引）；之後可接入玩家製作的過場動畫，而目前直接切關。
 - 不增加付費 API 或額外伺服器，維持 GitHub Pages 及 V0.8 無倒數的自由探索玩法。
+
+## V1.11｜Level Workshop：關卡資料模組化與離線候選產生器
+
+- **原始碼分層**：正式三顆星球、18 關的唯一關卡資料來源已移到 [`src/levels.js`](src/levels.js)。`index.html` 仍保留原有 Canvas 2D 解謎引擎和一體式 HUD，會先載入這份本機靜態關卡資料，再啟動遊戲。
+- **維持正式玩法與紀錄**：關卡順序、參考半徑／方向、訊號位置、危險區、已解鎖進度、手把、航線分享與現有瀏覽器 `localStorage` key 均不變。仍最多三圓、無倒數、無星星結算，玩家不須下載 AI 模型或呼叫 API。
+- **離線候選生成**：新增 [`tools/generate-level-candidates.mjs`](tools/generate-level-candidates.mjs)，以固定 seed 產生可重現的 easy／medium／hard／expert 候選，可設定補給數、危險區數，候選獨立輸出 JSON，標示 `REVIEW_ONLY_NOT_PUBLISHED`，不會自動混入 `src/levels.js`。
+- **數學驗證與反向測試**：[獨立幾何工具](tools/orbit-geometry.mjs) 檢查候選參考軌道命中全部補給站、沒有碰撞禁區、起始參數不會直接全通；[產生器測試](tools/test-level-workshop.mjs) 檢查四種難度、固定亂數重現、錯誤輸入及竄改關卡不會誤判。
+- **CI 預覽供審核**：GitHub Actions 每輪先驗證正式 18 關與候選生成，再執行桌面／手機瀏覽器 QA；產生的候選 JSON 存在測試 artifact，可在審核後才討論導入，不影響正式玩家。
+- **範例命令**：
+
+  ```bash
+  node tools/verify-orbit-levels.mjs
+  node tools/test-level-workshop.mjs
+  node tools/generate-level-candidates.mjs --seed 20261011 --difficulty hard --count 3 --output research/workshop-candidates.json
+  node tools/test-level-workshop.mjs research/workshop-candidates.json
+  ```
 
 ## V1.10｜原生 Canvas 動畫與獨立幾何檢查
 
@@ -141,6 +157,7 @@
 
 ## 版本
 
+- **V1.11**：Level Workshop；正式關卡資料外移、四級難度離線候選產生器、獨立物理與產生器測試、CI 候選審查檔。
 - **V1.10**：Canvas Interaction；路線重新開啟時的描繪回饋、半徑數字短暫高亮、按鈕 ARIA 調整與獨立關卡幾何 CI 驗證。
 - **V1.9**：Motion Polish；原生 Canvas 軌道微光、拖曳環提示、補給粒子與 AI Resource Hub 資源整合決策。
 - **V1.8**：Focus HUD；精簡右側常駐控制與導航、預測狀態、短暫操作提示、灰階鎖定星球。
