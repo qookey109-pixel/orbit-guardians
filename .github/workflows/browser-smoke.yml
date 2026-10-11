@@ -1,4 +1,4 @@
-name: Orbit endless nonmodal progression QA
+name: Orbit guided v0.9 experience QA
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Endless Orbit V0\.8/);
+          assert.match(await page.title(),/Guided Orbit V0\.9/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -46,12 +46,27 @@ jobs:
           assert.equal(checks.visual.background,'classic-cosmos');
           assert.equal(checks.visual.completion,'nonmodal');
           assert.equal(checks.visual.timeLimit,false);
+          assert.equal(checks.visual.onboarding,true);
+          assert.equal(checks.visual.prediction,'hazard-aware');
+          assert.equal(checks.visual.scores,'persistent-best');
           assert.deepEqual(checks.styleCount,1);
           assert.equal(checks.hiddenDecor,true);
           assert.equal(checks.noOldScanline,true);
           assert.ok(checks.overflow<2,'Desktop horizontal overflow '+checks.overflow);
           assert.ok(checks.verticalOverflow<2,'Desktop vertical overflow '+checks.verticalOverflow);
           assert.ok(checks.canvasHeight>600,'Integrated desktop canvas should exceed 600px '+checks.canvasHeight);
+          assert.equal(await page.locator('#missionObjective').count(),1);
+          assert.match(await page.locator('#missionObjective').textContent(),/收集 2 座補給站/);
+          assert.match(await page.locator('#missionStory').textContent(),/殖民地/);
+          await page.locator('#tutorial').waitFor({state:'visible',timeout:4000});
+          assert.match(await page.locator('#tutorialTitle').textContent(),/補給站/);
+          await page.locator('#tutorialSkip').click();
+          assert.equal(await page.locator('#tutorial').isVisible(),false);
+          assert.equal(await page.evaluate(()=>localStorage.getItem('orbit-code-tutorial-v09')),'done');
+          await page.locator('#levelList .level-btn').nth(1).click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),0,'Locked level should not open');
+          assert.match(await page.locator('#stageNotice').textContent(),/先完成第 1 關/);
+          assert.equal(await page.locator('#stageNotice').isVisible(),true);
           assert.equal(await page.locator('#timerMetric').count(),0,'Countdown must not be shown');
           assert.equal(await page.locator('#timeFill').count(),0,'Time bar must not be shown');
           assert.equal(await page.locator('#resultOverlay').count(),0,'Modal completion overlay must not exist');
@@ -85,7 +100,7 @@ jobs:
           assert.ok(sceneDifference>65,'Original space scene absent: difference '+sceneDifference);
           await page.locator('#sceneBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
-          await page.screenshot({path:'desktop-v08.png',fullPage:true});
+          await page.screenshot({path:'desktop-v09.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -115,6 +130,19 @@ jobs:
             return out;
           });
           for(const r of results){assert.equal(r.hit,r.goals,r.name+' missed goal');assert.equal(r.collision,false,r.name+' hit hazard')}
+          // Hazard preview has defined red danger segments for a deliberately risky radius.
+          const hazardPreview=await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__,l=d.levels[4],h=l.hazards[0],w=[{r:Math.hypot(h.x,h.y),d:1}];
+            let dangerous=0;
+            let a=d.pointAt(0,w);
+            for(let i=1;i<=240;i++){
+              const b=d.pointAt(i*8/240,w);
+              if(d.segmentDistance(a,b,h)<=h.r+4)dangerous++;
+              a=b;
+            }
+            return dangerous;
+          });
+          assert.ok(hazardPreview>0,'Hazard intersection sample missing');
           // Complete a level by collecting real goal positions; never stop the orbit on clear.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -126,6 +154,12 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.cleared),true,'Level not cleared');
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running','Orbit stopped on clear');
           assert.equal(await page.locator('#completionPanel').isVisible(),true,'Completion UI is not visible');
+          assert.equal(await page.locator('#completionStars').textContent(),'★★★');
+          assert.match(await page.locator('#completionFacts').textContent(),/1 個圓 · 碰撞 0 次/);
+          assert.equal(await page.locator('#completionBonus').isVisible(),true);
+          const savedBest=await page.evaluate(()=>JSON.parse(localStorage.getItem('orbit-code-progress')).best['0']);
+          assert.deepEqual(savedBest,{stars:3,hits:0,wheels:1,single:true});
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.pickupFx.length),2,'Pickup animation effects not spawned');
           assert.equal(await page.locator('#nextSideBtn').isVisible(),true,'Next-level button not shown in right console');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Mobile-only next button shown on desktop');
           await page.evaluate(()=>window.__ORBIT_DEBUG__.state.t=1000);
@@ -133,11 +167,27 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v08-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v09-clear.png',fullPage:true});
+          // Replaying with worse collisions must not erase the previous best score.
+          await page.locator('#retrySideBtn').click();
+          await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__;
+            d.state.hits=3;
+            d.start();
+            for(const g of d.levels[0].goals)d.collision(g,g);
+          });
+          assert.equal(await page.locator('#completionStars').textContent(),'★☆☆');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.best[0].stars),3);
           await page.locator('#nextSideBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),1,'Next-level action did not switch level');
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready','Next level should be ready');
           assert.equal(await page.locator('#completionPanel').isVisible(),false,'Previous completion still visible');
+          // Persistent progress and tutorial preference survive a fresh visit.
+          await page.reload({waitUntil:'networkidle'});
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.best[0].stars),3,'Best score did not persist');
+          assert.ok(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.unlocked)>=2,'Unlocked stages lost after reload');
+          assert.equal(await page.locator('#tutorial').isVisible(),false,'Skipped tutorial should not reappear');
+          await page.evaluate(()=>window.__ORBIT_DEBUG__.setLevel(1));
           const sizes=[{width:1440,height:900},{width:1366,height:768},{width:1024,height:720},{width:820,height:900},{width:390,height:844},{width:375,height:667},{width:320,height:568},{width:844,height:390}];
           const layouts=[];
           for(const size of sizes){
@@ -179,7 +229,7 @@ jobs:
           assert.equal(await page.locator('#levelList .level-btn').count(),6);
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v08.png',fullPage:true});
+          await page.screenshot({path:'mobile-v09.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -191,7 +241,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
-          await page.screenshot({path:'mobile-v08-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v09-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),2,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
@@ -203,14 +253,14 @@ jobs:
           await page.locator('#resetBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready');
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
-          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear}));
+          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest}));
           await browser.close();
           NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v08-endless-progression-qa
+          name: orbit-v09-guided-feedback-progress-qa
           path: |
             desktop-v08.png
             mobile-v08.png
