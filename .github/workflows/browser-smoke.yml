@@ -1,4 +1,4 @@
-name: Orbit V1.8 focus HUD QA
+name: Orbit V1.9 motion polish QA
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Focus HUD V1\.8/);
+          assert.match(await page.title(),/Motion Polish V1\.9/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -55,6 +55,9 @@ jobs:
           assert.equal(checks.visual.goal,'supply-station');
           assert.equal(checks.visual.hazard,'navigation-mine');
           assert.equal(checks.visual.layout,'focus-hud');
+          assert.equal(checks.visual.motion,'native-canvas');
+          assert.equal(checks.visual.motionDurationMs,640);
+          assert.equal(await page.locator('script[src]').count(),0,'Unexpected externally loaded animation dependency');
           assert.equal(checks.visual.quietHUD,true);
           assert.equal(await page.locator('.header-right .nav-link').count(),0);
           assert.equal(await page.locator('.live-readout').isVisible(),false);
@@ -201,7 +204,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
-          await page.screenshot({path:'desktop-v18.png',fullPage:true});
+          await page.screenshot({path:'desktop-v19.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -236,6 +239,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r),r0+5);
           await page.locator('#wheelControls .wheel:visible .micro-btn').nth(1).click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r),r0+4);
+          assert.ok(await page.evaluate(()=>performance.now()-window.__ORBIT_DEBUG__.state.motionAt<2000),'Editing should trigger motion feedback');
           assert.equal(Number(await page.locator('#wheelControls .wheel:visible input[type="number"]').inputValue()),r0+4);
           // Console shortcuts: number keys choose ring, arrows fine-tune, shift uses 5px steps, P previews.
           await page.locator('#wheelControls .wheel:visible .precision-fold summary').click();
@@ -391,7 +395,7 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v18-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v19-clear.png',fullPage:true});
           // Replay remains possible using existing flight controls, with no results card.
           await page.locator('#resetBtn').click();
           assert.equal(await page.locator('#clearNav').isVisible(),false);
@@ -447,9 +451,9 @@ jobs:
             });
             worldSamples.push(sample);return sample;
           };
-          await samplePlanet(0);await page.screenshot({path:'desktop-v18-origin.png',fullPage:true});
-          await samplePlanet(6);await page.screenshot({path:'desktop-v18-frost.png',fullPage:true});
-          await samplePlanet(12);await page.screenshot({path:'desktop-v18-ember.png',fullPage:true});
+          await samplePlanet(0);await page.screenshot({path:'desktop-v19-origin.png',fullPage:true});
+          await samplePlanet(6);await page.screenshot({path:'desktop-v19-frost.png',fullPage:true});
+          await samplePlanet(12);await page.screenshot({path:'desktop-v19-ember.png',fullPage:true});
           assert.ok(worldSamples[0].some((v,i)=>Math.abs(v-worldSamples[1][i])>5),'Second planet background must differ');
           assert.ok(worldSamples[1].some((v,i)=>Math.abs(v-worldSamples[2][i])>5),'Third planet background must differ');
           // All 18 levels clear without a modal, and each next stage unlocks sequentially.
@@ -585,7 +589,7 @@ jobs:
           await page.evaluate(()=>window.__ORBIT_DEBUG__.setLevel(12));
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v18.png',fullPage:true});
+          await page.screenshot({path:'mobile-v19.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -598,10 +602,22 @@ jobs:
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
           assert.equal(await page.locator('#clearNav').isVisible(),false,'Mobile should use dock next, not desktop navigation');
-          await page.screenshot({path:'mobile-v18-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v19-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),13,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
+          // Respect OS accessibility setting; visual-only motion must not be required for gameplay.
+          const reducedPage=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+          await reducedPage.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
+          const reduced=await reducedPage.evaluate(()=>({
+            prefersReduced:matchMedia('(prefers-reduced-motion: reduce)').matches,
+            animation:getComputedStyle(document.querySelector('#previewBtn .preview-led')).animationName,
+            levels:window.__ORBIT_DEBUG__.levels.length
+          }));
+          assert.equal(reduced.prefersReduced,true);
+          assert.equal(reduced.animation,'none','Motion should be disabled when reduced-motion is requested');
+          assert.equal(reduced.levels,18);
+          await reducedPage.close();
 
           await page.locator('#startBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running');
@@ -610,20 +626,20 @@ jobs:
           await page.locator('#resetBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready');
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
-          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl,gamepadAudit,planetUnlockAudit,finalJourney}));
+          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl,gamepadAudit,planetUnlockAudit,finalJourney,reduced}));
           await browser.close();
           NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v18-focus-hud-qa
+          name: orbit-v19-motion-polish-qa
           path: |
-            desktop-v18.png
-            mobile-v18.png
-            desktop-v18-clear.png
-            mobile-v18-clear.png
-            desktop-v18-origin.png
-            desktop-v18-frost.png
-            desktop-v18-ember.png
+            desktop-v19.png
+            mobile-v19.png
+            desktop-v19-clear.png
+            mobile-v19-clear.png
+            desktop-v19-origin.png
+            desktop-v19-frost.png
+            desktop-v19-ember.png
           if-no-files-found: ignore
