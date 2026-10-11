@@ -1,6 +1,6 @@
 # ORBIT // CODE — 軌道守護者
 
-**Focus HUD V1.8** · 傅立葉圓周軌道益智遊戲 · 繁體中文
+**Motion Polish V1.9** · 傅立葉圓周軌道益智遊戲 · 繁體中文
 
 🎮 **[立即遊玩（GitHub Pages）](https://qookey109-pixel.github.io/orbit-guardians/)**
 
@@ -59,6 +59,14 @@
 - 舊版六關的解鎖及最佳成績使用相同 localStorage keys 和 flat level indices。舊資料中若第六關已完成但 unlocked=6，會自動開放第七關。
 - **動畫留待後續加入**：跨星球時觸發 `orbit:planet-arrival` CustomEvent，其 `detail` 為 `{from,to,name}`（從 0 起算的星球索引）；之後可接入玩家製作的過場動畫，而目前直接切關。
 - 不增加付費 API 或額外伺服器，維持 GitHub Pages 及 V0.8 無倒數的自由探索玩法。
+
+## V1.9｜Motion Polish × AI Resource Hub
+
+- **純原生 Canvas 動畫**：半徑改動時，預測線在約 640ms 內出現沿軌道移動的微光（仍完整顯示預測線與紅色危險區段）；選取圓的拖曳控制點更清楚；補給收集時有 6 顆短暫光點。
+- **動作尊重使用者設定**：遵守 `prefers-reduced-motion`；所有回饋效果不更動軌道公式、命中判定或飛船速度。
+- **效能與維運優先**：借鏡 Anime.js／60fps 的動效設計，但不新增套件、貼圖、CDN、外部 API 或新的玩家下載步驟。
+- **資源採用決策**：針對 Anime.js、ThreeUI、React Bits、vgpu、SoundShockAudio、PixelArtBase、Agent Skills 等，已建立 [AI Resource Hub 整合優先順序](docs/AI_RESOURCE_HUB_ORBIT_INTEGRATION.md)。區分「已用設計理念」「待評估」與「暫不採用」，不混淆實作狀態。
+- 既有一體式 Console HUD、3 星球／18 關、無限時間、無結算／無星等顯示均保留。
 
 ## V1.8｜Focus HUD 預設精簡介面
 
@@ -124,6 +132,7 @@
 
 ## 版本
 
+- **V1.9**：Motion Polish；原生 Canvas 軌道微光、拖曳環提示、補給粒子與 AI Resource Hub 資源整合決策。
 - **V1.8**：Focus HUD；精簡右側常駐控制與導航、預測狀態、短暫操作提示、灰階鎖定星球。
 - **V1.7**：Clear Flight；先移除結算區、通關星級與星球星數，保留精簡下一關操作、關卡完成／解鎖進度及歷史資料。
 - **V1.6**：Star Atlas；上次關卡自動恢復、星球選擇直接進入場景、18 關及 54 星總覽、星球進度環。
