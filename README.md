@@ -1,6 +1,6 @@
 # ORBIT // CODE — 軌道守護者
 
-**Motion Polish V1.9** · 傅立葉圓周軌道益智遊戲 · 繁體中文
+**Canvas Interaction V1.10** · 傅立葉圓周軌道益智遊戲 · 繁體中文
 
 🎮 **[立即遊玩（GitHub Pages）](https://qookey109-pixel.github.io/orbit-guardians/)**
 
@@ -59,6 +59,15 @@
 - 舊版六關的解鎖及最佳成績使用相同 localStorage keys 和 flat level indices。舊資料中若第六關已完成但 unlocked=6，會自動開放第七關。
 - **動畫留待後續加入**：跨星球時觸發 `orbit:planet-arrival` CustomEvent，其 `detail` 為 `{from,to,name}`（從 0 起算的星球索引）；之後可接入玩家製作的過場動畫，而目前直接切關。
 - 不增加付費 API 或額外伺服器，維持 GitHub Pages 及 V0.8 無倒數的自由探索玩法。
+
+## V1.10｜原生 Canvas 動畫與獨立幾何檢查
+
+- **路線預測重啟**：玩家將「路線」由關切換成開，預測路徑會在 520ms 內顯示短暫的逐段描繪微光；原本的完整路線、方向與紅色危險區段從第一幀即保留，不會因動效失去可讀性。
+- **半徑數字回饋**：滑桿、拖曳、輸入與微調仍即時改變實際解謎參數。數字標籤另用瀏覽器原生 Web Animations API 呈現短暫高亮，最多每 110ms 觸發一次；不引入 Anime.js 或下載任何字體/套件。
+- **選圓無障礙語意**：將選圓的按鈕狀態統一為 `aria-pressed`，避免混用 `role=button` 與 `aria-selected`。保留最多三個圓與半徑 0–165。
+- **純 Node.js 關卡獨立驗證**：新增 [`tools/verify-orbit-levels.mjs`](tools/verify-orbit-levels.mjs)，GitHub Actions 在跑瀏覽器前，獨立計算 18 關參考圓周的路徑、補給命中與禁區接觸。工具不使用遊戲裡的 `collision()` 或 `__ORBIT_DEBUG__` 來直接宣告過關。
+- **降低動態設定**：保留 `prefers-reduced-motion` 支援，所有動畫只改視覺、不改判定。
+- 你提供的 Anime.js 片段屬於 SVG／DOM 參考；ORBIT 現在用 Canvas 2D，不適合直接套用 `strokeDashoffset`。外部動畫函式庫與 3D 模型先保持未導入。
 
 ## V1.9｜Motion Polish × AI Resource Hub
 
@@ -132,6 +141,7 @@
 
 ## 版本
 
+- **V1.10**：Canvas Interaction；路線重新開啟時的描繪回饋、半徑數字短暫高亮、按鈕 ARIA 調整與獨立關卡幾何 CI 驗證。
 - **V1.9**：Motion Polish；原生 Canvas 軌道微光、拖曳環提示、補給粒子與 AI Resource Hub 資源整合決策。
 - **V1.8**：Focus HUD；精簡右側常駐控制與導航、預測狀態、短暫操作提示、灰階鎖定星球。
 - **V1.7**：Clear Flight；先移除結算區、通關星級與星球星數，保留精簡下一關操作、關卡完成／解鎖進度及歷史資料。
