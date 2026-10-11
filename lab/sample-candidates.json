@@ -1,0 +1,292 @@
+{
+  "schema": "orbit-research-candidates-v1",
+  "status": "REVIEW_ONLY_NOT_PUBLISHED",
+  "seed": 20261011,
+  "difficulty": "hard",
+  "count": 3,
+  "goals": 4,
+  "hazards": 2,
+  "criteria": {
+    "maxWheels": 3,
+    "captureRadius": 9,
+    "previewIndependent": true,
+    "allGoalsReachable": true,
+    "referenceHazardContacts": 0,
+    "startNotAlreadySolved": true,
+    "nearDuplicateThreshold": 0.88,
+    "reviewGate": "READY_FOR_HUMAN_PLAYTEST",
+    "automaticPublication": false
+  },
+  "candidates": [
+    {
+      "name": "研究候選 01",
+      "desc": "調整圓周半徑與方向，依序連線補給站並避開禁區。",
+      "tip": "先觀察紅色預測路段，再調整各圓周。",
+      "start": [
+        {
+          "r": 139,
+          "d": -1
+        },
+        {
+          "r": 80,
+          "d": -1
+        },
+        {
+          "r": 44,
+          "d": 1
+        }
+      ],
+      "refs": [
+        {
+          "r": 114,
+          "d": -1
+        },
+        {
+          "r": 80,
+          "d": -1
+        },
+        {
+          "r": 44,
+          "d": -1
+        }
+      ],
+      "times": [
+        1.17,
+        3.51,
+        5.34,
+        7.13
+      ],
+      "max": 16,
+      "radius": 18,
+      "captureRadius": 9,
+      "hazards": [
+        {
+          "x": -20,
+          "y": 128,
+          "r": 13
+        },
+        {
+          "x": 98,
+          "y": 133,
+          "r": 14
+        }
+      ],
+      "goals": [
+        {
+          "x": 7.270253808832841,
+          "y": -184.30653489671244
+        },
+        {
+          "x": -66.00266628518345,
+          "y": -27.36706642343613
+        },
+        {
+          "x": -53.2110296321311,
+          "y": 29.473508523918202
+        },
+        {
+          "x": 84.34662587059522,
+          "y": 189.3582352015788
+        }
+      ],
+      "review": {
+        "id": "orbit-20261011-hard-01",
+        "state": "NOT_REVIEWED",
+        "challengeIndex": 91,
+        "roughBand": "expert",
+        "startGoalCoverage": 2,
+        "startDifferences": 2,
+        "directionChanges": 0,
+        "pathLength": 1208.034,
+        "radialSpan": 180.224,
+        "minGoalSpacing": 58.262,
+        "hazardClearance": 18.966,
+        "issues": [],
+        "reviewFlags": [],
+        "similarity": null,
+        "reviewGate": "READY_FOR_HUMAN_PLAYTEST",
+        "disclaimer": "Rule-based triage only; subjective difficulty, fun and accessibility need real players."
+      }
+    },
+    {
+      "name": "研究候選 02",
+      "desc": "調整圓周半徑與方向，依序連線補給站並避開禁區。",
+      "tip": "先觀察紅色預測路段，再調整各圓周。",
+      "start": [
+        {
+          "r": 125,
+          "d": -1
+        },
+        {
+          "r": 71,
+          "d": -1
+        },
+        {
+          "r": 29,
+          "d": 1
+        }
+      ],
+      "refs": [
+        {
+          "r": 125,
+          "d": -1
+        },
+        {
+          "r": 71,
+          "d": -1
+        },
+        {
+          "r": 29,
+          "d": -1
+        }
+      ],
+      "times": [
+        1.6,
+        3.12,
+        6.4,
+        7.1
+      ],
+      "max": 16,
+      "radius": 18,
+      "captureRadius": 9,
+      "hazards": [
+        {
+          "x": 141,
+          "y": 74,
+          "r": 13
+        },
+        {
+          "x": -24,
+          "y": 2,
+          "r": 13
+        }
+      ],
+      "goals": [
+        {
+          "x": -42.274575140626304,
+          "y": -143.56904513317807
+        },
+        {
+          "x": -69.03922546243746,
+          "y": -35.34849763812137
+        },
+        {
+          "x": -42.274575140626354,
+          "y": 143.56904513317804
+        },
+        {
+          "x": 91.00513434109754,
+          "y": 176.03344298979644
+        }
+      ],
+      "review": {
+        "id": "orbit-20261011-hard-02",
+        "state": "NOT_REVIEWED",
+        "challengeIndex": 84,
+        "roughBand": "expert",
+        "startGoalCoverage": 1,
+        "startDifferences": 1,
+        "directionChanges": 0,
+        "pathLength": 1076.55,
+        "radialSpan": 147.461,
+        "minGoalSpacing": 111.481,
+        "hazardClearance": 38.954,
+        "issues": [],
+        "reviewFlags": [],
+        "similarity": null,
+        "reviewGate": "READY_FOR_HUMAN_PLAYTEST",
+        "disclaimer": "Rule-based triage only; subjective difficulty, fun and accessibility need real players."
+      }
+    },
+    {
+      "name": "研究候選 03",
+      "desc": "調整圓周半徑與方向，依序連線補給站並避開禁區。",
+      "tip": "先觀察紅色預測路段，再調整各圓周。",
+      "start": [
+        {
+          "r": 131,
+          "d": -1
+        },
+        {
+          "r": 69,
+          "d": -1
+        },
+        {
+          "r": 29,
+          "d": 1
+        }
+      ],
+      "refs": [
+        {
+          "r": 131,
+          "d": -1
+        },
+        {
+          "r": 69,
+          "d": -1
+        },
+        {
+          "r": 29,
+          "d": -1
+        }
+      ],
+      "times": [
+        1.28,
+        2.69,
+        6.17,
+        7.22
+      ],
+      "max": 16,
+      "radius": 18,
+      "captureRadius": 9,
+      "hazards": [
+        {
+          "x": -131,
+          "y": -21,
+          "r": 15
+        },
+        {
+          "x": -107,
+          "y": 87,
+          "r": 15
+        }
+      ],
+      "goals": [
+        {
+          "x": 12.043212686138677,
+          "y": -176.67468863428414
+        },
+        {
+          "x": -70.89892603325518,
+          "y": -52.843721712662585
+        },
+        {
+          "x": -60.423469472467204,
+          "y": 121.3367884284636
+        },
+        {
+          "x": 122.89821103060724,
+          "y": 168.21862621078722
+        }
+      ],
+      "review": {
+        "id": "orbit-20261011-hard-03",
+        "state": "NOT_REVIEWED",
+        "challengeIndex": 84,
+        "roughBand": "expert",
+        "startGoalCoverage": 2,
+        "startDifferences": 1,
+        "directionChanges": 0,
+        "pathLength": 1091.862,
+        "radialSpan": 144.475,
+        "minGoalSpacing": 149.042,
+        "hazardClearance": 15.361,
+        "issues": [],
+        "reviewFlags": [],
+        "similarity": null,
+        "reviewGate": "READY_FOR_HUMAN_PLAYTEST",
+        "disclaimer": "Rule-based triage only; subjective difficulty, fun and accessibility need real players."
+      }
+    }
+  ]
+}
