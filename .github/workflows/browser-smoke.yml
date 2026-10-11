@@ -1,4 +1,4 @@
-name: Orbit V1.2 console HUD QA
+name: Orbit V1.3 precision-flight QA
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Console HUD V1\.2/);
+          assert.match(await page.title(),/Precision Flight V1\.3/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -47,7 +47,9 @@ jobs:
           assert.equal(checks.visual.ship,'round-scout');
           assert.equal(checks.visual.goal,'supply-station');
           assert.equal(checks.visual.hazard,'navigation-mine');
-          assert.equal(checks.visual.layout,'console-hud');
+          assert.equal(checks.visual.layout,'precision-flight');
+          assert.equal(checks.visual.precision,true);
+          assert.equal(checks.visual.customConfigs,true);
           assert.equal(checks.visual.background,'classic-cosmos');
           assert.equal(checks.visual.completion,'nonmodal');
           assert.equal(checks.visual.timeLimit,false);
@@ -156,7 +158,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
-          await page.screenshot({path:'desktop-v12.png',fullPage:true});
+          await page.screenshot({path:'desktop-v13.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -181,6 +183,41 @@ jobs:
           await page.locator('#wheelTabs .wheel-tab').nth(0).click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.selectedWheel),0);
           assert.notEqual(beforeRadius,84,'Radius test should change a value');
+          // Microsteps control only the selected wheel and synchronize slider and numeric value.
+          assert.equal(await page.locator('#wheelControls .wheel:visible .micro-btn').count(),4);
+          const r0=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
+          await page.locator('#wheelControls .wheel:visible .micro-btn').nth(3).click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r),r0+5);
+          await page.locator('#wheelControls .wheel:visible .micro-btn').nth(1).click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r),r0+4);
+          assert.equal(Number(await page.locator('#wheelControls .wheel:visible input[type="number"]').inputValue()),r0+4);
+          // Console shortcuts: number keys choose ring, arrows fine-tune, shift uses 5px steps, P previews.
+          await page.keyboard.press('2');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.selectedWheel),1);
+          await page.keyboard.press('Shift+ArrowRight');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[1].r),89);
+          await page.keyboard.press('ArrowLeft');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[1].r),88);
+          const preKey=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showPrediction);
+          await page.keyboard.press('p');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showPrediction),!preKey);
+          await page.keyboard.press('p');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showPrediction),preKey);
+          // Level-local parameters survive reload but never override the default automatically.
+          const savedParameters=await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__;
+            const saved=JSON.parse(localStorage.getItem('orbit-code-user-configs-v13'));
+            return {level:d.state.level,wheels:saved[d.state.level],original:d.state.wheels.map(w=>({r:w.r,d:w.d}))};
+          });
+          assert.deepEqual(savedParameters.wheels,savedParameters.original);
+          await page.reload({waitUntil:'networkidle'});
+          assert.equal(await page.locator('#advancedOptions').getAttribute('open'),null);
+          await page.locator('#advancedOptions summary').click();
+          assert.equal(await page.locator('#restoreConfigBtn').isEnabled(),true,'Saved config restore must be enabled');
+          await page.locator('#restoreConfigBtn').click();
+          assert.deepEqual(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.map(w=>({r:w.r,d:w.d}))),savedParameters.wheels);
+          assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),3);
+          await page.locator('#advancedOptions summary').click();
           const results=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__,out=[];
             for(const lvl of d.levels){
@@ -234,7 +271,7 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v12-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v13-clear.png',fullPage:true});
           // Replaying with worse collisions must not erase the previous best score.
           await page.locator('#retrySideBtn').click();
           await page.evaluate(()=>{
@@ -283,9 +320,9 @@ jobs:
             });
             worldSamples.push(sample);return sample;
           };
-          await samplePlanet(0);await page.screenshot({path:'desktop-v12-origin.png',fullPage:true});
-          await samplePlanet(6);await page.screenshot({path:'desktop-v12-frost.png',fullPage:true});
-          await samplePlanet(12);await page.screenshot({path:'desktop-v12-ember.png',fullPage:true});
+          await samplePlanet(0);await page.screenshot({path:'desktop-v13-origin.png',fullPage:true});
+          await samplePlanet(6);await page.screenshot({path:'desktop-v13-frost.png',fullPage:true});
+          await samplePlanet(12);await page.screenshot({path:'desktop-v13-ember.png',fullPage:true});
           assert.ok(worldSamples[0].some((v,i)=>Math.abs(v-worldSamples[1][i])>5),'Second planet background must differ');
           assert.ok(worldSamples[1].some((v,i)=>Math.abs(v-worldSamples[2][i])>5),'Third planet background must differ');
           // All 18 levels clear without a modal, and each next stage unlocks sequentially.
@@ -345,6 +382,10 @@ jobs:
           assert.equal(await page.locator('#dockSettings').getAttribute('aria-expanded'),'true');
           assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length),'Wheel tabs must match the current mission');
           assert.equal(await page.locator('#wheelControls .wheel:visible').count(),1);
+          assert.equal(await page.locator('#wheelControls .wheel:visible .micro-btn').count(),4,'Microsteps must be visible on mobile');
+          const mobileBefore=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[window.__ORBIT_DEBUG__.state.selectedWheel].r);
+          await page.locator('#wheelControls .wheel:visible .micro-btn').nth(2).click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[window.__ORBIT_DEBUG__.state.selectedWheel].r),mobileBefore+1);
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced settings should be folded on mobile');
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),true,'Mobile advanced background switch hidden');
@@ -371,7 +412,7 @@ jobs:
           assert.match(await page.locator('#levelProgress').textContent(),/赤曜星/);
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v12.png',fullPage:true});
+          await page.screenshot({path:'mobile-v13.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -383,7 +424,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
-          await page.screenshot({path:'mobile-v12-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v13-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),13,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
@@ -395,20 +436,20 @@ jobs:
           await page.locator('#resetBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready');
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
-          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius}));
+          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore}));
           await browser.close();
           NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v12-console-game-hud-qa
+          name: orbit-v13-precision-flight-qa
           path: |
-            desktop-v12.png
-            mobile-v12.png
-            desktop-v12-clear.png
-            mobile-v12-clear.png
-            desktop-v12-origin.png
-            desktop-v12-frost.png
-            desktop-v12-ember.png
+            desktop-v13.png
+            mobile-v13.png
+            desktop-v13-clear.png
+            mobile-v13-clear.png
+            desktop-v13-origin.png
+            desktop-v13-frost.png
+            desktop-v13-ember.png
           if-no-files-found: ignore
