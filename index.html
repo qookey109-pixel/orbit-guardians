@@ -907,7 +907,7 @@ try{
  const parsed=JSON.parse(localStorage.getItem(SAVED_CONFIG_KEY)||'{}');
  if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed)){
   for(const [stage,wheels] of Object.entries(parsed)){
-   if(!/^\\d+$/.test(stage)||Number(stage)<0||Number(stage)>=levels.length||
+   if(!/^\d+$/.test(stage)||Number(stage)<0||Number(stage)>=levels.length||
       !Array.isArray(wheels)||wheels.length<1||wheels.length>MAX_WHEELS)continue;
    if(wheels.every(w=>w&&Number.isInteger(w.r)&&w.r>=0&&w.r<=165&&(w.d===1||w.d===-1)))
      savedConfigs[stage]=wheels.map(w=>({r:w.r,d:w.d}));
