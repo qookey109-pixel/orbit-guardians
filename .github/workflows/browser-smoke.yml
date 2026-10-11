@@ -1,4 +1,4 @@
-name: Orbit V1.9 motion polish QA
+name: Orbit V1.10 canvas interaction QA
 
 on:
   push:
@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Independently verify mission geometry
+        run: node tools/verify-orbit-levels.mjs
       - name: Install browser
         run: |
           npm install --no-save playwright@1.55.1
@@ -32,7 +34,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Motion Polish V1\.9/);
+          assert.match(await page.title(),/Canvas Interaction V1\.10/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -57,6 +59,7 @@ jobs:
           assert.equal(checks.visual.layout,'focus-hud');
           assert.equal(checks.visual.motion,'native-canvas');
           assert.equal(checks.visual.motionDurationMs,640);
+          assert.equal(checks.visual.predictionRevealMs,520);
           assert.equal(await page.locator('script[src]').count(),0,'Unexpected externally loaded animation dependency');
           assert.equal(checks.visual.quietHUD,true);
           assert.equal(await page.locator('.header-right .nav-link').count(),0);
@@ -204,7 +207,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
-          await page.screenshot({path:'desktop-v19.png',fullPage:true});
+          await page.screenshot({path:'desktop-v110.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -220,6 +223,8 @@ jobs:
           assert.equal(await page.locator('#wheelTabs .wheel-count-shortcut').nth(1).isDisabled(),true);
           assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),3,'Wheel tabs not created');
           await page.locator('#wheelTabs .wheel-tab').nth(1).click();
+          assert.equal(await page.locator('#wheelTabs .wheel-tab').nth(1).getAttribute('aria-pressed'),'true');
+          assert.equal(await page.locator('#wheelTabs .wheel-tab').nth(0).getAttribute('aria-pressed'),'false');
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.selectedWheel),1);
           assert.equal(await page.locator('#wheelControls .wheel:visible').count(),1);
           const beforeRadius=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[1].r);
@@ -254,6 +259,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showPrediction),!preKey);
           await page.keyboard.press('p');
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showPrediction),preKey);
+          assert.ok(await page.evaluate(()=>performance.now()-window.__ORBIT_DEBUG__.state.predictionRevealAt<1000),'Reenabling prediction should start a visual-only reveal');
           // Level-local parameters survive reload but never override the default automatically.
           const savedParameters=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -395,7 +401,7 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v19-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v110-clear.png',fullPage:true});
           // Replay remains possible using existing flight controls, with no results card.
           await page.locator('#resetBtn').click();
           assert.equal(await page.locator('#clearNav').isVisible(),false);
@@ -451,9 +457,9 @@ jobs:
             });
             worldSamples.push(sample);return sample;
           };
-          await samplePlanet(0);await page.screenshot({path:'desktop-v19-origin.png',fullPage:true});
-          await samplePlanet(6);await page.screenshot({path:'desktop-v19-frost.png',fullPage:true});
-          await samplePlanet(12);await page.screenshot({path:'desktop-v19-ember.png',fullPage:true});
+          await samplePlanet(0);await page.screenshot({path:'desktop-v110-origin.png',fullPage:true});
+          await samplePlanet(6);await page.screenshot({path:'desktop-v110-frost.png',fullPage:true});
+          await samplePlanet(12);await page.screenshot({path:'desktop-v110-ember.png',fullPage:true});
           assert.ok(worldSamples[0].some((v,i)=>Math.abs(v-worldSamples[1][i])>5),'Second planet background must differ');
           assert.ok(worldSamples[1].some((v,i)=>Math.abs(v-worldSamples[2][i])>5),'Third planet background must differ');
           // All 18 levels clear without a modal, and each next stage unlocks sequentially.
@@ -589,7 +595,7 @@ jobs:
           await page.evaluate(()=>window.__ORBIT_DEBUG__.setLevel(12));
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v19.png',fullPage:true});
+          await page.screenshot({path:'mobile-v110.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -602,7 +608,7 @@ jobs:
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
           assert.equal(await page.locator('#clearNav').isVisible(),false,'Mobile should use dock next, not desktop navigation');
-          await page.screenshot({path:'mobile-v19-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v110-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),13,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
@@ -617,6 +623,9 @@ jobs:
           assert.equal(reduced.prefersReduced,true);
           assert.equal(reduced.animation,'none','Motion should be disabled when reduced-motion is requested');
           assert.equal(reduced.levels,18);
+          await reducedPage.locator('#previewBtn').click();
+          await reducedPage.locator('#previewBtn').click();
+          assert.equal(await reducedPage.evaluate(()=>window.__ORBIT_DEBUG__.state.showPrediction),true);
           await reducedPage.close();
 
           await page.locator('#startBtn').click();
@@ -633,13 +642,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v19-motion-polish-qa
+          name: orbit-v110-canvas-interaction-qa
           path: |
-            desktop-v19.png
-            mobile-v19.png
-            desktop-v19-clear.png
-            mobile-v19-clear.png
-            desktop-v19-origin.png
-            desktop-v19-frost.png
-            desktop-v19-ember.png
+            desktop-v110.png
+            mobile-v110.png
+            desktop-v110-clear.png
+            mobile-v110-clear.png
+            desktop-v110-origin.png
+            desktop-v110-frost.png
+            desktop-v110-ember.png
           if-no-files-found: ignore
