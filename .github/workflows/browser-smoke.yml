@@ -1,4 +1,4 @@
-name: Orbit integrated command deck QA
+name: Orbit endless nonmodal progression QA
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Integrated Command Deck V0\.7\.3/);
+          assert.match(await page.title(),/Endless Orbit V0\.8/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -44,12 +44,18 @@ jobs:
           assert.equal(checks.visual.hazard,'navigation-mine');
           assert.equal(checks.visual.layout,'integrated');
           assert.equal(checks.visual.background,'classic-cosmos');
+          assert.equal(checks.visual.completion,'nonmodal');
+          assert.equal(checks.visual.timeLimit,false);
           assert.deepEqual(checks.styleCount,1);
           assert.equal(checks.hiddenDecor,true);
           assert.equal(checks.noOldScanline,true);
           assert.ok(checks.overflow<2,'Desktop horizontal overflow '+checks.overflow);
           assert.ok(checks.verticalOverflow<2,'Desktop vertical overflow '+checks.verticalOverflow);
           assert.ok(checks.canvasHeight>600,'Integrated desktop canvas should exceed 600px '+checks.canvasHeight);
+          assert.equal(await page.locator('#timerMetric').count(),0,'Countdown must not be shown');
+          assert.equal(await page.locator('#timeFill').count(),0,'Time bar must not be shown');
+          assert.equal(await page.locator('#resultOverlay').count(),0,'Modal completion overlay must not exist');
+          assert.equal(await page.evaluate(()=>('remaining' in window.__ORBIT_DEBUG__.state)),false,'Timer state must be removed');
           const integration=await page.evaluate(()=>({headerControls:document.querySelector('.board-header').contains(document.querySelector('.actionbar')),headerMetrics:document.querySelector('.board-header').contains(document.querySelector('.metrics')),stageHeight:document.querySelector('#levelsSection').getBoundingClientRect().height,stageCount:document.querySelectorAll('.level-btn').length}));
           assert.equal(integration.headerControls,true);
           assert.equal(integration.headerMetrics,true);
@@ -79,7 +85,7 @@ jobs:
           assert.ok(sceneDifference>65,'Original space scene absent: difference '+sceneDifference);
           await page.locator('#sceneBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
-          await page.screenshot({path:'desktop-v073.png',fullPage:true});
+          await page.screenshot({path:'desktop-v08.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -109,6 +115,29 @@ jobs:
             return out;
           });
           for(const r of results){assert.equal(r.hit,r.goals,r.name+' missed goal');assert.equal(r.collision,false,r.name+' hit hazard')}
+          // Complete a level by collecting real goal positions; never stop the orbit on clear.
+          await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__;
+            d.setLevel(0);
+            d.state.wheels=d.levels[0].refs.map(w=>({...w}));
+            d.start();
+            for(const g of d.levels[0].goals)d.collision(g,g);
+          });
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.cleared),true,'Level not cleared');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running','Orbit stopped on clear');
+          assert.equal(await page.locator('#completionPanel').isVisible(),true,'Completion UI is not visible');
+          assert.equal(await page.locator('#nextSideBtn').isVisible(),true,'Next-level button not shown in right console');
+          assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Mobile-only next button shown on desktop');
+          await page.evaluate(()=>window.__ORBIT_DEBUG__.state.t=1000);
+          await page.waitForTimeout(180);
+          const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
+          assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
+          assert.equal(afterClear.mode,'running');
+          await page.screenshot({path:'desktop-v08-clear.png',fullPage:true});
+          await page.locator('#nextSideBtn').click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),1,'Next-level action did not switch level');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready','Next level should be ready');
+          assert.equal(await page.locator('#completionPanel').isVisible(),false,'Previous completion still visible');
           const sizes=[{width:1440,height:900},{width:1366,height:768},{width:1024,height:720},{width:820,height:900},{width:390,height:844},{width:375,height:667},{width:320,height:568},{width:844,height:390}];
           const layouts=[];
           for(const size of sizes){
@@ -148,7 +177,23 @@ jobs:
           assert.equal(await page.locator('#levelList .level-btn').count(),6);
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v073.png',fullPage:true});
+          await page.screenshot({path:'mobile-v08.png',fullPage:true});
+          // On phones show a fixed next-level action without forcing a modal or settings drawer.
+          await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__;
+            d.state.wheels=d.levels[d.state.level].refs.map(w=>({...w}));
+            d.start();
+            for(const g of d.levels[d.state.level].goals)d.collision(g,g);
+          });
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.cleared),true);
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running');
+          assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
+          assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
+          await page.screenshot({path:'mobile-v08-clear.png',fullPage:true});
+          await page.locator('#nextDockBtn').click();
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),2,'Mobile next level click failed');
+          assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
+
           await page.locator('#startBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'running');
           await page.locator('#startBtn').click();
@@ -156,15 +201,17 @@ jobs:
           await page.locator('#resetBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.mode),'ready');
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
-          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration}));
+          console.log(JSON.stringify({status:'PASS',checks,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear}));
           await browser.close();
           NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v073-command-deck-qa
+          name: orbit-v08-endless-progression-qa
           path: |
             desktop-v073.png
-            mobile-v073.png
+            mobile-v08.png
+            desktop-v08-clear.png
+            mobile-v08-clear.png
           if-no-files-found: ignore
