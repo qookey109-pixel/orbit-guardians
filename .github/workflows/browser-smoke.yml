@@ -167,6 +167,8 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),false);
           await page.locator('#sceneBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
+          await page.locator('#plusCircle').click();
+          await page.locator('#plusCircle').click();
           await page.locator('#minusCircle').click();
           await page.locator('#plusCircle').click();
           const wheelCount=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length);
@@ -210,7 +212,7 @@ jobs:
         with:
           name: orbit-v08-endless-progression-qa
           path: |
-            desktop-v073.png
+            desktop-v08.png
             mobile-v08.png
             desktop-v08-clear.png
             mobile-v08-clear.png
