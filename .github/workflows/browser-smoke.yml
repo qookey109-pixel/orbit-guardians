@@ -1,4 +1,4 @@
-name: Orbit V1.16 sector HUD fit QA
+name: Orbit V1.17 WebKit and Canvas performance QA
 
 on:
   push:
@@ -45,7 +45,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Sector Focus V1\.16/);
+          assert.match(await page.title(),/WebKit Flight Performance V1\.17/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -121,6 +121,14 @@ jobs:
           assert.notEqual(flightClarity.goalColor,flightClarity.hazardColor,'Supply and hazard metrics must use distinct visual colors');
           assert.equal(await page.locator('#previewBtn').getAttribute('aria-pressed'),'true');
           assert.equal(await page.locator('#previewText').textContent(),'路線：開');
+          // Ready-state forecast paths and unchanged telemetry must not be rebuilt per frame.
+          const beforeIdle=await page.evaluate(()=>({...window.__ORBIT_DEBUG__.renderPerf}));
+          await page.waitForTimeout(180);
+          const afterIdle=await page.evaluate(()=>({...window.__ORBIT_DEBUG__.renderPerf}));
+          assert.ok(afterIdle.forecastBuilds>=1,'Initial forecast never rendered');
+          assert.equal(afterIdle.forecastBuilds,beforeIdle.forecastBuilds,'Unchanged orbit preview rebuilt while idle');
+          assert.ok(afterIdle.forecastHits>beforeIdle.forecastHits,'No cached forecast reuse observed');
+          assert.equal(afterIdle.hudWrites,beforeIdle.hudWrites,'HUD values rewritten without state change');
           assert.equal(checks.visual.settlement,false);
           assert.equal(checks.visual.starRating,false);
           assert.equal(await page.locator('#completionPanel').count(),0,'Settlement panel should be removed');
@@ -259,7 +267,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
-          await page.screenshot({path:'desktop-v116.png',fullPage:true});
+          await page.screenshot({path:'desktop-v117.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -454,7 +462,7 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v116-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v117-clear.png',fullPage:true});
           // Replay remains possible using existing flight controls, with no results card.
           await page.locator('#resetBtn').click();
           assert.equal(await page.locator('#clearNav').isVisible(),false);
@@ -518,9 +526,9 @@ jobs:
             worldVisuals.push(visual);
             return sample;
           };
-          await samplePlanet(0);await page.screenshot({path:'desktop-v116-origin.png',fullPage:true});
-          await samplePlanet(6);await page.screenshot({path:'desktop-v116-frost.png',fullPage:true});
-          await samplePlanet(12);await page.screenshot({path:'desktop-v116-ember.png',fullPage:true});
+          await samplePlanet(0);await page.screenshot({path:'desktop-v117-origin.png',fullPage:true});
+          await samplePlanet(6);await page.screenshot({path:'desktop-v117-frost.png',fullPage:true});
+          await samplePlanet(12);await page.screenshot({path:'desktop-v117-ember.png',fullPage:true});
           assert.ok(worldSamples[0].some((v,i)=>Math.abs(v-worldSamples[1][i])>5),'Second planet background must differ');
           assert.ok(worldSamples[1].some((v,i)=>Math.abs(v-worldSamples[2][i])>5),'Third planet background must differ');
           assert.deepEqual(worldVisuals.map(x=>x.world),['origin','frost','ember']);
@@ -694,7 +702,7 @@ jobs:
           await page.evaluate(()=>window.__ORBIT_DEBUG__.setLevel(12));
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v116.png',fullPage:true});
+          await page.screenshot({path:'mobile-v117.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -707,7 +715,7 @@ jobs:
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
           assert.equal(await page.locator('#clearNav').isVisible(),false,'Mobile should use dock next, not desktop navigation');
-          await page.screenshot({path:'mobile-v116-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v117-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),13,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
@@ -756,7 +764,7 @@ jobs:
           assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.playing),false);
           await lab.locator('#hintBtn').click();
           assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.assisted),true);
-          await lab.screenshot({path:'lab-v116-desktop.png',fullPage:true});
+          await lab.screenshot({path:'lab-v117-desktop.png',fullPage:true});
           await lab.locator('#reviewNotes').fill('需要增加玩家提示並確認實際難度');
           await lab.locator('#reviewNotes').press('Tab');
           await lab.locator('[data-review="REVISE"]').click();
@@ -784,27 +792,95 @@ jobs:
           }));
           assert.equal(labMobile.overflow,0,'Playtest mobile should have no horizontal scroll');
           assert.ok(labMobile.canvas>200&&labMobile.controls>40);
-          await lab.screenshot({path:'lab-v116-mobile.png',fullPage:true});
+          await lab.screenshot({path:'lab-v117-mobile.png',fullPage:true});
           assert.deepEqual(labErrors,[],'Review lab browser errors');
           await lab.close();
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
           console.log(JSON.stringify({status:'PASS',checks,focusedPanel,flightClarity,worldVisuals,mobileTouchTargets,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl,gamepadAudit,planetUnlockAudit,finalJourney,reduced}));
           await browser.close();
           NODE
+      - name: Install WebKit engine
+        run: npx playwright install --with-deps webkit
+      - name: Cross-browser WebKit smoke (desktop and mobile)
+        run: |
+          curl -sf http://127.0.0.1:8765/ >/dev/null || (python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/orbit-webkit-server.log 2>&1 & sleep 1)
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { webkit } from 'playwright';
+          const browser=await webkit.launch({headless:true});
+          const errors=[],page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
+          page.on('pageerror',e=>errors.push(String(e)));
+          await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
+          assert.match(await page.title(),/WebKit Flight Performance V1\.17/);
+          assert.equal(await page.evaluate(()=>typeof Path2D),'function','WebKit Path2D support required');
+          assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__?.levels?.length),18);
+          assert.equal(await page.locator('#planetBar .planet-btn').count(),3);
+          assert.equal(await page.locator('#levelList .level-btn').count(),6);
+          assert.ok(await page.evaluate(()=>window.__ORBIT_DEBUG__.renderPerf.forecastBuilds>=1));
+          const perfBefore=await page.evaluate(()=>({...window.__ORBIT_DEBUG__.renderPerf}));
+          await page.waitForTimeout(160);
+          const perfAfter=await page.evaluate(()=>({...window.__ORBIT_DEBUG__.renderPerf}));
+          assert.equal(perfAfter.forecastBuilds,perfBefore.forecastBuilds,'Safari idle preview recalculated');
+          assert.ok(perfAfter.forecastHits>perfBefore.forecastHits,'Safari failed to reuse Path2D preview');
+          const radialChange=await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__,before=d.renderPerf.forecastBuilds,initial=d.state.wheels[0].r;
+            d.updateWheel(0,'r',Math.min(165,initial+1));
+            return {before,after:d.renderPerf.forecastBuilds,radius:d.state.wheels[0].r,initial};
+          });
+          assert.equal(radialChange.radius,radialChange.initial+1);
+          assert.ok(radialChange.after>radialChange.before,'Changing a radius must invalidate cached prediction');
+          const screenshot=async (name)=>page.screenshot({path:name,fullPage:true});
+          await screenshot('webkit-desktop-v117.png');
+          for(const size of [{width:390,height:844},{width:320,height:568},{width:844,height:390}]){
+            await page.setViewportSize(size);
+            await page.waitForTimeout(120);
+            const fit=await page.evaluate(()=>({
+              scrollX:document.documentElement.scrollWidth-innerWidth,
+              scrollY:document.documentElement.scrollHeight-innerHeight,
+              canvas:document.querySelector('#gameCanvas').getBoundingClientRect().height,
+              dock:document.querySelector('.mobile-dock').getBoundingClientRect().height,
+              preview:document.querySelector('#previewBtn').getAttribute('aria-pressed')
+            }));
+            assert.ok(fit.scrollX<2&&fit.scrollY<2,'WebKit viewport overflow: '+JSON.stringify({size,fit}));
+            assert.ok(fit.canvas>=size.height-2,'WebKit canvas not full viewport: '+JSON.stringify({size,fit}));
+            assert.ok(fit.dock>=35,'WebKit mobile dock missing: '+JSON.stringify({size,fit}));
+            assert.equal(fit.preview,'true');
+          }
+          await page.setViewportSize({width:390,height:844});
+          await page.locator('#dockSettings').click();
+          assert.equal(await page.locator('#settingsPanel').isVisible(),true);
+          assert.equal(await page.locator('#mobileSheetDismiss').isVisible(),true);
+          await page.locator('#mobileSheetDismiss').click({position:{x:20,y:250}});
+          assert.equal(await page.locator('#settingsPanel').isVisible(),false);
+          await page.locator('#dockLevels').click();
+          assert.equal(await page.locator('#levelsSection').isVisible(),true);
+          await page.keyboard.press('Escape');
+          assert.equal(await page.locator('#levelsSection').isVisible(),false);
+          await screenshot('webkit-mobile-v117.png');
+          const reducedPage=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+          reducedPage.on('pageerror',e=>errors.push(String(e)));
+          await reducedPage.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
+          assert.equal(await reducedPage.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches),true);
+          assert.equal(await reducedPage.evaluate(()=>getComputedStyle(document.querySelector('#previewBtn .preview-led')).animationName),'none');
+          assert.deepEqual(errors,[],'WebKit had uncaught errors');
+          await browser.close();
+          NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v116-sector-hud-fit-qa
+          name: orbit-v117-webkit-canvas-qa
           path: |
-            desktop-v116.png
-            mobile-v116.png
-            desktop-v116-clear.png
-            mobile-v116-clear.png
-            desktop-v116-origin.png
-            desktop-v116-frost.png
-            desktop-v116-ember.png
+            desktop-v117.png
+            mobile-v117.png
+            desktop-v117-clear.png
+            mobile-v117-clear.png
+            desktop-v117-origin.png
+            desktop-v117-frost.png
+            desktop-v117-ember.png
             research/workshop-candidates.json
-            lab-v116-desktop.png
-            lab-v116-mobile.png
+            lab-v117-desktop.png
+            lab-v117-mobile.png
+            webkit-desktop-v117.png
+            webkit-mobile-v117.png
           if-no-files-found: ignore
