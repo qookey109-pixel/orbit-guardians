@@ -837,13 +837,22 @@ jobs:
           assert.equal(await page.locator('#planetBar .planet-btn').count(),3);
           assert.equal(await page.locator('#levelList .level-btn').count(),6);
           assert.ok(await page.evaluate(()=>window.__ORBIT_DEBUG__.renderPerf.forecastBuilds>=1));
-          const perfBefore=await page.evaluate(()=>({...window.__ORBIT_DEBUG__.renderPerf}));
-          await page.waitForTimeout(160);
-          // WebKit headless may throttle requestAnimationFrame; prove reuse with explicit redraws.
-          await page.evaluate(()=>{for(let i=0;i<4;i++)window.__ORBIT_DEBUG__.draw()});
-          const perfAfter=await page.evaluate(()=>({...window.__ORBIT_DEBUG__.renderPerf}));
-          assert.equal(perfAfter.forecastBuilds,perfBefore.forecastBuilds,'Safari idle preview recalculated');
-          assert.ok(perfAfter.forecastHits>perfBefore.forecastHits,'Safari failed to reuse Path2D preview');
+          // Observer scheduling after initial paint is browser-specific. Test a stable,
+          // unchanged viewport synchronously, independent of rAF and resize delivery timing.
+          await page.waitForTimeout(180);
+          const cacheAudit=await page.evaluate(()=>{
+            const d=window.__ORBIT_DEBUG__;d.draw();
+            const before={...d.renderPerf};
+            d.resize();d.resize();
+            for(let i=0;i<4;i++)d.draw();
+            return {before,after:{...d.renderPerf}};
+          });
+          assert.equal(cacheAudit.after.canvasResizes,cacheAudit.before.canvasResizes,
+            'WebKit must not reallocate Canvas for an unchanged viewport');
+          assert.equal(cacheAudit.after.forecastBuilds,cacheAudit.before.forecastBuilds,
+            'WebKit stationary preview was rebuilt despite unchanged orbit and viewport');
+          assert.ok(cacheAudit.after.forecastHits>cacheAudit.before.forecastHits,
+            'WebKit failed to reuse Path2D preview');
           const radialChange=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__,before=d.renderPerf.forecastBuilds,initial=d.state.wheels[0].r;
             d.updateWheel(0,'r',Math.min(165,initial+1));
