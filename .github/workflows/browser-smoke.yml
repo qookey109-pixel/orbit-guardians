@@ -1,4 +1,4 @@
-name: Orbit V1.17 WebKit and Canvas performance QA
+name: Orbit V1.18 UI focus and cross-browser QA
 
 on:
   push:
@@ -45,7 +45,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/WebKit Flight Performance V1\.17/);
+          assert.equal(await page.title(),'ORBIT // CODE｜軌道守護者');
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -121,6 +121,17 @@ jobs:
           assert.notEqual(flightClarity.goalColor,flightClarity.hazardColor,'Supply and hazard metrics must use distinct visual colors');
           assert.equal(await page.locator('#previewBtn').getAttribute('aria-pressed'),'true');
           assert.equal(await page.locator('#previewText').textContent(),'路線：開');
+          assert.equal(await page.locator('svg.ui-symbols symbol').count(),16,'SVG icon catalog missing');
+          const iconIds=['fullscreenBtn','hudControlBtn','startBtn','resetBtn','previewBtn','sceneBtn','soundBtn','shareBtn','restoreConfigBtn','referenceBtn','randomBtn','dockSettings','dockLevels'];
+          for(const id of iconIds){
+            const button=page.locator('#'+id);
+            const icon=button.locator('svg.ui-icon use');
+            assert.equal(await icon.count(),1,'Missing consistent SVG icon for '+id);
+            const href=await icon.getAttribute('href');
+            assert.equal(await page.locator('svg.ui-symbols '+href).count(),1,'Unresolved SVG symbol '+href);
+          }
+          assert.equal(await page.locator('header .brand small').isVisible(),false,'Decorative subtitle must not crowd first screen');
+          assert.equal(await page.locator('.gamepad-help').evaluate(el=>el.open),false,'Gamepad legend must stay collapsed');
           // Ready-state forecast paths and unchanged telemetry must not be rebuilt per frame.
           const beforeIdle=await page.evaluate(()=>({...window.__ORBIT_DEBUG__.renderPerf}));
           await page.waitForTimeout(180);
@@ -246,9 +257,11 @@ jobs:
           assert.equal(await page.locator('#soundBtn').getAttribute('aria-pressed'),'false','Sound should be off by default');
           await page.locator('#soundBtn').click();
           assert.equal(await page.locator('#soundBtn').getAttribute('aria-pressed'),'true');
+          assert.equal(await page.locator('#soundBtn .ui-icon use').getAttribute('href'),'#oi-sound');
           assert.equal(await page.evaluate(()=>localStorage.getItem('orbit-code-sounds-v14')),'on');
           await page.locator('#soundBtn').click();
           assert.equal(await page.locator('#soundBtn').getAttribute('aria-pressed'),'false');
+          assert.equal(await page.locator('#soundBtn .ui-icon use').getAttribute('href'),'#oi-mute');
           assert.equal(await page.evaluate(()=>localStorage.getItem('orbit-code-sounds-v14')),'off');
           assert.equal(await page.locator('#wheelControls .wheel:visible').count(),1,'Only current wheel editor should be visible');
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
@@ -268,7 +281,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
-          await page.screenshot({path:'desktop-v117.png',fullPage:true});
+          await page.screenshot({path:'desktop-v118.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -463,7 +476,7 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v117-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v118-clear.png',fullPage:true});
           // Replay remains possible using existing flight controls, with no results card.
           await page.locator('#resetBtn').click();
           assert.equal(await page.locator('#clearNav').isVisible(),false);
@@ -527,9 +540,9 @@ jobs:
             worldVisuals.push(visual);
             return sample;
           };
-          await samplePlanet(0);await page.screenshot({path:'desktop-v117-origin.png',fullPage:true});
-          await samplePlanet(6);await page.screenshot({path:'desktop-v117-frost.png',fullPage:true});
-          await samplePlanet(12);await page.screenshot({path:'desktop-v117-ember.png',fullPage:true});
+          await samplePlanet(0);await page.screenshot({path:'desktop-v118-origin.png',fullPage:true});
+          await samplePlanet(6);await page.screenshot({path:'desktop-v118-frost.png',fullPage:true});
+          await samplePlanet(12);await page.screenshot({path:'desktop-v118-ember.png',fullPage:true});
           assert.ok(worldSamples[0].some((v,i)=>Math.abs(v-worldSamples[1][i])>5),'Second planet background must differ');
           assert.ok(worldSamples[1].some((v,i)=>Math.abs(v-worldSamples[2][i])>5),'Third planet background must differ');
           assert.deepEqual(worldVisuals.map(x=>x.world),['origin','frost','ember']);
@@ -619,7 +632,7 @@ jobs:
               assert.ok(fit.dockBottom<=size.height+1,'Mobile dock not visible: '+JSON.stringify(fit));
               assert.ok(fit.actionH<=52,'Mobile flight controls must be one horizontal row: '+JSON.stringify(fit));
               assert.ok(fit.actionW<=size.width-10,'Mobile flight controls overflow: '+JSON.stringify(fit));
-              assert.ok(fit.dockTarget>=40,'Mobile dock controls must have a 40px+ touch target: '+JSON.stringify(fit));
+              assert.ok(fit.dockTarget>=44,'Mobile dock controls must have a 44px+ touch target: '+JSON.stringify(fit));
               assert.ok(fit.actionBottom<=fit.dockTop+2,'Flight actions must not collide with bottom dock: '+JSON.stringify(fit));
               if(size.width<=510)assert.ok(fit.hudOverlap<1,'Narrow phone mission text and metrics overlap: '+JSON.stringify(fit));
             }
@@ -654,8 +667,8 @@ jobs:
               .map(el=>({label:el.getAttribute('aria-label')||el.textContent.trim(),
                         height:el.getBoundingClientRect().height}));
           });
-          assert.ok(mobileTouchTargets.every(x=>x.height>=40),
-            'Mobile ring controls require >=40px touch targets '+JSON.stringify(mobileTouchTargets));
+          assert.ok(mobileTouchTargets.every(x=>x.height>=44),
+            'Mobile ring controls require >=44px touch targets '+JSON.stringify(mobileTouchTargets));
           assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length),'Wheel tabs must match the current mission');
           assert.equal(await page.locator('#wheelControls .wheel:visible').count(),1);
           assert.equal(await page.locator('#wheelControls .wheel:visible .radius-micro').isVisible(),false,'Microsteps default folded on mobile');
@@ -703,7 +716,7 @@ jobs:
           await page.evaluate(()=>window.__ORBIT_DEBUG__.setLevel(12));
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v117.png',fullPage:true});
+          await page.screenshot({path:'mobile-v118.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -716,7 +729,7 @@ jobs:
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
           assert.equal(await page.locator('#clearNav').isVisible(),false,'Mobile should use dock next, not desktop navigation');
-          await page.screenshot({path:'mobile-v117-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v118-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),13,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
@@ -765,7 +778,7 @@ jobs:
           assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.playing),false);
           await lab.locator('#hintBtn').click();
           assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.assisted),true);
-          await lab.screenshot({path:'lab-v117-desktop.png',fullPage:true});
+          await lab.screenshot({path:'lab-v118-desktop.png',fullPage:true});
           await lab.locator('#reviewNotes').fill('需要增加玩家提示並確認實際難度');
           await lab.locator('#reviewNotes').press('Tab');
           await lab.locator('[data-review="REVISE"]').click();
@@ -793,7 +806,7 @@ jobs:
           }));
           assert.equal(labMobile.overflow,0,'Playtest mobile should have no horizontal scroll');
           assert.ok(labMobile.canvas>200&&labMobile.controls>40);
-          await lab.screenshot({path:'lab-v117-mobile.png',fullPage:true});
+          await lab.screenshot({path:'lab-v118-mobile.png',fullPage:true});
           assert.deepEqual(labErrors,[],'Review lab browser errors');
           await lab.close();
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
@@ -812,9 +825,15 @@ jobs:
           const errors=[],page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/WebKit Flight Performance V1\.17/);
+          assert.equal(await page.title(),'ORBIT // CODE｜軌道守護者');
           assert.equal(await page.evaluate(()=>typeof Path2D),'function','WebKit Path2D support required');
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__?.levels?.length),18);
+          assert.equal(await page.locator('#startBtn .ui-icon use').getAttribute('href'),'#oi-launch');
+          await page.locator('#startBtn').click();
+          assert.equal(await page.locator('#startBtn .ui-icon use').getAttribute('href'),'#oi-pause','WebKit launch icon');
+          await page.locator('#startBtn').click();
+          assert.equal(await page.locator('#startBtn .ui-icon use').getAttribute('href'),'#oi-launch','WebKit pause icon');
+          await page.locator('#resetBtn').click();
           assert.equal(await page.locator('#planetBar .planet-btn').count(),3);
           assert.equal(await page.locator('#levelList .level-btn').count(),6);
           assert.ok(await page.evaluate(()=>window.__ORBIT_DEBUG__.renderPerf.forecastBuilds>=1));
@@ -833,7 +852,7 @@ jobs:
           assert.equal(radialChange.radius,radialChange.initial+1);
           assert.ok(radialChange.after>radialChange.before,'Changing a radius must invalidate cached prediction');
           const screenshot=async (name)=>page.screenshot({path:name,fullPage:true});
-          await screenshot('webkit-desktop-v117.png');
+          await screenshot('webkit-desktop-v118.png');
           for(const size of [{width:390,height:844},{width:320,height:568},{width:844,height:390}]){
             await page.setViewportSize(size);
             await page.waitForTimeout(120);
@@ -859,7 +878,7 @@ jobs:
           assert.equal(await page.locator('#levelsSection').isVisible(),true);
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await screenshot('webkit-mobile-v117.png');
+          await screenshot('webkit-mobile-v118.png');
           const reducedPage=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
           reducedPage.on('pageerror',e=>errors.push(String(e)));
           await reducedPage.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
@@ -872,18 +891,18 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v117-webkit-canvas-qa
+          name: orbit-v118-ui-clarity-qa
           path: |
-            desktop-v117.png
-            mobile-v117.png
-            desktop-v117-clear.png
-            mobile-v117-clear.png
-            desktop-v117-origin.png
-            desktop-v117-frost.png
-            desktop-v117-ember.png
+            desktop-v118.png
+            mobile-v118.png
+            desktop-v118-clear.png
+            mobile-v118-clear.png
+            desktop-v118-origin.png
+            desktop-v118-frost.png
+            desktop-v118-ember.png
             research/workshop-candidates.json
-            lab-v117-desktop.png
-            lab-v117-mobile.png
-            webkit-desktop-v117.png
-            webkit-mobile-v117.png
+            lab-v118-desktop.png
+            lab-v118-mobile.png
+            webkit-desktop-v118.png
+            webkit-mobile-v118.png
           if-no-files-found: ignore
