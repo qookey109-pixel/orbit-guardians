@@ -1,6 +1,6 @@
 # ORBIT // CODE — 軌道守護者
 
-**Sector Focus V1.16** · 傅立葉圓周軌道益智遊戲 · 繁體中文
+**WebKit Flight Performance V1.17** · 傅立葉圓周軌道益智遊戲 · 繁體中文
 
 🎮 **[立即遊玩（GitHub Pages）](https://qookey109-pixel.github.io/orbit-guardians/)**
 
@@ -59,6 +59,14 @@
 - 舊版六關的解鎖及最佳成績使用相同 localStorage keys 和 flat level indices。舊資料中若第六關已完成但 unlocked=6，會自動開放第七關。
 - **動畫留待後續加入**：跨星球時觸發 `orbit:planet-arrival` CustomEvent，其 `detail` 為 `{from,to,name}`（從 0 起算的星球索引）；之後可接入玩家製作的過場動畫，而目前直接切關。
 - 不增加付費 API 或額外伺服器，維持 GitHub Pages 及 V0.8 無倒數的自由探索玩法。
+
+## V1.17｜WebKit Flight Performance：軌道預測快取與 Safari 相容性
+
+- **預測線原生 Path2D 快取**：靜止／暫停時，針對同一關卡、圓周配置、運行相位與畫面尺寸，重用完整 240 段預測點、禁區分類、實際繪製路徑與方向箭頭；不再在每一幀重新計算三角函數及交會判定。飛行時位置持續變動，仍逐幀更新；改半徑／方向、切關或縮放立即重算。只保留一份快取，不累積歷史畫面。
+- **HUD DOM 減少重複寫入**：補給／碰撞顯示值沒變時不重設文字節點，減少無意義的主執行緒處理。這不改變計數來源、碰撞或存檔。
+- **實際 WebKit 驗收**：既有完整 Chromium 18 關／8 尺寸 QA 保留，另安裝 Playwright WebKit 引擎，檢查桌機、390×844、320×568、844×390 等畫面、Path2D 快取、半徑變更立即更新、手機抽屜／Esc 操作及系統減少動態效果。
+- **無虛構 FPS**：本輪以「預測重建次數／快取命中」及功能回歸證明重複計算已減少，不聲稱所有裝置都達到特定 FPS；原生 Safari 實機流暢度仍可後續獨立驗收。
+- 不變：**三顆星球／18 關、完整傅立葉軌道公式、禁區與補給判定、既有存檔、行動版單畫面、Level Review Lab 研究隔離**。
 
 ## V1.16｜Sector Focus：星球視覺識別 × 手機 HUD 排版
 
@@ -210,6 +218,7 @@
 
 ## 版本
 
+- **V1.17**：WebKit Flight Performance；預測線 Path2D 靜態快取、HUD 避免重複 DOM 更新、WebKit 跨瀏覽器測試。
 - **V1.16**：Sector Focus；星球專屬 HUD 色彩、低干擾背景層與小螢幕避讓／觸控優化。
 - **V1.15**：Flight Clarity；航線安全／危險對比、補給／禁區邊界、飛船光暈與沉浸式 HUD 層級。
 - **V1.14**：Mobile Drawer Focus；手機設定與關卡抽屜可點擊背景收合，避免誤觸 Canvas，加入 PR 瀏覽器驗證。
