@@ -250,7 +250,7 @@ jobs:
           assert.equal(await page.locator('#advancedOptions').getAttribute('open'),null,'Advanced settings should be folded by default');
           assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),1);
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced controls must stay folded');
-          await page.locator('#advancedOptions summary').click();
+          await page.locator('#advancedOptions > summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),true,'Expanded advanced scene control hidden');
           assert.equal(await page.locator('#soundBtn').isVisible(),true);
           assert.equal(await page.locator('#shareBtn').isVisible(),true);
@@ -279,7 +279,7 @@ jobs:
           assert.ok(sceneDifference>65,'Original space scene absent: difference '+sceneDifference);
           await page.locator('#sceneBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
-          await page.locator('#advancedOptions summary').click();
+          await page.locator('#advancedOptions > summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
           await page.screenshot({path:'desktop-v118.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
@@ -344,12 +344,12 @@ jobs:
           assert.deepEqual(savedParameters.wheels,savedParameters.original);
           await page.reload({waitUntil:'networkidle'});
           assert.equal(await page.locator('#advancedOptions').getAttribute('open'),null);
-          await page.locator('#advancedOptions summary').click();
+          await page.locator('#advancedOptions > summary').click();
           assert.equal(await page.locator('#restoreConfigBtn').isEnabled(),true,'Saved config restore must be enabled');
           await page.locator('#restoreConfigBtn').click();
           assert.deepEqual(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.map(w=>({r:w.r,d:w.d}))),savedParameters.wheels);
           assert.equal(await page.locator('#wheelTabs .wheel-tab').count(),3);
-          await page.locator('#advancedOptions summary').click();
+          await page.locator('#advancedOptions > summary').click();
           // A shared route must reproduce both the level and all orbit parameters.
           const sharedUrl=await page.evaluate(()=>window.__ORBIT_DEBUG__.makeShareUrl());
           const shared=new URL(sharedUrl);
@@ -359,7 +359,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),0);
           assert.deepEqual(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.map(w=>({r:w.r,d:w.d}))),savedParameters.wheels,'Shared link did not reproduce the route');
           assert.match(await page.locator('#flightToast').textContent(),/已載入分享的航線/);
-          await page.locator('#advancedOptions summary').click();
+          await page.locator('#advancedOptions > summary').click();
           await page.locator('#shareBtn').click();
           await page.waitForFunction(()=>/航線連結|瀏覽器未允許複製/.test(document.querySelector('#flightToast')?.textContent||''),null,{timeout:4000});
           assert.match(await page.locator('#flightToast').textContent(),/航線連結|瀏覽器未允許複製/);
@@ -679,7 +679,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[window.__ORBIT_DEBUG__.state.selectedWheel].r),mobileBefore+1);
           await page.locator('#wheelControls .wheel:visible .precision-fold summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced settings should be folded on mobile');
-          await page.locator('#advancedOptions summary').click();
+          await page.locator('#advancedOptions > summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),true,'Mobile advanced background switch hidden');
           assert.equal(await page.locator('#soundBtn').isVisible(),true,'Mobile sound switch hidden');
           assert.equal(await page.locator('#shareBtn').isVisible(),true,'Mobile sharing button hidden');
@@ -687,7 +687,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),false);
           await page.locator('#sceneBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
-          await page.locator('#advancedOptions summary').click();
+          await page.locator('#advancedOptions > summary').click();
           // Planet three starts with two/three wheels; normalize before checking controls.
           while(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels.length)>1)await page.locator('#wheelTabs .wheel-count-shortcut').nth(0).click();
           await page.locator('#wheelTabs .wheel-count-shortcut').nth(1).click();
