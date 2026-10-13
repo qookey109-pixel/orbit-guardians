@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Control Focus V1.13</title>
+<title>ORBIT // CODE — 軌道守護者｜Mobile Drawer Focus V1.14</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -1101,6 +1101,17 @@ body.level-cleared .board{border:0!important}
 @media(prefers-reduced-motion:reduce){
  #settingsPanel .wheel-tab.selected,#hudControlBtn[aria-expanded=false]{transition:none}
 }
+/* V1.14: a touch-dismiss surface behind mobile drawers prevents accidental canvas edits. */
+.mobile-sheet-dismiss[hidden]{display:none!important}
+.mobile-sheet-dismiss{display:none}
+@media(max-width:860px){
+ body[data-mobile-pane=settings] .mobile-sheet-dismiss,
+ body[data-mobile-pane=levels] .mobile-sheet-dismiss{
+  display:block;position:absolute;inset:0;width:100%;height:100%;z-index:17;
+  padding:0;border:0;border-radius:0;background:rgba(2,10,24,.18);
+  touch-action:manipulation;cursor:default
+ }
+}
 </style>
 </head>
 <body><div class="shell">
@@ -1148,7 +1159,7 @@ body.level-cleared .board{border:0!important}
  <button class="btn share-orbit" id="shareBtn" type="button" aria-label="複製目前關卡及軌道參數連結">↗ 分享航線</button>
 </div>
 <button class="btn" id="restoreConfigBtn" type="button" disabled>↶ 還原上次配置</button><button class="btn" id="referenceBtn">◎ 載入關卡示範參數</button><button class="btn ghost" id="randomBtn">⚄ 隨機實驗</button><div class="fineprint">拖曳彩色圓點，或直接輸入數字。各圓周節奏固定。</div>
-<div class="gamepad-help">手把：A 發射／暫停 · B 方向 · LB/RB 選圓 · 十字鍵微調（↑↓ 為 ±5）· X 預測 · Y 重試 · Start 通關後下一關</div></div></details></aside></main>
+<div class="gamepad-help">手把：A 發射／暫停 · B 方向 · LB/RB 選圓 · 十字鍵微調（↑↓ 為 ±5）· X 預測 · Y 重試 · Start 通關後下一關</div></div></details></aside><button class="mobile-sheet-dismiss" id="mobileSheetDismiss" type="button" aria-label="關閉目前的手機浮動面板" hidden></button></main>
 <nav class="mobile-dock" aria-label="手機遊戲工具列"><button class="dock-btn" id="dockSettings" aria-controls="settingsPanel" aria-expanded="false" type="button">◯ 軌道設定</button><button class="dock-btn" id="dockLevels" aria-controls="levelsSection" aria-expanded="false" type="button">▤ 選擇關卡 <span id="mobileJourneyCount" class="mobile-journey-count" hidden></span></button><button class="dock-btn dock-next" id="nextDockBtn" type="button" hidden>下一關 →</button></nav>
 <footer><span>ORBIT // CODE — 2026 · 靜態網頁，完全在你的裝置運算</span><span><span>不需帳號或 API</span></span></footer>
 </div>
@@ -2123,12 +2134,14 @@ function syncMobilePanels(){
  if(!isMobile)mobilePane='';
  else document.body.classList.remove('rail-hidden');
  document.body.dataset.mobilePane=isMobile?mobilePane:'';
+ $('mobileSheetDismiss').hidden=!(isMobile&&mobilePane);
  $('dockSettings').setAttribute('aria-expanded',String(isMobile&&mobilePane==='settings'));
  $('dockLevels').setAttribute('aria-expanded',String(isMobile&&mobilePane==='levels'));
  $('settingsPanel').inert=isMobile&&mobilePane!=='settings';
  $('levelsSection').inert=isMobile&&mobilePane!=='levels';
  syncHudControl();
 }
+$('mobileSheetDismiss').addEventListener('click',()=>{if(!mobileMedia.matches)return;mobilePane='';syncMobilePanels()});
 $('dockSettings').addEventListener('click',()=>{mobilePane=mobilePane==='settings'?'':'settings';syncMobilePanels()});
 $('dockLevels').addEventListener('click',()=>{mobilePane=mobilePane==='levels'?'':'levels';syncMobilePanels()});
 if(mobileMedia.addEventListener)mobileMedia.addEventListener('change',syncMobilePanels);
