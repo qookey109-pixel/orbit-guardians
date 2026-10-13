@@ -124,6 +124,7 @@ jobs:
           // Ready-state forecast paths and unchanged telemetry must not be rebuilt per frame.
           const beforeIdle=await page.evaluate(()=>({...window.__ORBIT_DEBUG__.renderPerf}));
           await page.waitForTimeout(180);
+          await page.evaluate(()=>{for(let i=0;i<4;i++)window.__ORBIT_DEBUG__.draw()});
           const afterIdle=await page.evaluate(()=>({...window.__ORBIT_DEBUG__.renderPerf}));
           assert.ok(afterIdle.forecastBuilds>=1,'Initial forecast never rendered');
           assert.equal(afterIdle.forecastBuilds,beforeIdle.forecastBuilds,'Unchanged orbit preview rebuilt while idle');
@@ -819,6 +820,8 @@ jobs:
           assert.ok(await page.evaluate(()=>window.__ORBIT_DEBUG__.renderPerf.forecastBuilds>=1));
           const perfBefore=await page.evaluate(()=>({...window.__ORBIT_DEBUG__.renderPerf}));
           await page.waitForTimeout(160);
+          // WebKit headless may throttle requestAnimationFrame; prove reuse with explicit redraws.
+          await page.evaluate(()=>{for(let i=0;i<4;i++)window.__ORBIT_DEBUG__.draw()});
           const perfAfter=await page.evaluate(()=>({...window.__ORBIT_DEBUG__.renderPerf}));
           assert.equal(perfAfter.forecastBuilds,perfBefore.forecastBuilds,'Safari idle preview recalculated');
           assert.ok(perfAfter.forecastHits>perfBefore.forecastHits,'Safari failed to reuse Path2D preview');
