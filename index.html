@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Flight Clarity V1.15</title>
+<title>ORBIT // CODE — 軌道守護者｜Sector Focus V1.16</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -1149,6 +1149,79 @@ body.level-cleared .board{border:0!important}
 }
 @media(prefers-reduced-motion:reduce){
  .board-header .actionbar #startBtn{filter:none;transition:none}
+}
+
+/* V1.16 Sector Identity × Mobile HUD Fit.
+   Cosmetic only: Canvas coordinates, orbit physics, saved state and controls are unchanged. */
+body[data-planet="origin"]{
+ --sector-line:#8ce4cf;--sector-glow:rgba(89,211,195,.24);
+ --sector-nebula:rgba(39,135,142,.105);--sector-nebula-alt:rgba(92,115,204,.085)
+}
+body[data-planet="frost"]{
+ --sector-line:#a8eaf8;--sector-glow:rgba(117,207,241,.28);
+ --sector-nebula:rgba(66,149,203,.13);--sector-nebula-alt:rgba(130,199,242,.09)
+}
+body[data-planet="ember"]{
+ --sector-line:#f6b596;--sector-glow:rgba(244,149,115,.27);
+ --sector-nebula:rgba(188,65,97,.12);--sector-nebula-alt:rgba(233,131,77,.075)
+}
+body[data-planet] .board-canvas:after{
+ background:
+  radial-gradient(ellipse 39% 58% at 0% 61%,var(--sector-nebula),transparent 100%),
+  radial-gradient(ellipse 40% 53% at 100% 26%,var(--sector-nebula-alt),transparent 100%),
+  linear-gradient(180deg,rgba(2,9,23,.34),transparent 19%,transparent 67%,rgba(2,9,23,.4))
+}
+body[data-planet] .board-header .metrics{isolation:isolate}
+body[data-planet] .board-header .metrics:before{
+ content:'';position:absolute;left:10px;right:10px;top:-1px;height:2px;
+ border-radius:3px;background:var(--sector-line);
+ box-shadow:0 0 10px var(--sector-glow);pointer-events:none
+}
+body[data-planet] .planet-btn.selected{
+ border-bottom-color:var(--sector-line)!important;
+ box-shadow:inset 0 -1px var(--sector-line),0 3px 15px var(--sector-glow)!important
+}
+body[data-planet] .level-btn.selected{
+ border-bottom-color:var(--sector-line)!important
+}
+body[data-planet] #settingsPanel .console-header{
+ border-left-color:#dec38b
+}
+@media(max-width:860px){
+ .mobile-dock .dock-btn{height:42px!important;min-height:42px!important}
+ .board-header .actionbar{bottom:62px!important}
+ body[data-mobile-pane=settings] .panel,
+ body[data-mobile-pane=levels] .levels-section{bottom:62px!important}
+ body[data-planet] .board-header .metrics:before{left:7px;right:7px}
+}
+@media(max-width:510px){
+ .command-title{
+  width:calc(100vw - 159px)!important;
+  max-width:calc(100vw - 159px)!important;gap:5px!important
+ }
+ .command-title>div:first-child{min-width:0;flex:1}
+ .command-title .level-name,.command-title .mission-objective{
+  display:block;max-width:100%!important;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap
+ }
+ .command-title .mission-info-btn{flex:none}
+ .board-header .metrics{
+  width:132px;max-width:132px;right:8px!important;
+  gap:2px!important;justify-content:space-between
+ }
+ .board-header .metric{min-width:0;padding-left:5px!important}
+ .board-header .metric span{font-size:8px!important;white-space:nowrap}
+ .board-header .metric strong{font-size:15px!important}
+}
+@media(max-width:860px) and (max-height:570px){
+ .mobile-dock .dock-btn{height:40px!important;min-height:40px!important}
+ .board-header .actionbar{bottom:54px!important}
+ body[data-mobile-pane=settings] .panel,
+ body[data-mobile-pane=levels] .levels-section{bottom:54px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ body[data-planet] .board-canvas:after,
+ body[data-planet] .planet-btn.selected{transition:none!important}
 }
 </style>
 </head>
