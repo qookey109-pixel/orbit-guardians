@@ -1,4 +1,4 @@
-name: Orbit V1.14 mobile drawer focus QA
+name: Orbit V1.15 flight clarity UI QA
 
 on:
   push:
@@ -45,7 +45,7 @@ jobs:
           const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
           page.on('pageerror',e=>errors.push(String(e)));
           await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
-          assert.match(await page.title(),/Mobile Drawer Focus V1\.14/);
+          assert.match(await page.title(),/Flight Clarity V1\.15/);
           const checks=await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
             return {stages:d?.levels?.length,max:d?.MAX_WHEELS,styleCount:document.querySelectorAll('style').length,hiddenDecor:getComputedStyle(document.querySelector('.space-caption')).display==='none',noOldScanline:getComputedStyle(document.body,'::after').content==='none',visual:d?.visual,overflow:document.documentElement.scrollWidth-innerWidth,verticalOverflow:document.documentElement.scrollHeight-innerHeight,canvasHeight:document.querySelector('#boardArea').getBoundingClientRect().height};
@@ -101,6 +101,24 @@ jobs:
           assert.ok(focusedPanel.accent>=3,'Warm gold header accent missing');
           assert.ok(focusedPanel.activeBackground!=='none','Selected ring editor must be emphasized');
           assert.ok(focusedPanel.sliderHeight>=20,'Radius slider not prominent enough');
+          const flightClarity=await page.evaluate(()=>{
+            const title=document.querySelector('.command-title');
+            const metrics=document.querySelector('.board-header .metrics');
+            const launch=document.querySelector('#startBtn');
+            return {
+              missionAccent:parseFloat(getComputedStyle(title,'::before').width),
+              metricsBackground:getComputedStyle(metrics).backgroundImage,
+              metricsBlur:getComputedStyle(metrics).backdropFilter,
+              launchBackground:getComputedStyle(launch).backgroundImage,
+              goalColor:getComputedStyle(document.querySelector('#goalMetric')).color,
+              hazardColor:getComputedStyle(document.querySelector('#hazardMetric')).color
+            };
+          });
+          assert.ok(flightClarity.missionAccent>=3,'Mission title must keep the warm-gold orientation line');
+          assert.ok(flightClarity.metricsBackground.includes('linear-gradient'),'Metric readout must separate from scene');
+          assert.notEqual(flightClarity.metricsBlur,'none','Metric readout must remain legible over the cosmos');
+          assert.ok(flightClarity.launchBackground.includes('linear-gradient'),'Launch action gradient missing');
+          assert.notEqual(flightClarity.goalColor,flightClarity.hazardColor,'Supply and hazard metrics must use distinct visual colors');
           assert.equal(await page.locator('#previewBtn').getAttribute('aria-pressed'),'true');
           assert.equal(await page.locator('#previewText').textContent(),'路線：開');
           assert.equal(checks.visual.settlement,false);
@@ -241,7 +259,7 @@ jobs:
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.showScenery),true);
           await page.locator('#advancedOptions summary').click();
           assert.equal(await page.locator('#sceneBtn').isVisible(),false,'Advanced options did not collapse');
-          await page.screenshot({path:'desktop-v114.png',fullPage:true});
+          await page.screenshot({path:'desktop-v115.png',fullPage:true});
           const first=await page.evaluate(()=>window.__ORBIT_DEBUG__.state.wheels[0].r);
           const handle=await page.evaluate(()=>window.__ORBIT_DEBUG__.wheelGeometry()[0]);
           const rect=await page.locator('#gameCanvas').boundingBox();
@@ -436,7 +454,7 @@ jobs:
           const afterClear=await page.evaluate(()=>({t:window.__ORBIT_DEBUG__.state.t,mode:window.__ORBIT_DEBUG__.state.mode,cleared:window.__ORBIT_DEBUG__.state.cleared}));
           assert.ok(afterClear.t>1000,'Orbit does not continue after victory: '+JSON.stringify(afterClear));
           assert.equal(afterClear.mode,'running');
-          await page.screenshot({path:'desktop-v114-clear.png',fullPage:true});
+          await page.screenshot({path:'desktop-v115-clear.png',fullPage:true});
           // Replay remains possible using existing flight controls, with no results card.
           await page.locator('#resetBtn').click();
           assert.equal(await page.locator('#clearNav').isVisible(),false);
@@ -492,9 +510,9 @@ jobs:
             });
             worldSamples.push(sample);return sample;
           };
-          await samplePlanet(0);await page.screenshot({path:'desktop-v114-origin.png',fullPage:true});
-          await samplePlanet(6);await page.screenshot({path:'desktop-v114-frost.png',fullPage:true});
-          await samplePlanet(12);await page.screenshot({path:'desktop-v114-ember.png',fullPage:true});
+          await samplePlanet(0);await page.screenshot({path:'desktop-v115-origin.png',fullPage:true});
+          await samplePlanet(6);await page.screenshot({path:'desktop-v115-frost.png',fullPage:true});
+          await samplePlanet(12);await page.screenshot({path:'desktop-v115-ember.png',fullPage:true});
           assert.ok(worldSamples[0].some((v,i)=>Math.abs(v-worldSamples[1][i])>5),'Second planet background must differ');
           assert.ok(worldSamples[1].some((v,i)=>Math.abs(v-worldSamples[2][i])>5),'Third planet background must differ');
           // All 18 levels clear without a modal, and each next stage unlocks sequentially.
@@ -656,7 +674,7 @@ jobs:
           await page.evaluate(()=>window.__ORBIT_DEBUG__.setLevel(12));
           await page.keyboard.press('Escape');
           assert.equal(await page.locator('#levelsSection').isVisible(),false);
-          await page.screenshot({path:'mobile-v114.png',fullPage:true});
+          await page.screenshot({path:'mobile-v115.png',fullPage:true});
           // On phones show a fixed next-level action without forcing a modal or settings drawer.
           await page.evaluate(()=>{
             const d=window.__ORBIT_DEBUG__;
@@ -669,7 +687,7 @@ jobs:
           assert.equal(await page.locator('#nextDockBtn').isVisible(),true,'Mobile next button unavailable');
           assert.equal(await page.locator('#settingsPanel').isVisible(),false,'Mobile overlay drawer should stay closed');
           assert.equal(await page.locator('#clearNav').isVisible(),false,'Mobile should use dock next, not desktop navigation');
-          await page.screenshot({path:'mobile-v114-clear.png',fullPage:true});
+          await page.screenshot({path:'mobile-v115-clear.png',fullPage:true});
           await page.locator('#nextDockBtn').click();
           assert.equal(await page.evaluate(()=>window.__ORBIT_DEBUG__.state.level),13,'Mobile next level click failed');
           assert.equal(await page.locator('#nextDockBtn').isVisible(),false,'Next button did not hide after advancing');
@@ -718,7 +736,7 @@ jobs:
           assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.playing),false);
           await lab.locator('#hintBtn').click();
           assert.equal(await lab.evaluate(()=>window.__ORBIT_LAB_DEBUG__.state.assisted),true);
-          await lab.screenshot({path:'lab-v114-desktop.png',fullPage:true});
+          await lab.screenshot({path:'lab-v115-desktop.png',fullPage:true});
           await lab.locator('#reviewNotes').fill('需要增加玩家提示並確認實際難度');
           await lab.locator('#reviewNotes').press('Tab');
           await lab.locator('[data-review="REVISE"]').click();
@@ -746,27 +764,27 @@ jobs:
           }));
           assert.equal(labMobile.overflow,0,'Playtest mobile should have no horizontal scroll');
           assert.ok(labMobile.canvas>200&&labMobile.controls>40);
-          await lab.screenshot({path:'lab-v114-mobile.png',fullPage:true});
+          await lab.screenshot({path:'lab-v115-mobile.png',fullPage:true});
           assert.deepEqual(labErrors,[],'Review lab browser errors');
           await lab.close();
           assert.equal(errors.length,0,'Uncaught browser errors '+errors.join('; '));
-          console.log(JSON.stringify({status:'PASS',checks,focusedPanel,mobileTouchTargets,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl,gamepadAudit,planetUnlockAudit,finalJourney,reduced}));
+          console.log(JSON.stringify({status:'PASS',checks,focusedPanel,flightClarity,mobileTouchTargets,dragBefore:first,dragAfter:dragged,results,layouts,sceneDifference,integration,afterClear,hazardPreview,savedBest,worldSamples,immersive,seamless,beforeRadius,savedParameters,mobileBefore,sharedUrl,gamepadAudit,planetUnlockAudit,finalJourney,reduced}));
           await browser.close();
           NODE
       - name: Attach screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-v114-control-focus-qa
+          name: orbit-v115-flight-clarity-qa
           path: |
-            desktop-v114.png
-            mobile-v114.png
-            desktop-v114-clear.png
-            mobile-v114-clear.png
-            desktop-v114-origin.png
-            desktop-v114-frost.png
-            desktop-v114-ember.png
+            desktop-v115.png
+            mobile-v115.png
+            desktop-v115-clear.png
+            mobile-v115-clear.png
+            desktop-v115-origin.png
+            desktop-v115-frost.png
+            desktop-v115-ember.png
             research/workshop-candidates.json
-            lab-v114-desktop.png
-            lab-v114-mobile.png
+            lab-v115-desktop.png
+            lab-v115-mobile.png
           if-no-files-found: ignore
