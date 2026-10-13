@@ -1795,7 +1795,20 @@ function syncHUD(){
  if(goalEl.textContent!==goal){goalEl.textContent=goal;renderPerf.hudWrites++}
  if(hazardEl.textContent!==hits){hazardEl.textContent=hits;renderPerf.hudWrites++}
 }
-function resize(){const box=$('boardArea').getBoundingClientRect();W=box.width;H=box.height;DPR=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);worldScale=Math.min((W-28)/610,(H-32)/530);OX=W/2;OY=H/2;sceneryKey="";draw()}
+function resize(){
+ const box=$('boardArea').getBoundingClientRect(),nextW=box.width,nextH=box.height;
+ if(nextW<=0||nextH<=0)return;
+ const nextDPR=Math.min(window.devicePixelRatio||1,2);
+ const pixelsW=Math.round(nextW*nextDPR),pixelsH=Math.round(nextH*nextDPR);
+ // WebKit can repeat observer notifications after first paint. Never clear an unchanged
+ // backing store or its scenery/forecast paths when the dimensions are identical.
+ if(W===nextW&&H===nextH&&DPR===nextDPR&&canvas.width===pixelsW&&canvas.height===pixelsH)return;
+ W=nextW;H=nextH;DPR=nextDPR;
+ canvas.width=pixelsW;canvas.height=pixelsH;
+ ctx.setTransform(DPR,0,0,DPR,0,0);
+ worldScale=Math.min((W-28)/610,(H-32)/530);OX=W/2;OY=H/2;
+ sceneryKey="";draw()
+}
 function sx(x){return OX+x*worldScale}function sy(y){return OY+y*worldScale}function drawLine(points,color,width=1,blur=0,dash=[]){if(points.length<2)return;ctx.beginPath();ctx.moveTo(sx(points[0].x),sy(points[0].y));for(let i=1;i<points.length;i++)ctx.lineTo(sx(points[i].x),sy(points[i].y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin='round';ctx.lineCap='round';ctx.setLineDash(dash);ctx.shadowColor=color;ctx.shadowBlur=blur;ctx.stroke();ctx.shadowBlur=0;ctx.setLineDash([])}
 const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let sceneryCache=null,sceneryKey='';
