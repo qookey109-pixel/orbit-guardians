@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#050a14">
-<title>ORBIT // CODE — 軌道守護者｜Sector Focus V1.16</title>
+<title>ORBIT // CODE — 軌道守護者｜WebKit Flight Performance V1.17</title>
 <meta name="description" content="用旋轉圓的數量、大小與方向組合出不同軌跡，收集訊號、閃避禁區，完成傅立葉圓周謎題。免費免安裝。">
 <style>
 
@@ -1721,10 +1721,13 @@ function renderWheels(){
  tabs.append(navMinus,navPlus);
  selectWheel(state.selectedWheel)
 }
+// A small instrumented counter also guards unnecessary DOM churn on every frame.
+const renderPerf={forecastBuilds:0,forecastHits:0,hudWrites:0};
 function syncHUD(){
- const l=levels[state.level];
- $('goalMetric').textContent=`${state.done} / ${l.goals.length}`;
- $('hazardMetric').textContent=state.hits;
+ const l=levels[state.level],goal=`${state.done} / ${l.goals.length}`,hits=String(state.hits);
+ const goalEl=$('goalMetric'),hazardEl=$('hazardMetric');
+ if(goalEl.textContent!==goal){goalEl.textContent=goal;renderPerf.hudWrites++}
+ if(hazardEl.textContent!==hits){hazardEl.textContent=hits;renderPerf.hudWrites++}
 }
 function resize(){const box=$('boardArea').getBoundingClientRect();W=box.width;H=box.height;DPR=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);worldScale=Math.min((W-28)/610,(H-32)/530);OX=W/2;OY=H/2;sceneryKey="";draw()}
 function sx(x){return OX+x*worldScale}function sy(y){return OY+y*worldScale}function drawLine(points,color,width=1,blur=0,dash=[]){if(points.length<2)return;ctx.beginPath();ctx.moveTo(sx(points[0].x),sy(points[0].y));for(let i=1;i<points.length;i++)ctx.lineTo(sx(points[i].x),sy(points[i].y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin='round';ctx.lineCap='round';ctx.setLineDash(dash);ctx.shadowColor=color;ctx.shadowBlur=blur;ctx.stroke();ctx.shadowBlur=0;ctx.setLineDash([])}
@@ -1871,30 +1874,50 @@ function drawGoals(){
   ctx.restore();
  }
 }
-function drawPrediction(){
- if(!state.showPrediction)return;
- // Preview one full orbital cycle, with red segments where the ship would pass hazards.
- const level=levels[state.level],n=240,cycle=8,origin=state.t;
- const pts=[];
+// V1.17: keep one set of Path2D forecast data until the orbit, stage or viewport changes.
+// Native Path2D works in Chromium and WebKit; no OffscreenCanvas or external GPU API needed.
+let forecastCache=null;
+function forecastGeometry(){
+ const key=`${state.level}|${state.t}|${W}|${H}|${state.wheels.map(w=>w.r+','+w.d).join(';')}`;
+ if(forecastCache?.key===key){renderPerf.forecastHits++;return forecastCache}
+ const level=levels[state.level],n=240,cycle=8,origin=state.t,pts=[];
  for(let i=0;i<=n;i++)pts.push(pointAt(origin+cycle*i/n,state.wheels));
- // A dark, thin underlay separates both forecast colors from colorful nebulae.
- // Geometry and hazard classification still come from the same preview points.
- ctx.save();ctx.lineWidth=4.1;ctx.lineCap='round';ctx.lineJoin='round';
- ctx.strokeStyle='rgba(2,15,29,.77)';ctx.beginPath();
- ctx.moveTo(sx(pts[0].x),sy(pts[0].y));
- for(let i=1;i<=n;i++)ctx.lineTo(sx(pts[i].x),sy(pts[i].y));
- ctx.stroke();ctx.restore();
- ctx.lineWidth=1.9;ctx.lineCap='round';ctx.lineJoin='round';
- ctx.setLineDash([5,5]);
- let danger=false,previousDanger=null;
+ const underlay=new Path2D();underlay.moveTo(sx(pts[0].x),sy(pts[0].y));
+ const segments=[],markers=[];
+ let current=null,prevDanger=null;
  for(let i=1;i<=n;i++){
   const a=pts[i-1],b=pts[i];
-  danger=level.hazards.some(h=>segmentDistance(a,b,h)<=h.r+4);
-  if(danger!==previousDanger){if(i>1)ctx.stroke();ctx.beginPath();ctx.moveTo(sx(a.x),sy(a.y));ctx.strokeStyle=danger?'#ff9992f0':'#b5e7fbdc';previousDanger=danger;}
-  ctx.lineTo(sx(b.x),sy(b.y));
+  underlay.lineTo(sx(b.x),sy(b.y));
+  const danger=level.hazards.some(h=>segmentDistance(a,b,h)<=h.r+4);
+  if(danger!==prevDanger){
+   current={danger,path:new Path2D()};
+   current.path.moveTo(sx(a.x),sy(a.y));
+   segments.push(current);prevDanger=danger;
+  }
+  current.path.lineTo(sx(b.x),sy(b.y));
  }
- ctx.stroke();ctx.setLineDash([]);
- // Native-Canvas line reveal sits atop the complete safety forecast.
+ for(let i=38;i<n;i+=40){
+  const a=pts[i],b=pts[i+1];
+  markers.push({x:sx(a.x),y:sy(a.y),angle:Math.atan2(b.y-a.y,b.x-a.x),
+   danger:level.hazards.some(h=>Math.hypot(a.x-h.x,a.y-h.y)<h.r+7)});
+ }
+ forecastCache={key,level,n,cycle,origin,pts,underlay,segments,markers};
+ renderPerf.forecastBuilds++;
+ return forecastCache;
+}
+function drawPrediction(){
+ if(!state.showPrediction)return;
+ const {level,n,cycle,origin,pts,underlay,segments,markers}=forecastGeometry();
+ // Preserve V1.15 underlay, safety colors and dashed appearance, but reuse baked paths.
+ ctx.save();ctx.lineWidth=4.1;ctx.lineCap='round';ctx.lineJoin='round';
+ ctx.strokeStyle='rgba(2,15,29,.77)';ctx.stroke(underlay);ctx.restore();
+ ctx.save();ctx.lineWidth=1.9;ctx.lineCap='round';ctx.lineJoin='round';
+ ctx.setLineDash([5,5]);
+ for(const segment of segments){
+  ctx.strokeStyle=segment.danger?'#ff9992f0':'#b5e7fbdc';ctx.stroke(segment.path);
+ }
+ ctx.restore();
+ // Transient motion glints remain frame-based and are not cached.
  if(!reducedMotion&&state.predictionRevealAt){
   const elapsed=performance.now()-state.predictionRevealAt;
   if(elapsed>=0&&elapsed<520){
@@ -1906,7 +1929,6 @@ function drawPrediction(){
    ctx.strokeStyle='#d5f4ff';ctx.stroke();ctx.restore();
   }
  }
- // Short motion cue overlays, but never hides, the complete hazard-aware preview.
  if(!reducedMotion&&state.motionAt>0){
   const age=performance.now()-state.motionAt;
   if(age>=0&&age<640){
@@ -1921,11 +1943,9 @@ function drawPrediction(){
    ctx.restore();
   }
  }
- for(let i=38;i<n;i+=40){
-  const a=pts[i],b=pts[i+1],angle=Math.atan2(b.y-a.y,b.x-a.x);
-  const hazard=level.hazards.some(h=>Math.hypot(a.x-h.x,a.y-h.y)<h.r+7);
-  ctx.save();ctx.translate(sx(a.x),sy(a.y));ctx.rotate(angle);
-  ctx.fillStyle=hazard?'#ff8982e6':'#a9dcf6b9';
+ for(const marker of markers){
+  ctx.save();ctx.translate(marker.x,marker.y);ctx.rotate(marker.angle);
+  ctx.fillStyle=marker.danger?'#ff8982e6':'#a9dcf6b9';
   ctx.beginPath();ctx.moveTo(5,0);ctx.lineTo(-3,-3.2);ctx.lineTo(-3,3.2);ctx.closePath();ctx.fill();ctx.restore();
  }
 }
@@ -2360,6 +2380,6 @@ window.addEventListener('keydown',e=>{
  }
 });
 new ResizeObserver(resize).observe($('boardArea'));setLevel(state.lastLevel);readSharedOrbit();requestAnimationFrame(tick);
-window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,worlds:planets,PLANET_SIZE,planetIndex,renderPlanets,makeShareUrl,readSharedOrbit,playCue,toggleSound,pollGamepad,announcePlanetUnlocked,hidePlanetAchievement,journeyTotals,firstPlayableInPlanet,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'focus-hud',precision:true,quietHUD:true,journeyProgress:true,settlement:false,starRating:false,resumeLastStage:true,gamepad:true,planetUnlock:'nonmodal',sonicFeedback:true,shareableOrbit:true,customConfigs:true,completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',predictionRevealMs:520,motion:'native-canvas',motionDurationMs:640,scores:'persistent-best',planets:3,levelsPerPlanet:6}};
+window.__ORBIT_DEBUG__={levels,state,pointAt,resetRun,start,setLevel,collision,finish,wheelGeometry,updateWheel,MAX_WHEELS,segmentDistance,hideTutorial,syncTutorial,worlds:planets,PLANET_SIZE,planetIndex,renderPlanets,makeShareUrl,readSharedOrbit,playCue,toggleSound,pollGamepad,announcePlanetUnlocked,hidePlanetAchievement,journeyTotals,firstPlayableInPlanet,renderPerf,visual:{ship:'round-scout',goal:'supply-station',hazard:'navigation-mine',background:'classic-cosmos',layout:'focus-hud',precision:true,quietHUD:true,journeyProgress:true,settlement:false,starRating:false,resumeLastStage:true,gamepad:true,planetUnlock:'nonmodal',sonicFeedback:true,shareableOrbit:true,customConfigs:true,completion:'nonmodal',timeLimit:false,onboarding:true,prediction:'hazard-aware',predictionRevealMs:520,motion:'native-canvas',motionDurationMs:640,scores:'persistent-best',planets:3,levelsPerPlanet:6}};
 })();
 </script></body></html>
