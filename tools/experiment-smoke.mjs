@@ -81,11 +81,16 @@ for(const [name,engine] of engines){
  assert.equal(fitted.forecast,false,'Initial tracing should grow as a solid line instead of showing a completed forecast');
  assert.equal(await page.locator('#freeMode').getAttribute('aria-pressed'),'true');
  assert.ok(await page.locator('#status').textContent().then(x=>x.includes('自動生成')));
- await page.waitForTimeout(280);
  const motion=await page.evaluate(()=>{
-  const m=window.__ORBIT_EXPERIMENT_DEBUG__.model;
-  return {t:m.t,trail:m.trail.length,last:m.trail.at(-1)};
+  const d=window.__ORBIT_EXPERIMENT_DEBUG__,m=d.model;
+  // Background headless WebKit is free to throttle rAF. Advance a real model
+  // timestep explicitly and audit the chain's physical endpoint instead.
+  d.advanceTrace(.06);d.advanceTrace(.06);d.advanceTrace(.06);
+  const last=m.trail.at(-1),endpoint=d.wheelPosition(m.t);
+  return {t:m.t,trail:m.trail.length,last,
+    endpointDeviation:Math.hypot(last.x-endpoint.x,last.y-endpoint.y)};
  });
+ assert.ok(motion.endpointDeviation<1e-7,'Trace tip is not attached to the rotating-circle chain');
  assert.ok(motion.t>0&&motion.trail>2,'Generated orbit did not progressively draw a moving trace: '+JSON.stringify(motion));
  // Circle-count edits must add true Fourier harmonics, not arbitrary default circles.
  await page.locator('#countInput').fill('20');
