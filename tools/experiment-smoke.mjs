@@ -11,6 +11,21 @@ for(const [name,engine] of engines){
  assert.equal(await page.locator('#countInput').inputValue(),'3');
  assert.equal(await page.locator('#freeMode').getAttribute('aria-pressed'),'true');
  assert.ok(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__?.model?.width>0));
+ // Instrument readouts are driven by the same simulation state as the orbit.
+ assert.equal(await page.locator('#labState').textContent(),'MODEL READY');
+ assert.equal(await page.locator('#labHarmonics').textContent(),'003');
+ assert.equal(await page.locator('#labError').textContent(),'—');
+ assert.equal(await page.locator('#labPath').textContent(),'MODEL');
+ assert.equal(await page.locator('#labPlayback').textContent(),'PAUSED');
+ assert.equal(await page.locator('.telemetry-metrics .datum').count(),3);
+ assert.equal(await page.locator('.legend-row').count(),3);
+ const gridAudit=await page.evaluate(()=>{
+  const d=window.__ORBIT_EXPERIMENT_DEBUG__,before=d.model.perf.gridBuilds;
+  for(let i=0;i<5;i++)d.render();
+  return {before,after:d.model.perf.gridBuilds};
+ });
+ assert.ok(gridAudit.before>=1,'Laboratory measurement grid never generated');
+ assert.equal(gridAudit.after,gridAudit.before,'Grid geometry should not rebuild each animation frame');
  const math=await page.evaluate(()=>{
   const d=window.__ORBIT_EXPERIMENT_DEBUG__;
   const samples=Array.from({length:120},(_,i)=>({x:25+90*Math.cos(i*2*Math.PI/120),y:-15+90*Math.sin(i*2*Math.PI/120)}));
@@ -45,12 +60,18 @@ for(const [name,engine] of engines){
    const bottom=document.querySelector('.bottom').getBoundingClientRect();
    const canvas=document.querySelector('#plot').getBoundingClientRect();
    return {sw:document.documentElement.scrollWidth,sh:document.documentElement.scrollHeight,
-    top:top.bottom,bottom:bottom.top,end:bottom.bottom,width:canvas.width,height:canvas.height};
+    top:top.bottom,bottom:bottom.top,end:bottom.bottom,width:canvas.width,height:canvas.height,
+    telemetry:(()=>{const r=document.querySelector('.telemetry-panel').getBoundingClientRect();
+      return {left:r.left,right:r.right,top:r.top,bottom:r.bottom}})()};
   });
   assert.ok(rect.sw<=size.width+1&&rect.sh<=size.height+1,'Page scroll at '+JSON.stringify({size,rect}));
   assert.ok(rect.width>=size.width-2&&rect.height>=size.height-2,'Canvas must be full viewport');
   assert.ok(rect.top<rect.bottom,'Toolbar and bottom controls overlap '+JSON.stringify({size,rect}));
   assert.ok(rect.end<=size.height+1,'Bottom controls outside viewport '+JSON.stringify({size,rect}));
+  assert.ok(rect.telemetry.left>=0&&rect.telemetry.right<=size.width+1,
+   'Telemetry overflows screen '+JSON.stringify({size,rect}));
+  assert.ok(rect.telemetry.top>=rect.top-2&&rect.telemetry.bottom<rect.bottom,
+   'Instrument data overlaps controls '+JSON.stringify({size,rect}));
  }
  await page.setViewportSize({width:390,height:844});
  await page.locator('#drawMode').click();
@@ -71,6 +92,14 @@ for(const [name,engine] of engines){
    trail:m.trail.length,forecast:m.showForecast,coefficients:m.coeffs.length};
  });
  assert.equal(fitted.source,'fitted','Stroke release must generate immediately');
+ assert.equal(await page.locator('#labState').textContent(),'RECONSTRUCTED');
+ assert.equal(await page.locator('#labPath').textContent(),'LOOP');
+ assert.equal(await page.locator('#labHarmonics').textContent(),
+  String(fitted.ringCount).padStart(3,'0'));
+ assert.equal(await page.locator('#labError').textContent(),fitted.errorPixels.toFixed(1));
+ assert.equal(await page.locator('#labSampleCount').textContent(),'INPUT / 2048');
+ assert.equal(await page.locator('#labPlayback').textContent(),
+  fitted.playing?'RUNNING':'PAUSED');
  assert.equal(fitted.mode,'free','Auto-generated stroke should switch to animation');
  assert.ok(fitted.ringCount>=12&&fitted.ringCount<=512,'Circle count must be adaptive: '+JSON.stringify(fitted));
  assert.equal(fitted.ringCount,fitted.autoCount,'Auto count does not match output');
@@ -107,6 +136,9 @@ for(const [name,engine] of engines){
  await page.locator('#settingsBtn').click();
  await page.locator('#radiusNumber').fill('120');await page.locator('#radiusNumber').press('Tab');
  assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.wheels[0].r),120);
+ assert.equal(await page.locator('#labError').textContent(),
+  await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.errorPixels.toFixed(1)),
+  'Lab readout must reflect revised orbit calibration');
  await page.locator('#showRings').uncheck();
  assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.showRings),false);
  // Editing while the preview is hidden must invalidate the cached trajectory.
@@ -153,6 +185,7 @@ for(const [name,engine] of engines){
     autoCount:m.autoCount,trail:m.trail.length};
  });
  assert.equal(open.closed,false,'Open stroke must not be forced into a closed shape');
+ assert.equal(await page.locator('#labPath').textContent(),'RETURN');
  assert.equal(open.source,'fitted');assert.equal(open.mode,'free');
  assert.ok(open.n>=12&&open.n<=512&&open.n===open.autoCount);
  assert.ok(open.strokeEndDist>110&&open.refEndDist<8,'Open stroke needs an out-and-back period: '+JSON.stringify(open));
