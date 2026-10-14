@@ -2,7 +2,7 @@
 <html lang="zh-Hant"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#081629">
+<meta name="theme-color" content="#07151d">
 <meta name="description" content="ORBIT LAB：畫一條線，系統自動生成旋轉圓，沿著手繪軌跡運動並逐步描出實線。">
 <title>ORBIT LAB｜軌跡實驗室</title>
 <link rel="stylesheet" href="./style.css">
@@ -10,10 +10,10 @@
 <body>
 <main class="workspace">
  <header class="topbar">
-  <a class="brand" href="../" aria-label="返回 ORBIT CODE 正式遊戲"><span class="mark">◎</span><span><strong>ORBIT <em>LAB</em></strong><small>軌跡實驗室</small></span></a>
+  <a class="brand" href="../" aria-label="返回 ORBIT CODE 正式遊戲"><span class="mark">◎</span><span><strong>ORBIT <em>LAB</em></strong><small>TRAJECTORY RESEARCH STATION</small></span></a>
   <div class="modes" role="group" aria-label="操作模式">
-   <button id="freeMode" class="mode current" type="button" aria-pressed="true">自由加圈</button>
-   <button id="drawMode" class="mode" type="button" aria-pressed="false">手繪軌跡</button>
+   <button id="freeMode" class="mode current" type="button" aria-pressed="true"><span class="mode-code" aria-hidden="true">01</span> 參數建模</button>
+   <button id="drawMode" class="mode" type="button" aria-pressed="false"><span class="mode-code" aria-hidden="true">02</span> 樣本描繪</button>
   </div>
   <div class="topactions">
    <button id="settingsBtn" class="iconbtn" type="button" aria-expanded="false" aria-controls="advancedPanel" aria-label="開啟細節設定" title="細節設定">
@@ -25,13 +25,29 @@
  <section class="stage" id="stage" aria-label="軌跡運動畫布">
   <canvas id="plot" aria-label="自由模式顯示多個圓周運動，手繪模式可以直接在畫布上描繪軌跡。"></canvas>
   <div class="canvas-top">
-   <div id="status" class="status" role="status" aria-live="polite">手繪後自動生成圓周與運動軌跡</div>
-   <div class="legend" aria-hidden="true"><span class="swatch track"></span>軌跡 <span class="swatch original"></span>手繪</div>
+   <div class="telemetry-panel" aria-label="軌跡實驗即時數據">
+    <div class="telemetry-header"><span class="status-light" aria-hidden="true"></span><strong id="labState">MODEL READY</strong><span class="telemetry-id">OBSERVER / 01</span></div>
+    <div class="telemetry-metrics">
+     <div class="datum"><small>HARMONICS <span>圓數</span></small><strong id="labHarmonics">003</strong></div>
+     <div class="datum"><small>TRACE ERROR <span>誤差</span></small><strong id="labError">—</strong><span class="unit">px</span></div>
+     <div class="datum"><small>PATH TYPE <span>路徑</span></small><strong id="labPath">MODEL</strong></div>
+    </div>
+    <div class="telemetry-bottom"><span id="labSampleCount">INPUT / 0</span><span id="labPlayback">IDLE</span></div>
+    <div id="status" class="status" role="status" aria-live="polite">選擇樣本描繪，在畫布上畫出路徑</div>
+   </div>
+   <div class="legend" aria-hidden="true">
+    <span class="legend-title">SIGNAL CHANNELS</span>
+    <span class="legend-row"><span class="swatch original"></span>INPUT TRACE <small>手繪樣本</small></span>
+    <span class="legend-row"><span class="swatch track"></span>RECONSTRUCTED <small>重建線</small></span>
+    <span class="legend-row"><span class="swatch orbit"></span>ORBIT CHAIN <small>圓周鏈</small></span>
+   </div>
   </div>
+  <div class="instrument-corner instrument-corner-bl" aria-hidden="true">X / Y · ORIGIN 0,0</div>
+  <div class="instrument-corner instrument-corner-br" aria-hidden="true">FOURIER ANALYSIS · LOCAL ENGINE</div>
   <p id="canvasHint" class="hint">選擇「手繪軌跡」畫一條線，放開手指就會自動生成旋轉圓與動態描線</p>
   <aside id="advancedPanel" class="advanced" aria-label="進階圓周設定" hidden>
-   <div class="panel-title"><h2>圓周微調</h2><button id="closeSettings" type="button" class="close" aria-label="收起設定">×</button></div>
-   <label class="rowlabel" for="wheelSelect">選擇圓周</label>
+   <div class="panel-title"><h2><small>CALIBRATION / 02</small>圓周參數校正</h2><button id="closeSettings" type="button" class="close" aria-label="收起設定">×</button></div>
+   <label class="rowlabel" for="wheelSelect">HARMONIC / 選擇圓周</label>
    <select id="wheelSelect" aria-label="選擇要調整的圓周"></select>
    <label class="rowlabel" for="radius">半徑 <output id="radiusOut">90</output></label>
    <input id="radius" type="range" min="0" max="300" step="1" value="90">
@@ -51,6 +67,7 @@
  </section>
  <div class="bottom">
   <div class="primarycontrols">
+   <span class="console-label" aria-hidden="true">MOTION<br>CONTROL</span>
    <button id="playBtn" class="play" type="button"><span aria-hidden="true">▶</span> <span id="playText">開始播放</span></button>
    <div class="count" role="group" aria-label="使用圓周數">
     <button id="minusBtn" type="button" aria-label="減少一個圓周">−</button>
@@ -60,9 +77,10 @@
    <label class="speed" for="speedSlider">速度 <input id="speedSlider" type="range" min="10" max="250" value="100" step="10"><output id="speedOut">1.0×</output></label>
   </div>
   <div class="secondarycontrols">
+   <span class="console-secondary-label" aria-hidden="true">SAMPLE /</span>
    <button id="generateBtn" class="generate" type="button" disabled>重新生成圓周</button>
-   <button id="clearBtn" class="quiet" type="button">清空線條</button>
-   <button id="resetBtn" class="quiet" type="button">重設</button>
+   <button id="clearBtn" class="quiet" type="button">清除樣本</button>
+   <button id="resetBtn" class="quiet" type="button">重置實驗</button>
   </div>
  </div>
 </main>
