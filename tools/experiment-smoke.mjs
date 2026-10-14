@@ -26,6 +26,16 @@ for(const [name,engine] of engines){
  });
  assert.ok(gridAudit.before>=1,'Laboratory measurement grid never generated');
  assert.equal(gridAudit.after,gridAudit.before,'Grid geometry should not rebuild each animation frame');
+ await page.locator('#settingsBtn').click();
+ await page.locator('#showGrid').uncheck();
+ assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.showGrid),false);
+ const hiddenGrid=await page.evaluate(()=>{
+  const d=window.__ORBIT_EXPERIMENT_DEBUG__,start=d.model.perf.gridBuilds;
+  d.render();d.render();return [start,d.model.perf.gridBuilds];
+ });
+ assert.equal(hiddenGrid[0],hiddenGrid[1],'Grid disabled must not recreate paths');
+ await page.locator('#showGrid').check();
+ await page.locator('#closeSettings').click();
  const math=await page.evaluate(()=>{
   const d=window.__ORBIT_EXPERIMENT_DEBUG__;
   const samples=Array.from({length:120},(_,i)=>({x:25+90*Math.cos(i*2*Math.PI/120),y:-15+90*Math.sin(i*2*Math.PI/120)}));
@@ -72,7 +82,28 @@ for(const [name,engine] of engines){
    'Telemetry overflows screen '+JSON.stringify({size,rect}));
   assert.ok(rect.telemetry.top>=rect.top-2&&rect.telemetry.bottom<rect.bottom,
    'Instrument data overlaps controls '+JSON.stringify({size,rect}));
+  if(size.width<=390){
+   const step=await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.perf.gridBuilds);
+   assert.ok(step>=1,'Mobile grid geometry must exist');
+  }
  }
+ // Mobile Safari pointer ergonomics and high-DPR Canvas budget.
+ const touchPage=await browser.newPage({viewport:{width:320,height:568},hasTouch:true,deviceScaleFactor:3});
+ touchPage.on('pageerror',e=>errors.push(String(e)));
+ await touchPage.goto(origin+'experiment/',{waitUntil:'networkidle'});
+ const touchFit=await touchPage.evaluate(()=>{
+  const rect=sel=>document.querySelector(sel).getBoundingClientRect();
+  const d=window.__ORBIT_EXPERIMENT_DEBUG__.model,buttons=['#minusBtn','#plusBtn','#playBtn'];
+  return {coarse:matchMedia('(pointer:coarse)').matches,
+   heights:buttons.map(sel=>({name:sel,height:rect(sel).height,width:rect(sel).width})),
+   pixels:document.querySelector('#plot').width*document.querySelector('#plot').height,
+   scrollWidth:document.documentElement.scrollWidth,scrollHeight:document.documentElement.scrollHeight};
+ });
+ assert.ok(touchFit.pixels<=2403000,'High-DPR canvas exceeds conservative backing-store budget: '+JSON.stringify(touchFit));
+ assert.ok(touchFit.scrollWidth<=321&&touchFit.scrollHeight<=569,'Touch page must remain single-screen');
+ if(touchFit.coarse)assert.ok(touchFit.heights.every(x=>x.height>=44&&x.width>=44),
+  'Safari touch targets must reach 44px '+JSON.stringify(touchFit));
+ await touchPage.close();
  await page.setViewportSize({width:390,height:844});
  await page.locator('#drawMode').click();
  const box=await page.locator('#plot').boundingBox();
@@ -155,6 +186,22 @@ for(const [name,engine] of engines){
  await page.locator('#closeSettings').click();
  await page.locator('#countInput').fill('256');await page.locator('#countInput').press('Tab');
  assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.wheels.length),256);
+ await page.locator('#settingsBtn').click();
+ await page.locator('#wheelSelect').selectOption('200');
+ const focusPlan=await page.evaluate(()=>{
+  const d=window.__ORBIT_EXPERIMENT_DEBUG__;
+  const indexes=d.visibleCircleIndices();
+  const builds=d.model.perf.ringPlans;
+  for(let i=0;i<4;i++)d.render();
+  return {count:d.model.wheels.length,selected:d.model.selected,
+   selectedVisible:indexes.includes(d.model.selected),lastVisible:indexes.includes(d.model.wheels.length-1),
+   visible:indexes.length,builds,nextBuilds:d.model.perf.ringPlans};
+ });
+ assert.equal(focusPlan.selected,200);
+ assert.ok(focusPlan.selectedVisible&&focusPlan.lastVisible,'Selected ring and last ring must remain visible: '+JSON.stringify(focusPlan));
+ assert.ok(focusPlan.visible<=32,'Crowded high-count orbit skeleton '+JSON.stringify(focusPlan));
+ assert.equal(focusPlan.nextBuilds,focusPlan.builds,'Ring index plan should be stable between frames');
+ await page.locator('#closeSettings').click();
  await page.locator('#playBtn').click();
  assert.equal(await page.locator('#playBtn').getAttribute('aria-pressed'),'false');
  await page.locator('#playBtn').click();
@@ -196,6 +243,24 @@ for(const [name,engine] of engines){
  await page.locator('#resetBtn').click();
  assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.wheels.length),3);
  assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.playing),false);
+ await page.locator('#drawMode').click();
+ const cancelBox=await page.locator('#plot').boundingBox();
+ await page.mouse.move(cancelBox.x+120,cancelBox.y+300);
+ await page.mouse.down();
+ await page.mouse.move(cancelBox.x+170,cancelBox.y+328,{steps:6});
+ const cancelId=await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.activePointerId);
+ assert.notEqual(cancelId,null);
+ await page.locator('#plot').dispatchEvent('pointercancel',
+  {bubbles:true,pointerId:cancelId,pointerType:'mouse',isPrimary:true});
+ await page.mouse.up();
+ const cancelState=await page.evaluate(()=>{
+  const m=window.__ORBIT_EXPERIMENT_DEBUG__.model;
+  return {mode:m.mode,source:m.source,stroke:m.stroke.length,drawing:m.drawing,active:m.activePointerId};
+ });
+ assert.equal(cancelState.mode,'draw','Cancelled gesture must not leave drawing mode');
+ assert.equal(cancelState.stroke,0,'Interrupted touch must not auto-fit a partial stroke');
+ assert.equal(cancelState.active,null,'Pointer tracking must be released after cancellation');
+ await page.locator('#resetBtn').click();
  assert.equal(await page.evaluate(()=>localStorage.getItem('orbit-code-progress')),null,
   'Independent experiment must never write game progress');
  const reduced=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
