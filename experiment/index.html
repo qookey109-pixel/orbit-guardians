@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#081629">
-<meta name="description" content="ORBIT LAB：自由疊加圓周，直接畫出軌跡，用傅立葉變換讓圓自動重建手繪線條。">
+<meta name="description" content="ORBIT LAB：畫一條線，系統自動生成旋轉圓，沿著手繪軌跡運動並逐步描出實線。">
 <title>ORBIT LAB｜軌跡實驗室</title>
 <link rel="stylesheet" href="./style.css">
 </head>
@@ -25,10 +25,10 @@
  <section class="stage" id="stage" aria-label="軌跡運動畫布">
   <canvas id="plot" aria-label="自由模式顯示多個圓周運動，手繪模式可以直接在畫布上描繪軌跡。"></canvas>
   <div class="canvas-top">
-   <div id="status" class="status" role="status" aria-live="polite">調整圓周，觀察路徑</div>
+   <div id="status" class="status" role="status" aria-live="polite">手繪後自動生成圓周與運動軌跡</div>
    <div class="legend" aria-hidden="true"><span class="swatch track"></span>軌跡 <span class="swatch original"></span>手繪</div>
   </div>
-  <p id="canvasHint" class="hint">切換到「手繪軌跡」，在畫布上用手指或滑鼠畫線</p>
+  <p id="canvasHint" class="hint">選擇「手繪軌跡」畫一條線，放開手指就會自動生成旋轉圓與動態描線</p>
   <aside id="advancedPanel" class="advanced" aria-label="進階圓周設定" hidden>
    <div class="panel-title"><h2>圓周微調</h2><button id="closeSettings" type="button" class="close" aria-label="收起設定">×</button></div>
    <label class="rowlabel" for="wheelSelect">選擇圓周</label>
@@ -44,7 +44,7 @@
    <div class="switches">
     <label><input id="showRings" type="checkbox" checked> 顯示圓周</label>
     <label><input id="showOriginal" type="checkbox" checked> 顯示手繪線</label>
-    <label><input id="showForecast" type="checkbox" checked> 顯示完整軌跡</label>
+    <label><input id="showForecast" type="checkbox" checked> 顯示預測線（完整路徑）</label>
    </div>
    <p class="help">此處的編輯只影響實驗，不會更改正式遊戲的關卡或存檔。</p>
   </aside>
@@ -60,7 +60,7 @@
    <label class="speed" for="speedSlider">速度 <input id="speedSlider" type="range" min="10" max="250" value="100" step="10"><output id="speedOut">1.0×</output></label>
   </div>
   <div class="secondarycontrols">
-   <button id="generateBtn" class="generate" type="button" disabled>依手繪生成圓周</button>
+   <button id="generateBtn" class="generate" type="button" disabled>重新生成圓周</button>
    <button id="clearBtn" class="quiet" type="button">清空線條</button>
    <button id="resetBtn" class="quiet" type="button">重設</button>
   </div>
