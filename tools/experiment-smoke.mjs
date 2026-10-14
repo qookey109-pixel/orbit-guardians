@@ -166,7 +166,10 @@ for(const [name,engine] of engines){
    fitted.autoCount,'Regenerate should restore adaptive circle count');
  await page.locator('#settingsBtn').click();
  await page.locator('#radiusNumber').fill('120');await page.locator('#radiusNumber').press('Tab');
- assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.wheels[0].r),120);
+ assert.equal(await page.evaluate(()=>{
+  const m=window.__ORBIT_EXPERIMENT_DEBUG__.model;
+  return m.wheels[m.selected].r;
+ }),120,'Calibration should target the currently selected rotating circle, not the DC anchor');
  assert.equal(await page.locator('#labError').textContent(),
   await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.errorPixels.toFixed(1)),
   'Lab readout must reflect revised orbit calibration');
@@ -183,6 +186,7 @@ for(const [name,engine] of engines){
  await page.locator('#showForecast').check();
  const buildsAfter=await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.perf.forecastBuilds);
  assert.ok(buildsAfter>buildsBefore,'Re-enabling forecast did not update the edited orbit');
+ await page.locator('#showRings').check();
  await page.locator('#closeSettings').click();
  await page.locator('#countInput').fill('256');await page.locator('#countInput').press('Tab');
  assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.wheels.length),256);
