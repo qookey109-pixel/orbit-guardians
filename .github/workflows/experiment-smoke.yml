@@ -1,4 +1,4 @@
-name: ORBIT LAB V1.19 Experiment QA
+name: ORBIT LAB V1.21 Research Console QA
 on:
   pull_request:
     paths:
@@ -39,7 +39,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-lab-v119-chromium-webkit
+          name: orbit-lab-v121-research-console-chromium-webkit
           path: |
             experiment-chromium-mobile.png
             experiment-chromium-desktop.png
