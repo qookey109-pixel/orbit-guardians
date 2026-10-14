@@ -1,0 +1,48 @@
+name: ORBIT LAB V1.19 Experiment QA
+on:
+  pull_request:
+    paths:
+      - 'experiment/**'
+      - 'tools/experiment-smoke.mjs'
+      - '.github/workflows/experiment-smoke.yml'
+      - 'index.html'
+  push:
+    branches: [main]
+    paths:
+      - 'experiment/**'
+      - 'tools/experiment-smoke.mjs'
+      - '.github/workflows/experiment-smoke.yml'
+      - 'index.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.1
+          npx playwright install --with-deps chromium webkit
+      - name: Test trajectory experiment in Chromium and WebKit
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/orbit-experiment-server.log 2>&1 &
+          node tools/experiment-smoke.mjs
+      - name: Attach tested UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbit-lab-v119-chromium-webkit
+          path: |
+            experiment-chromium-mobile.png
+            experiment-chromium-desktop.png
+            experiment-webkit-mobile.png
+            experiment-webkit-desktop.png
+          if-no-files-found: ignore
