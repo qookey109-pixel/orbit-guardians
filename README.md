@@ -1,8 +1,17 @@
 # ORBIT // CODE — 軌道守護者
 
-**V1.21 ORBIT LAB** · 傅立葉圓周軌道益智遊戲 · 繁體中文
+**V1.22 ORBIT LAB** · 傅立葉圓周軌道益智遊戲 · 繁體中文
 
 🎮 **[立即遊玩（GitHub Pages）](https://qookey109-pixel.github.io/orbit-guardians/)**
+
+## V1.22｜Precision Focus：量測層級 × 多圈可讀性 × 行動 Safari
+
+- **淡化與可隱藏量測格線**：中央觀測台原有的 Path2D 格線按照手機與桌面尺寸使用 76／64／56 CSS px 間距；在手繪模式降低格線對比，讓原始青綠線與真正的金色動態軌跡成為視覺主角。進階設定新增「顯示量測格線」開關；關閉後不再繪製格線，但不改 Fourier 模型。
+- **圓周骨架聚焦**：少圈維持逐一顯示，多圈依振幅展示主要旋轉圓，保證使用者選取的圓、最末圓及起始結構始終顯示，降低重疊線條；f=0 的 DC 平移向量不再畫成誤導性的旋轉圓。選取端點對比提高，所有圓依舊參與實際軌道計算。
+- **手機操作可靠性**：只追蹤一個有效手指／觸控筆，利用瀏覽器 coalesced pointer events 補足快速滑動軌跡；完成才自動 FFT 生成，被系統取消或失去 pointer capture 的筆跡不能當完整路徑分析。手機表單／功能鍵補足 44px 觸控目標。
+- **Canvas 記憶體防護**：高 DPR 畫布依可用視窗採取最多約 240 萬 backing pixels 的畫質預算，避免高解析度螢幕無必要地分配大畫布；不影響 CSS 世界座標或手繪邏輯。
+- **CI 驗證**：保留正式 18 關與研究 Lab 隔離，新增 Grid toggle、格線快取、256 圈選取第 200 圈、取消手繪、coarse pointer 觸控熱區、高 DPR 像素預算與 Chromium／Playwright WebKit 雙引擎回歸。
+- **注意**：Linux WebKit 自動化可抓跨引擎錯誤，但真實 macOS/iOS Safari 實機仍需人工確認手感與流暢度。
 
 ## V1.21｜Research Console 軌跡研究站視覺優化
 
