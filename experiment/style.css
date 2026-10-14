@@ -23,3 +23,14 @@
 @media(max-width:410px){.topbar{gap:5px;padding-left:10px;padding-right:10px}.brand{gap:4px}.brand strong{font-size:12px;letter-spacing:.04em}.brand small{font-size:9px;letter-spacing:0}.mark{font-size:20px}.modes{padding:3px;gap:1px}.mode{font-size:11px;padding:9px 7px}.iconbtn{width:37px;height:37px}.primarycontrols{flex-wrap:wrap;justify-content:center;gap:7px}.play{flex:1;min-width:115px}.count{flex:1;justify-content:center}.speed{width:100%;justify-content:center;min-height:25px}.speed input{width:100px}.advanced{bottom:calc(177px + env(safe-area-inset-bottom,0px));max-height:49vh}.hint{bottom:178px}.secondarycontrols button{font-size:10px;padding:0 7px}}
 @media(max-height:540px){.topbar{height:53px;padding-top:4px;padding-bottom:4px}.canvas-top{top:56px}.bottom{bottom:6px;gap:4px}.primarycontrols{padding:4px 8px}.secondarycontrols{padding:3px 7px}.secondarycontrols button{height:28px}.advanced{top:56px;bottom:115px;max-height:none}.hint{bottom:108px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* V1.20 — Drawing is one gesture. Show only the action needed while drawing. */
+.workspace[data-mode="draw"] .count{display:none}
+.workspace[data-mode="draw"] .secondarycontrols{opacity:.7}
+.workspace[data-mode="draw"] #generateBtn{display:none}
+.workspace[data-mode="draw"] .hint{color:#d8f9f2;opacity:1}
+.workspace[data-mode="free"] .hint{max-width:min(550px,91vw);overflow:hidden;text-overflow:ellipsis}
+@media(max-width:860px){
+ .workspace[data-mode="draw"] .primarycontrols{max-width:calc(100vw - 24px)}
+ .workspace[data-mode="draw"] .hint{white-space:normal;line-height:1.5;bottom:clamp(134px,20vh,177px)}
+}
