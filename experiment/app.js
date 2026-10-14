@@ -135,7 +135,7 @@ function generate(){
  model.reference=result.samples;
  model.source='fitted';
  model.selected=0;
- model.t=0;model.trail=[];model.playing=true;model.last=0;
+ model.t=0;model.trail=[];model.playing=!matchMedia('(prefers-reduced-motion: reduce)').matches;model.last=0;
  model.mode='free';
  setCount(n);
  model.error=fitError(model.reference);
