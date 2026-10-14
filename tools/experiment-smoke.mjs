@@ -140,7 +140,7 @@ for(const [name,engine] of engines){
   await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.errorPixels.toFixed(1)),
   'Lab readout must reflect revised orbit calibration');
  assert.match(await page.locator('#status').textContent(),/最新誤差已更新/);
- assert.equal(/誤差約\\s*[\\d.]+px/.test(await page.locator('#status').textContent()),false,
+ assert.equal((await page.locator('#status').textContent()).includes('誤差約'),false,
   'Action message must not repeat an outdated residual from an earlier orbit configuration');
  await page.locator('#showRings').uncheck();
  assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.showRings),false);
