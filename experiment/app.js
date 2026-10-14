@@ -104,7 +104,7 @@ function setCount(value){
  $('countInput').value=n;
  if(model.source==='fitted'){
   model.error=fitError(model.reference);model.errorPixels=model.error*model.scale;
-  if(n!==model.autoCount)note('使用 '+n+' 個圓 · 軌跡誤差約 '+model.errorPixels.toFixed(1)+'px · 可點重新生成恢復自動精度');
+  if(n!==model.autoCount)note('使用 '+n+' 個圓 · 最新重建誤差請看上方分析卡');
  }else if(n>128)note(n+' 圓模式 · 可在設定中隱藏圓周骨架以維持流暢');
  else note('目前 '+n+' 個圓周 · 可以直接拖曳端點');
  renderWheelEditor();
@@ -236,7 +236,7 @@ function generate(){
  $('generateBtn').textContent='重新生成圓周';
  syncMode();syncPlay();
  const label=model.closedPath?'循環描繪':'來回描繪';
- note('自動生成 '+model.autoCount+' 個圓 · 沿手繪線'+label+' · 誤差約 '+model.errorPixels.toFixed(1)+'px');
+ note('自動生成 '+model.autoCount+' 個圓 · 沿手繪線'+label+' · 查看上方即時誤差');
  $('canvasHint').textContent='金色端點沿著手繪路徑移動，並逐步畫出實線軌跡';
  render();
  return true;
@@ -294,6 +294,7 @@ function updateWheel(field,value){
  if(model.source==='fitted'&&model.coeffs[model.selected]){
   model.coeffs[model.selected]={...w};
   model.error=fitError(model.reference);model.errorPixels=model.error*model.scale;
+  note('圓周 '+(model.selected+1)+' 已校正 · 最新誤差已更新');
  }
  model.forecastDirty=true;model.trail=[];
  renderWheelEditor();render();
@@ -459,6 +460,7 @@ function finishPointer(){
  if(model.drag){
   if(model.source==='fitted'&&model.reference.length){
    model.error=fitError(model.reference);model.errorPixels=model.error*model.scale;
+   note('圓周 '+(model.drag.index+1)+' 已校正 · 最新誤差已更新');
   }
   model.drag=null;canvas.style.cursor='grab';
  }
