@@ -49,8 +49,11 @@ function setCount(value){
  model.selected=clamp(model.selected,0,n-1);
  model.forecastDirty=true;model.trail=[];
  $('countInput').value=n;
- if(n>128)note(n+' 圓模式 · 可在設定中隱藏圓周骨架以維持流暢');
- else if(model.source!=='fitted')note('目前 '+n+' 個圓周 · 可以直接拖曳端點');
+ if(model.source==='fitted'){
+  model.error=fitError(model.reference);model.errorPixels=model.error*model.scale;
+  if(n!==model.autoCount)note('使用 '+n+' 個圓 · 軌跡誤差約 '+model.errorPixels.toFixed(1)+'px · 可點重新生成恢復自動精度');
+ }else if(n>128)note(n+' 圓模式 · 可在設定中隱藏圓周骨架以維持流暢');
+ else note('目前 '+n+' 個圓周 · 可以直接拖曳端點');
  renderWheelEditor();
  render();
  return n;
@@ -187,7 +190,8 @@ function generate(){
 }
 function clearStroke(){
  model.stroke=[];model.reference=[];model.error=null;model.errorPixels=null;model.autoCount=0;
- $('generateBtn').disabled=true;
+ model.trail=[];model.showForecast=true;$('showForecast').checked=true;model.forecastDirty=true;
+ $('generateBtn').disabled=true;$('generateBtn').textContent='依手繪生成圓周';
  if(model.source==='fitted'){model.source='manual';model.coeffs=[];model.wheels=defaultWheels();$('countInput').value=3;renderWheelEditor()}
  $('canvasHint').textContent='在畫布上畫一條路徑，完成後按「依手繪生成圓周」';
  note('手繪路徑已清空');render();
@@ -216,7 +220,7 @@ function syncMode(){
  $('freeMode').setAttribute('aria-pressed',String(model.mode==='free'));
  $('drawMode').setAttribute('aria-pressed',String(model.mode==='draw'));
  $('generateBtn').disabled=model.stroke.length<3;
- $('.workspace').dataset.mode=model.mode;
+ document.querySelector('.workspace').dataset.mode=model.mode;
  canvas.style.cursor=model.mode==='draw'?'crosshair':'grab';
 }
 function syncPlay(){
@@ -304,12 +308,16 @@ function render(){
   model.perf.frames++;return;
  }
  if(model.showForecast){buildForecast();strokeLine(model.forecast,'rgba(246,214,159,.52)',1.35,true)}
- if(model.trail.length>1)strokeLine(model.trail.map(pixel),'rgba(244,226,190,.92)',2.2);
+ if(model.trail.length>1){
+  // The line is generated from the actual rotating endpoint, not painted from
+  // the reference stroke. Its length grows as the orbit advances.
+  strokeLine(model.trail.map(pixel),'rgba(244,226,190,.96)',2.8);
+ }
  const circles=wheelCenters(model.t),many=circles.length>100;
  if(model.showRings){
   // Skip insignificant intermediate skeletons at extreme counts; all circles still
   // participate in the actual motion and sampled target path calculation.
-  const step=circles.length>250?Math.ceil(circles.length/125):1;
+  const step=circles.length>110?Math.ceil(circles.length/45):1;
   for(let i=0;i<circles.length;i+=step){
    const c=circles[i];if(c.r<.25)continue;
    const p=pixel({x:c.cx,y:c.cy}),end=pixel({x:c.x,y:c.y}),color=wheelColor[i%wheelColor.length];
@@ -330,10 +338,14 @@ function frame(now){
  if(model.playing&&model.mode!=='draw'){
   if(model.last){
    const dt=Math.min((now-model.last)/1000,.065);
-   const before=model.t;model.t=(model.t+dt*model.speed/8)%1;
-   if(model.t<before)model.trail=[];
-   model.trail.push(wheelPosition(model.t));
-   if(model.trail.length>1600)model.trail.shift();
+   const before=model.t,advance=dt*model.speed/8;
+   model.t=(before+advance)%1;
+   if(model.t<before)model.trail=[wheelPosition(0)];
+   // More than one point per frame is needed for smooth hand-drawn corners.
+   const start=model.t<before?0:before;
+   const steps=Math.max(1,Math.ceil((model.t-start)/.001));
+   for(let k=1;k<=steps;k++)model.trail.push(wheelPosition(start+(model.t-start)*k/steps));
+   if(model.trail.length>1800)model.trail.splice(0,model.trail.length-1800);
    // Forecast geometry is independent of time; keep any pending invalidation until visible.
   }
   model.last=now;
@@ -381,7 +393,8 @@ function finishPointer(){
  if(model.drawing){
   model.drawing=false;
   $('generateBtn').disabled=model.stroke.length<3;
-  note(model.stroke.length>=3?'已記錄軌跡 · 點「依手繪生成圓周」':'軌跡太短，請再畫一次');
+  if(model.stroke.length>=3)generate(); // Auto-build and start after finger release.
+  else note('軌跡太短，請再畫一次');
  }
  if(model.drag){model.drag=null;canvas.style.cursor='grab'}
  render();
