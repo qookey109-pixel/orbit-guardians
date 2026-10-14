@@ -334,20 +334,20 @@ function render(){
  ctx.beginPath();ctx.arc(position.x,position.y,5,0,TAU);ctx.fill();ctx.stroke();
  model.perf.frames++;
 }
+function advanceTrace(seconds){
+ if(!model.playing||model.mode==='draw')return;
+ const before=model.t,advance=clamp(seconds,0,.065)*model.speed/8;
+ model.t=(before+advance)%1;
+ if(model.t<before)model.trail=[wheelPosition(0)];
+ // Draw from the rotating chain's endpoint, sampling between animation frames.
+ const start=model.t<before?0:before;
+ const steps=Math.max(1,Math.ceil((model.t-start)/.001));
+ for(let k=1;k<=steps;k++)model.trail.push(wheelPosition(start+(model.t-start)*k/steps));
+ if(model.trail.length>1800)model.trail.splice(0,model.trail.length-1800);
+}
 function frame(now){
  if(model.playing&&model.mode!=='draw'){
-  if(model.last){
-   const dt=Math.min((now-model.last)/1000,.065);
-   const before=model.t,advance=dt*model.speed/8;
-   model.t=(before+advance)%1;
-   if(model.t<before)model.trail=[wheelPosition(0)];
-   // More than one point per frame is needed for smooth hand-drawn corners.
-   const start=model.t<before?0:before;
-   const steps=Math.max(1,Math.ceil((model.t-start)/.001));
-   for(let k=1;k<=steps;k++)model.trail.push(wheelPosition(start+(model.t-start)*k/steps));
-   if(model.trail.length>1800)model.trail.splice(0,model.trail.length-1800);
-   // Forecast geometry is independent of time; keep any pending invalidation until visible.
-  }
+  if(model.last)advanceTrace((now-model.last)/1000);
   model.last=now;
  }else model.last=0;
  render();requestAnimationFrame(frame);
@@ -430,6 +430,6 @@ window.addEventListener('keydown',e=>{
 });
 const observer=new ResizeObserver(resize);observer.observe(stage);
 window.addEventListener('pageshow',e=>{if(e.persisted)resize()});
-window.__ORBIT_EXPERIMENT_DEBUG__={model,wheelPosition,resampleClosed,pathIsClosed,complexFFT,fitPath,chooseCircleCount,generate,setCount,setMode,resize,render};
+window.__ORBIT_EXPERIMENT_DEBUG__={model,wheelPosition,resampleClosed,pathIsClosed,complexFFT,fitPath,chooseCircleCount,generate,setCount,setMode,resize,render,advanceTrace};
 resize();renderWheelEditor();syncMode();syncPlay();requestAnimationFrame(frame);
 })();
