@@ -11,9 +11,62 @@ const model={
  stroke:[],reference:[],showRings:true,showForecast:true,showOriginal:true,
  drawing:false,drag:null,forecast:[],forecastDirty:true,
  width:0,height:0,dpr:1,scale:1,last:0,trail:[],error:null,
- perf:{fftCalls:0,forecastBuilds:0,frames:0}
+ perf:{fftCalls:0,forecastBuilds:0,frames:0,gridBuilds:0}
 };
 const wheelColor=['#a8e7e0','#e8d19b','#aabdeb','#eba9ad'];
+const telemetryCache={};
+function textIfChanged(id,value){
+ const str=String(value);if(telemetryCache[id]===str)return;
+ telemetryCache[id]=str;$(id).textContent=str;
+}
+function syncTelemetry(){
+ const fitted=model.source==='fitted',drawing=model.mode==='draw';
+ const label=drawing?(model.drawing?'ACQUIRING':'INPUT READY'):
+   fitted?'RECONSTRUCTED':'MODEL READY';
+ const error=fitted&&Number.isFinite(model.errorPixels)?model.errorPixels:null;
+ textIfChanged('labState',label);
+ textIfChanged('labHarmonics',model.wheels.length.toLocaleString('en-US',{minimumIntegerDigits:3}));
+ textIfChanged('labError',error===null?'—':error.toFixed(1));
+ textIfChanged('labPath',drawing?'INPUT':fitted?(model.closedPath?'LOOP':'RETURN'):'MODEL');
+ textIfChanged('labSampleCount','INPUT / '+(model.reference.length||model.stroke.length));
+ textIfChanged('labPlayback',drawing?(model.drawing?'CAPTURING':'STANDBY'):(model.playing?'RUNNING':'PAUSED'));
+ const quality=error===null?'none':error<=3?'good':error<=8?'fair':'poor';
+ if($('labError').dataset.quality!==quality)$('labError').dataset.quality=quality;
+}
+let measurementGrid=null;
+function buildMeasurementGrid(){
+ const minor=new Path2D(),major=new Path2D(),width=model.width,height=model.height;
+ const centerX=width/2,centerY=height/2,step=52;
+ for(let x=centerX%step;x<width;x+=step){
+  const p=Math.round(x)+.5;minor.moveTo(p,0);minor.lineTo(p,height);
+ }
+ for(let y=centerY%step;y<height;y+=step){
+  const p=Math.round(y)+.5;minor.moveTo(0,p);minor.lineTo(width,p);
+ }
+ major.moveTo(Math.round(centerX)+.5,0);major.lineTo(Math.round(centerX)+.5,height);
+ major.moveTo(0,Math.round(centerY)+.5);major.lineTo(width,Math.round(centerY)+.5);
+ measurementGrid={minor,major};model.perf.gridBuilds++;
+}
+function drawMeasurementGrid(ctx){
+ if(!measurementGrid)buildMeasurementGrid();
+ ctx.save();
+ ctx.strokeStyle='rgba(119,176,182,.064)';ctx.lineWidth=1;ctx.stroke(measurementGrid.minor);
+ ctx.strokeStyle='rgba(130,206,201,.20)';ctx.lineWidth=1;ctx.stroke(measurementGrid.major);
+ const w=model.width,h=model.height,margin=14,arm=16;
+ ctx.strokeStyle='rgba(143,199,195,.28)';ctx.lineWidth=1.1;ctx.beginPath();
+ for(const [x,y,dx,dy] of [[margin,margin,1,1],[w-margin,margin,-1,1],
+                           [margin,h-margin,1,-1],[w-margin,h-margin,-1,-1]]){
+  ctx.moveTo(x,y+arm*dy);ctx.lineTo(x,y);ctx.lineTo(x+arm*dx,y);
+ }
+ ctx.stroke();
+ if(w>750&&h>470){
+  ctx.fillStyle='rgba(133,185,188,.56)';
+  ctx.font='9px ui-monospace, monospace';
+  ctx.fillText('OBSERVATION FIELD / XY',margin+18,margin+4);
+  ctx.textAlign='right';ctx.fillText('SCALE / VIEWPORT',w-margin-18,h-margin-4);
+ }
+ ctx.restore();
+}
 function note(value){$('status').textContent=value}
 function coordinate(x,y){return{x:(x-model.width/2)/model.scale,y:(y-model.height/2)/model.scale}}
 function pixel(p){return{x:model.width/2+p.x*model.scale,y:model.height/2+p.y*model.scale}}
@@ -238,7 +291,10 @@ function updateWheel(field,value){
  if(field==='r')w.r=clamp(Number(value)||0,0,1000);
  if(field==='f')w.f=clamp(Math.round(Number(value)||0),-2048,2048);
  if(field==='phase')w.phase=clamp(Number(value)||0,-180,180)*Math.PI/180;
- if(model.source==='fitted'&&model.coeffs[model.selected])model.coeffs[model.selected]={...w};
+ if(model.source==='fitted'&&model.coeffs[model.selected]){
+  model.coeffs[model.selected]={...w};
+  model.error=fitError(model.reference);model.errorPixels=model.error*model.scale;
+ }
  model.forecastDirty=true;model.trail=[];
  renderWheelEditor();render();
 }
@@ -271,7 +327,8 @@ function resize(){
  model.width=w;model.height=h;model.dpr=dpr;model.scale=Math.min(w/640,h/620);
  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
  context.setTransform(dpr,0,0,dpr,0,0);
- model.forecastDirty=true;render();
+ if(model.source==='fitted'&&Number.isFinite(model.error))model.errorPixels=model.error*model.scale;
+ model.forecastDirty=true;measurementGrid=null;buildMeasurementGrid();render();
 }
 function buildForecast(){
  if(!model.forecastDirty)return;
@@ -290,12 +347,14 @@ function strokeLine(pts,color,width,dashed=false){
  context.lineJoin='round';context.lineCap='round';context.stroke();context.setLineDash([]);
 }
 function render(){
+ syncTelemetry();
  if(!model.width||!model.height)return;
  const ctx=context,w=model.width,h=model.height;
  ctx.fillStyle='#071522';ctx.fillRect(0,0,w,h);
  const radial=ctx.createRadialGradient(w*.51,h*.43,0,w*.51,h*.43,Math.max(w,h)*.72);
  radial.addColorStop(0,'rgba(29,62,83,.30)');radial.addColorStop(1,'rgba(7,18,30,0)');
  ctx.fillStyle=radial;ctx.fillRect(0,0,w,h);
+ drawMeasurementGrid(ctx);
  // Lightweight static reference axis; sparse enough to keep visual focus on the orbit.
  const center=pixel({x:0,y:0});
  ctx.strokeStyle='rgba(118,161,180,.10)';ctx.lineWidth=1;
@@ -384,6 +443,7 @@ canvas.addEventListener('pointermove',event=>{
   const c=model.drag,w=model.wheels[c.index];if(!w)return;
   w.r=clamp(Math.round(Math.hypot(p.x-c.cx,p.y-c.cy)),0,1000);
   if(model.source==='fitted'&&model.coeffs[c.index])model.coeffs[c.index]={...w};
+  model.errorPixels=null; // Do not show an outdated precision readout mid-drag.
   model.forecastDirty=true;model.trail=[];
   renderWheelEditor();render();
  }
@@ -396,7 +456,12 @@ function finishPointer(){
   if(model.stroke.length>=3)generate(); // Auto-build and start after finger release.
   else note('軌跡太短，請再畫一次');
  }
- if(model.drag){model.drag=null;canvas.style.cursor='grab'}
+ if(model.drag){
+  if(model.source==='fitted'&&model.reference.length){
+   model.error=fitError(model.reference);model.errorPixels=model.error*model.scale;
+  }
+  model.drag=null;canvas.style.cursor='grab';
+ }
  render();
 }
 canvas.addEventListener('pointerup',finishPointer);
@@ -430,6 +495,6 @@ window.addEventListener('keydown',e=>{
 });
 const observer=new ResizeObserver(resize);observer.observe(stage);
 window.addEventListener('pageshow',e=>{if(e.persisted)resize()});
-window.__ORBIT_EXPERIMENT_DEBUG__={model,wheelPosition,resampleClosed,pathIsClosed,complexFFT,fitPath,chooseCircleCount,generate,setCount,setMode,resize,render,advanceTrace};
+window.__ORBIT_EXPERIMENT_DEBUG__={model,wheelPosition,resampleClosed,pathIsClosed,complexFFT,fitPath,chooseCircleCount,generate,setCount,setMode,resize,render,advanceTrace,syncTelemetry};
 resize();renderWheelEditor();syncMode();syncPlay();requestAnimationFrame(frame);
 })();
