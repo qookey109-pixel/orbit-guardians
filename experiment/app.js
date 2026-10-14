@@ -1,0 +1,380 @@
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id), TAU=Math.PI*2;
+const canvas=$('plot'),context=canvas.getContext('2d',{alpha:false});
+const stage=$('stage');
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const defaultWheels=()=>[{r:110,f:1,phase:0},{r:45,f:-2,phase:0},{r:27,f:3,phase:0}];
+const model={
+ mode:'free',source:'manual',playing:false,t:0,speed:1,
+ wheels:defaultWheels(),coeffs:[],selected:0,
+ stroke:[],reference:[],showRings:true,showForecast:true,showOriginal:true,
+ drawing:false,drag:null,forecast:[],forecastDirty:true,
+ width:0,height:0,dpr:1,scale:1,last:0,trail:[],error:null,
+ perf:{fftCalls:0,forecastBuilds:0,frames:0}
+};
+const wheelColor=['#a8e7e0','#e8d19b','#aabdeb','#eba9ad'];
+function note(value){$('status').textContent=value}
+function coordinate(x,y){return{x:(x-model.width/2)/model.scale,y:(y-model.height/2)/model.scale}}
+function pixel(p){return{x:model.width/2+p.x*model.scale,y:model.height/2+p.y*model.scale}}
+function wheelPosition(t,wheels=model.wheels){
+ let x=0,y=0;
+ for(const wheel of wheels){
+  const a=TAU*wheel.f*t+wheel.phase;
+  x+=wheel.r*Math.cos(a);y+=wheel.r*Math.sin(a);
+ }
+ return{x,y};
+}
+function wheelCenters(t){
+ let x=0,y=0;
+ const result=[];
+ for(let i=0;i<model.wheels.length;i++){
+  const w=model.wheels[i],a=TAU*w.f*t+w.phase;
+  const nx=x+w.r*Math.cos(a),ny=y+w.r*Math.sin(a);
+  result.push({index:i,cx:x,cy:y,x:nx,y:ny,r:w.r});
+  x=nx;y=ny;
+ }
+ return result;
+}
+function nextWheel(i){return{r:Math.max(4,Math.round(45/(1+i*.23))),f:(i%2?-1:1)*(Math.floor(i/2)+1),phase:0}}
+function setCount(value){
+ const n=clamp(Math.floor(Number(value)||1),1,2048);
+ if(model.source==='fitted'&&model.coeffs.length){
+  while(model.coeffs.length<n)model.coeffs.push(nextWheel(model.coeffs.length));
+  model.wheels=model.coeffs.slice(0,n).map(w=>({...w}));
+ }else{
+  while(model.wheels.length<n)model.wheels.push(nextWheel(model.wheels.length));
+  model.wheels.length=n;
+ }
+ model.selected=clamp(model.selected,0,n-1);
+ model.forecastDirty=true;model.trail=[];
+ $('countInput').value=n;
+ if(n>128)note(n+' 圓模式 · 可在設定中隱藏圓周骨架以維持流暢');
+ else if(model.source!=='fitted')note('目前 '+n+' 個圓周 · 可以直接拖曳端點');
+ renderWheelEditor();
+ render();
+ return n;
+}
+function complexFFT(re,im){
+ const n=re.length;
+ // Radix-2 DFT with a negative exponential, inverse epicycles use positive rotation.
+ for(let i=1,j=0;i<n;i++){
+  let bit=n>>1;
+  for(;j&bit;bit>>=1)j^=bit;
+  j^=bit;
+  if(i<j){[re[i],re[j]]=[re[j],re[i]];[im[i],im[j]]=[im[j],im[i]]}
+ }
+ for(let len=2;len<=n;len<<=1){
+  const angle=-TAU/len,wr=Math.cos(angle),wi=Math.sin(angle);
+  for(let i=0;i<n;i+=len){
+   let ur=1,ui=0;
+   for(let j=0;j<len/2;j++){
+    const u=i+j,v=u+len/2;
+    const vr=re[v]*ur-im[v]*ui,vi=re[v]*ui+im[v]*ur;
+    re[v]=re[u]-vr;im[v]=im[u]-vi;
+    re[u]+=vr;im[u]+=vi;
+    const nr=ur*wr-ui*wi;ui=ur*wi+ui*wr;ur=nr;
+   }
+  }
+ }
+}
+function resampleClosed(points,count){
+ const source=points.map(p=>({x:p.x,y:p.y}));
+ if(source.length<3)return[];
+ // Closing the loop intentionally makes one full rotation periodic.
+ const lengths=[],n=source.length;
+ let total=0;
+ for(let i=0;i<n;i++){
+  const a=source[i],b=source[(i+1)%n],d=Math.hypot(b.x-a.x,b.y-a.y);
+  lengths.push(d);total+=d;
+ }
+ if(total<10)return[];
+ const sampled=[],step=total/count;
+ let index=0,start=0;
+ for(let i=0;i<count;i++){
+  const at=i*step;
+  while(index<n-1&&start+lengths[index]<at){start+=lengths[index];index++}
+  const a=source[index],b=source[(index+1)%n];
+  const t=lengths[index]?clamp((at-start)/lengths[index],0,1):0;
+  sampled.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
+ }
+ return sampled;
+}
+function fitPath(points,count){
+ const size=Math.min(2048,Math.max(512,2**Math.ceil(Math.log2(Math.max(2,count)))));
+ const samples=resampleClosed(points,size);
+ if(samples.length!==size)return null;
+ const re=samples.map(p=>p.x),im=samples.map(p=>p.y);
+ complexFFT(re,im);
+ const coefficients=[];
+ for(let i=0;i<size;i++){
+  const x=re[i]/size,y=im[i]/size;
+  coefficients.push({r:Math.hypot(x,y),f:i>size/2?i-size:i,phase:Math.atan2(y,x)});
+ }
+ const base=coefficients.shift(); // DC term anchors the drawn path's center.
+ coefficients.sort((a,b)=>b.r-a.r);
+ model.perf.fftCalls++;
+ return{coeffs:[base,...coefficients],samples};
+}
+function fitError(samples){
+ if(!samples.length)return null;
+ const stride=Math.max(1,Math.ceil(samples.length/256));
+ let sum=0,n=0;
+ for(let i=0;i<samples.length;i+=stride){
+  const p=wheelPosition(i/samples.length),q=samples[i];
+  sum+=(p.x-q.x)**2+(p.y-q.y)**2;n++;
+ }
+ return Math.sqrt(sum/n);
+}
+function generate(){
+ if(model.stroke.length<3){note('請先在畫布上畫一條軌跡');return false}
+ const n=clamp(Number($('countInput').value)||3,1,2048);
+ const result=fitPath(model.stroke,n);
+ if(!result){note('線條太短，請畫一條更完整的軌跡');return false}
+ model.coeffs=result.coeffs;
+ model.reference=result.samples;
+ model.source='fitted';
+ model.selected=0;
+ model.t=0;model.trail=[];model.playing=true;model.last=0;
+ model.mode='free';
+ setCount(n);
+ model.error=fitError(model.reference);
+ syncMode();syncPlay();
+ note('已生成 '+n+' 個圓 · 誤差約 '+model.error.toFixed(1)+' 單位');
+ $('canvasHint').textContent='成功重建 · 可以繼續調整圓周數或微調設定';
+ return true;
+}
+function clearStroke(){
+ model.stroke=[];model.reference=[];model.error=null;
+ $('generateBtn').disabled=true;
+ if(model.source==='fitted'){model.source='manual';model.coeffs=[]}
+ $('canvasHint').textContent='在畫布上畫一條路徑，完成後按「依手繪生成圓周」';
+ note('手繪路徑已清空');render();
+}
+function resetAll(){
+ model.mode='free';model.source='manual';model.playing=false;model.t=0;
+ model.speed=1;model.selected=0;model.stroke=[];model.reference=[];
+ model.coeffs=[];model.wheels=defaultWheels();model.trail=[];model.error=null;
+ model.forecastDirty=true;model.drawing=false;model.drag=null;
+ $('countInput').value=3;$('speedSlider').value=100;$('speedOut').textContent='1.0×';
+ $('generateBtn').disabled=true;
+ $('canvasHint').textContent='切換到「手繪軌跡」，在畫布上用手指或滑鼠畫線';
+ syncMode();syncPlay();renderWheelEditor();note('調整圓周，觀察路徑');render();
+}
+function setMode(mode){
+ if(mode!=='free'&&mode!=='draw')return;
+ model.mode=mode;
+ if(mode==='draw'){model.playing=false;model.drawing=false;model.drag=null;model.trail=[];note('用手指或滑鼠畫出你的軌跡')}
+ else note(model.source==='fitted'?'可以微調重建後的圓周':'自由調整圓周，觀察即時路徑');
+ $('canvasHint').textContent=mode==='draw'?'用手指或滑鼠畫線，完成後按「依手繪生成圓周」':model.source==='fitted'?'保留手繪線作為參考，調整圓周看差異':'可直接拖曳圓周端點，也能打開右上角設定';
+ syncMode();syncPlay();render();
+}
+function syncMode(){
+ $('freeMode').classList.toggle('current',model.mode==='free');
+ $('drawMode').classList.toggle('current',model.mode==='draw');
+ $('freeMode').setAttribute('aria-pressed',String(model.mode==='free'));
+ $('drawMode').setAttribute('aria-pressed',String(model.mode==='draw'));
+ $('generateBtn').disabled=model.stroke.length<3;
+ canvas.style.cursor=model.mode==='draw'?'crosshair':'grab';
+}
+function syncPlay(){
+ $('playText').textContent=model.playing?'暫停播放':'開始播放';
+ $('playBtn').firstElementChild.textContent=model.playing?'Ⅱ':'▶';
+ $('playBtn').setAttribute('aria-pressed',String(model.playing));
+}
+function togglePlay(){
+ if(model.mode==='draw')setMode('free');
+ model.playing=!model.playing;model.last=0;syncPlay();render();
+}
+function updateWheel(field,value){
+ const w=model.wheels[model.selected];
+ if(!w)return;
+ if(field==='r')w.r=clamp(Number(value)||0,0,1000);
+ if(field==='f')w.f=clamp(Math.round(Number(value)||0),-2048,2048);
+ if(field==='phase')w.phase=clamp(Number(value)||0,-180,180)*Math.PI/180;
+ if(model.source==='fitted'&&model.coeffs[model.selected])model.coeffs[model.selected]={...w};
+ model.forecastDirty=true;model.trail=[];
+ renderWheelEditor();render();
+}
+function renderWheelEditor(){
+ const s=$('wheelSelect'),current=model.selected;
+ s.replaceChildren();
+ model.wheels.forEach((wheel,i)=>{
+  const option=document.createElement('option');
+  option.value=i;option.textContent='圓周 '+String(i+1).padStart(2,'0')+' · '+(wheel.f===0?'不旋轉':Math.abs(wheel.f)+'×'+(wheel.f<0?'逆':'順'));
+  s.append(option);
+ });
+ s.value=String(clamp(current,0,model.wheels.length-1));
+ const w=model.wheels[model.selected];if(!w)return;
+ $('radius').value=Math.min(300,w.r);$('radiusNumber').value=Math.round(w.r);
+ $('radiusOut').textContent=Math.round(w.r);
+ $('frequency').value=w.f;
+ const angle=Math.round(w.phase*180/Math.PI);
+ $('phase').value=clamp(angle,-180,180);$('phaseOut').textContent=angle+'°';
+}
+function openSettings(visible){
+ $('advancedPanel').hidden=!visible;
+ $('settingsBtn').setAttribute('aria-expanded',String(visible));
+ if(visible)renderWheelEditor();
+}
+function resize(){
+ const b=stage.getBoundingClientRect();
+ const w=b.width,h=b.height,dpr=Math.min(devicePixelRatio||1,2);
+ if(w<1||h<1)return;
+ if(model.width===w&&model.height===h&&model.dpr===dpr)return;
+ model.width=w;model.height=h;model.dpr=dpr;model.scale=Math.min(w/640,h/620);
+ canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+ context.setTransform(dpr,0,0,dpr,0,0);
+ model.forecastDirty=true;render();
+}
+function buildForecast(){
+ if(!model.forecastDirty)return;
+ const n=model.wheels.length>700?220:model.wheels.length>200?350:480;
+ const points=[];
+ // Sum in coefficient space, never infer geometry from the pixels.
+ for(let i=0;i<=n;i++)points.push(pixel(wheelPosition(i/n)));
+ model.forecast=points;model.forecastDirty=false;model.perf.forecastBuilds++;
+}
+function strokeLine(pts,color,width,dashed=false){
+ if(pts.length<2)return;
+ context.beginPath();context.moveTo(pts[0].x,pts[0].y);
+ for(let i=1;i<pts.length;i++)context.lineTo(pts[i].x,pts[i].y);
+ context.strokeStyle=color;context.lineWidth=width;
+ context.setLineDash(dashed?[5,6]:[]);
+ context.lineJoin='round';context.lineCap='round';context.stroke();context.setLineDash([]);
+}
+function render(){
+ if(!model.width||!model.height)return;
+ const ctx=context,w=model.width,h=model.height;
+ ctx.fillStyle='#071522';ctx.fillRect(0,0,w,h);
+ const radial=ctx.createRadialGradient(w*.51,h*.43,0,w*.51,h*.43,Math.max(w,h)*.72);
+ radial.addColorStop(0,'rgba(29,62,83,.30)');radial.addColorStop(1,'rgba(7,18,30,0)');
+ ctx.fillStyle=radial;ctx.fillRect(0,0,w,h);
+ // Lightweight static reference axis; sparse enough to keep visual focus on the orbit.
+ const center=pixel({x:0,y:0});
+ ctx.strokeStyle='rgba(118,161,180,.10)';ctx.lineWidth=1;
+ ctx.beginPath();ctx.moveTo(center.x-13,center.y);ctx.lineTo(center.x+13,center.y);
+ ctx.moveTo(center.x,center.y-13);ctx.lineTo(center.x,center.y+13);ctx.stroke();
+ const raw=(model.mode==='draw'?model.stroke:model.reference.length?model.reference:model.stroke);
+ if(model.showOriginal&&raw.length>1)strokeLine(raw.map(pixel),'rgba(127,229,209,.63)',1.8,true);
+ if(model.mode==='draw'){
+  if(model.stroke.length>0){const p=pixel(model.stroke[model.stroke.length-1]);ctx.fillStyle='#b9f7ee';ctx.beginPath();ctx.arc(p.x,p.y,3.5,0,TAU);ctx.fill()}
+  model.perf.frames++;return;
+ }
+ if(model.showForecast){buildForecast();strokeLine(model.forecast,'rgba(246,214,159,.52)',1.35,true)}
+ if(model.trail.length>1)strokeLine(model.trail.map(pixel),'rgba(244,226,190,.92)',2.2);
+ const circles=wheelCenters(model.t),many=circles.length>100;
+ if(model.showRings){
+  // Skip insignificant intermediate skeletons at extreme counts; all circles still
+  // participate in the actual motion and sampled target path calculation.
+  const step=circles.length>250?Math.ceil(circles.length/125):1;
+  for(let i=0;i<circles.length;i+=step){
+   const c=circles[i];if(c.r<.25)continue;
+   const p=pixel({x:c.cx,y:c.cy}),end=pixel({x:c.x,y:c.y}),color=wheelColor[i%wheelColor.length];
+   ctx.strokeStyle=color;ctx.globalAlpha=i===model.selected?.9:many?.3:.52;
+   ctx.lineWidth=i===model.selected?1.55:1;
+   ctx.beginPath();ctx.arc(p.x,p.y,c.r*model.scale,0,TAU);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(end.x,end.y);ctx.stroke();
+   if(i===model.selected||circles.length<=20){ctx.fillStyle=color;ctx.beginPath();ctx.arc(end.x,end.y,i===model.selected?4.7:2.5,0,TAU);ctx.fill()}
+  }
+  ctx.globalAlpha=1;
+ }
+ const position=pixel(wheelPosition(model.t));
+ ctx.fillStyle='#f7e4b8';ctx.strokeStyle='#544a3b';ctx.lineWidth=2;
+ ctx.beginPath();ctx.arc(position.x,position.y,5,0,TAU);ctx.fill();ctx.stroke();
+ model.perf.frames++;
+}
+function frame(now){
+ if(model.playing&&model.mode!=='draw'){
+  if(model.last){
+   const dt=Math.min((now-model.last)/1000,.065);
+   const before=model.t;model.t=(model.t+dt*model.speed/8)%1;
+   if(model.t<before)model.trail=[];
+   model.trail.push(wheelPosition(model.t));
+   if(model.trail.length>1600)model.trail.shift();
+   model.forecastDirty=false; // Prediction spans a full period; starting time does not change its shape.
+  }
+  model.last=now;
+ }else model.last=0;
+ render();requestAnimationFrame(frame);
+}
+function pointerCoord(event){const b=canvas.getBoundingClientRect();return coordinate(event.clientX-b.left,event.clientY-b.top)}
+canvas.addEventListener('pointerdown',event=>{
+ const p=pointerCoord(event);
+ if(model.mode==='draw'){
+  model.stroke=[p];model.reference=[];model.error=null;model.drawing=true;
+  $('generateBtn').disabled=true;note('繪製中…');canvas.setPointerCapture(event.pointerId);render();event.preventDefault();return;
+ }
+ const handles=wheelCenters(model.t);
+ let selected=-1,best=Infinity;
+ for(let i=handles.length-1;i>=0;i--){
+  const h=handles[i],distance=Math.hypot(h.x-p.x,h.y-p.y)*model.scale;
+  if(distance<best&&distance<23){best=distance;selected=i}
+ }
+ if(selected<0)return;
+ model.selected=selected;
+ const h=handles[selected];model.drag={index:selected,cx:h.cx,cy:h.cy};
+ model.playing=false;model.last=0;syncPlay();renderWheelEditor();
+ canvas.setPointerCapture(event.pointerId);canvas.style.cursor='grabbing';event.preventDefault();
+});
+canvas.addEventListener('pointermove',event=>{
+ if(!model.drawing&&!model.drag)return;
+ const p=pointerCoord(event);
+ if(model.drawing){
+  const last=model.stroke[model.stroke.length-1];
+  if(!last||Math.hypot(last.x-p.x,last.y-p.y)>2/model.scale){
+   if(model.stroke.length<12000)model.stroke.push(p);
+   render();
+  }
+ }else if(model.drag){
+  const c=model.drag,w=model.wheels[c.index];if(!w)return;
+  w.r=clamp(Math.round(Math.hypot(p.x-c.cx,p.y-c.cy)),0,1000);
+  if(model.source==='fitted'&&model.coeffs[c.index])model.coeffs[c.index]={...w};
+  model.forecastDirty=true;model.trail=[];
+  renderWheelEditor();render();
+ }
+ event.preventDefault();
+});
+function finishPointer(){
+ if(model.drawing){
+  model.drawing=false;
+  $('generateBtn').disabled=model.stroke.length<3;
+  note(model.stroke.length>=3?'已記錄軌跡 · 點「依手繪生成圓周」':'軌跡太短，請再畫一次');
+ }
+ if(model.drag){model.drag=null;canvas.style.cursor='grab'}
+ render();
+}
+canvas.addEventListener('pointerup',finishPointer);
+canvas.addEventListener('pointercancel',finishPointer);
+canvas.addEventListener('lostpointercapture',finishPointer);
+$('freeMode').addEventListener('click',()=>setMode('free'));
+$('drawMode').addEventListener('click',()=>setMode('draw'));
+$('playBtn').addEventListener('click',togglePlay);
+$('generateBtn').addEventListener('click',generate);
+$('clearBtn').addEventListener('click',clearStroke);
+$('resetBtn').addEventListener('click',resetAll);
+$('minusBtn').addEventListener('click',()=>setCount(model.wheels.length-1));
+$('plusBtn').addEventListener('click',()=>setCount(model.wheels.length+1));
+$('countInput').addEventListener('change',e=>setCount(e.target.value));
+$('speedSlider').addEventListener('input',e=>{model.speed=Number(e.target.value)/100;$('speedOut').textContent=model.speed.toFixed(1)+'×'});
+$('settingsBtn').addEventListener('click',()=>openSettings($('advancedPanel').hidden));
+$('closeSettings').addEventListener('click',()=>openSettings(false));
+$('wheelSelect').addEventListener('change',e=>{model.selected=Number(e.target.value);renderWheelEditor()});
+$('radius').addEventListener('input',e=>updateWheel('r',e.target.value));
+$('radiusNumber').addEventListener('change',e=>updateWheel('r',e.target.value));
+$('frequency').addEventListener('change',e=>updateWheel('f',e.target.value));
+$('phase').addEventListener('input',e=>updateWheel('phase',e.target.value));
+$('showRings').addEventListener('change',e=>{model.showRings=e.target.checked;render()});
+$('showOriginal').addEventListener('change',e=>{model.showOriginal=e.target.checked;render()});
+$('showForecast').addEventListener('change',e=>{model.showForecast=e.target.checked;render()});
+window.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&!$('advancedPanel').hidden){openSettings(false);$('settingsBtn').focus();return}
+ if(e.code==='Space'&&!['INPUT','BUTTON','SELECT','TEXTAREA'].includes(document.activeElement?.tagName)){
+  e.preventDefault();togglePlay();
+ }
+});
+const observer=new ResizeObserver(resize);observer.observe(stage);
+window.addEventListener('pageshow',e=>{if(e.persisted)resize()});
+window.__ORBIT_EXPERIMENT_DEBUG__={model,wheelPosition,resampleClosed,complexFFT,fitPath,generate,setCount,setMode,resize,render};
+resize();renderWheelEditor();syncMode();syncPlay();requestAnimationFrame(frame);
+})();
