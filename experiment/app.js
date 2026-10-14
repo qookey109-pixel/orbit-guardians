@@ -292,7 +292,7 @@ function frame(now){
    if(model.t<before)model.trail=[];
    model.trail.push(wheelPosition(model.t));
    if(model.trail.length>1600)model.trail.shift();
-   model.forecastDirty=false; // Prediction spans a full period; starting time does not change its shape.
+   // Forecast geometry is independent of time; keep any pending invalidation until visible.
   }
   model.last=now;
  }else model.last=0;

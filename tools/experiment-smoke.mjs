@@ -83,6 +83,14 @@ for(const [name,engine] of engines){
  assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.wheels[0].r),120);
  await page.locator('#showRings').uncheck();
  assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.showRings),false);
+ // Editing while the preview is hidden must invalidate the cached trajectory.
+ await page.locator('#showForecast').uncheck();
+ const buildsBefore=await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.perf.forecastBuilds);
+ await page.locator('#radiusNumber').fill('133');await page.locator('#radiusNumber').press('Tab');
+ await page.waitForTimeout(110);
+ await page.locator('#showForecast').check();
+ const buildsAfter=await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.perf.forecastBuilds);
+ assert.ok(buildsAfter>buildsBefore,'Re-enabling forecast did not update the edited orbit');
  await page.locator('#closeSettings').click();
  await page.locator('#countInput').fill('256');await page.locator('#countInput').press('Tab');
  assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.wheels.length),256);
