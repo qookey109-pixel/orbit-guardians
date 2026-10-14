@@ -291,7 +291,10 @@ function updateWheel(field,value){
  if(field==='r')w.r=clamp(Number(value)||0,0,1000);
  if(field==='f')w.f=clamp(Math.round(Number(value)||0),-2048,2048);
  if(field==='phase')w.phase=clamp(Number(value)||0,-180,180)*Math.PI/180;
- if(model.source==='fitted'&&model.coeffs[model.selected])model.coeffs[model.selected]={...w};
+ if(model.source==='fitted'&&model.coeffs[model.selected]){
+  model.coeffs[model.selected]={...w};
+  model.error=fitError(model.reference);model.errorPixels=model.error*model.scale;
+ }
  model.forecastDirty=true;model.trail=[];
  renderWheelEditor();render();
 }
@@ -324,6 +327,7 @@ function resize(){
  model.width=w;model.height=h;model.dpr=dpr;model.scale=Math.min(w/640,h/620);
  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
  context.setTransform(dpr,0,0,dpr,0,0);
+ if(model.source==='fitted'&&Number.isFinite(model.error))model.errorPixels=model.error*model.scale;
  model.forecastDirty=true;measurementGrid=null;buildMeasurementGrid();render();
 }
 function buildForecast(){
@@ -439,6 +443,7 @@ canvas.addEventListener('pointermove',event=>{
   const c=model.drag,w=model.wheels[c.index];if(!w)return;
   w.r=clamp(Math.round(Math.hypot(p.x-c.cx,p.y-c.cy)),0,1000);
   if(model.source==='fitted'&&model.coeffs[c.index])model.coeffs[c.index]={...w};
+  model.errorPixels=null; // Do not show an outdated precision readout mid-drag.
   model.forecastDirty=true;model.trail=[];
   renderWheelEditor();render();
  }
@@ -451,7 +456,12 @@ function finishPointer(){
   if(model.stroke.length>=3)generate(); // Auto-build and start after finger release.
   else note('軌跡太短，請再畫一次');
  }
- if(model.drag){model.drag=null;canvas.style.cursor='grab'}
+ if(model.drag){
+  if(model.source==='fitted'&&model.reference.length){
+   model.error=fitError(model.reference);model.errorPixels=model.error*model.scale;
+  }
+  model.drag=null;canvas.style.cursor='grab';
+ }
  render();
 }
 canvas.addEventListener('pointerup',finishPointer);
