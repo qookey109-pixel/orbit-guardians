@@ -23,7 +23,7 @@ function syncTelemetry(){
  const fitted=model.source==='fitted',drawing=model.mode==='draw';
  const label=drawing?(model.drawing?'ACQUIRING':'INPUT READY'):
    fitted?'RECONSTRUCTED':'MODEL READY';
- const error=fitted&&Number.isFinite(model.errorPixels)?model.errorPixels:null;
+ const error=fitted&&!drawing&&Number.isFinite(model.errorPixels)?model.errorPixels:null;
  textIfChanged('labState',label);
  textIfChanged('labHarmonics',model.wheels.length.toLocaleString('en-US',{minimumIntegerDigits:3}));
  textIfChanged('labError',error===null?'—':error.toFixed(1));
@@ -441,49 +441,66 @@ function frame(now){
  }else model.last=0;
  render();requestAnimationFrame(frame);
 }
-function pointerCoord(event){const b=canvas.getBoundingClientRect();return coordinate(event.clientX-b.left,event.clientY-b.top)}
+function pointerCoord(event){
+ const b=canvas.getBoundingClientRect();
+ return coordinate(event.clientX-b.left,event.clientY-b.top);
+}
+function appendStrokePoint(event){
+ const p=pointerCoord(event),prev=model.stroke.at(-1);
+ if(model.stroke.length>=12000)return;
+ if(!prev||Math.hypot(prev.x-p.x,prev.y-p.y)>1.2/model.scale)model.stroke.push(p);
+}
 canvas.addEventListener('pointerdown',event=>{
+ if(model.activePointerId!==null||event.pointerType==='touch'&&!event.isPrimary)return;
+ if(event.pointerType==='mouse'&&event.button!==0)return;
  const p=pointerCoord(event);
  if(model.mode==='draw'){
-  model.stroke=[p];model.reference=[];model.error=null;model.drawing=true;
-  $('generateBtn').disabled=true;note('繪製中…');canvas.setPointerCapture(event.pointerId);render();event.preventDefault();return;
+  model.activePointerId=event.pointerId;
+  model.stroke=[p];model.reference=[];model.error=null;model.errorPixels=null;model.drawing=true;
+  $('generateBtn').disabled=true;note('正在採集手繪樣本…');
+  canvas.setPointerCapture(event.pointerId);render();event.preventDefault();return;
  }
  const handles=wheelCenters(model.t);
  let selected=-1,best=Infinity;
  for(let i=handles.length-1;i>=0;i--){
   const h=handles[i],distance=Math.hypot(h.x-p.x,h.y-p.y)*model.scale;
-  if(distance<best&&distance<23){best=distance;selected=i}
+  if(distance<best&&distance<(event.pointerType==='touch'?32:23)){best=distance;selected=i}
  }
  if(selected<0)return;
- model.selected=selected;
+ model.activePointerId=event.pointerId;model.selected=selected;
  const h=handles[selected];model.drag={index:selected,cx:h.cx,cy:h.cy};
  model.playing=false;model.last=0;syncPlay();renderWheelEditor();
  canvas.setPointerCapture(event.pointerId);canvas.style.cursor='grabbing';event.preventDefault();
 });
 canvas.addEventListener('pointermove',event=>{
- if(!model.drawing&&!model.drag)return;
- const p=pointerCoord(event);
+ if(model.activePointerId===null||event.pointerId!==model.activePointerId)return;
  if(model.drawing){
-  const last=model.stroke[model.stroke.length-1];
-  if(!last||Math.hypot(last.x-p.x,last.y-p.y)>2/model.scale){
-   if(model.stroke.length<12000)model.stroke.push(p);
-   render();
-  }
+  // Coalesced stylus/finger samples preserve detail when Safari batches moves.
+  const samples=typeof event.getCoalescedEvents==='function'?event.getCoalescedEvents():[];
+  for(const sample of samples)appendStrokePoint(sample);
+  appendStrokePoint(event);
+  render();
  }else if(model.drag){
-  const c=model.drag,w=model.wheels[c.index];if(!w)return;
+  const p=pointerCoord(event),c=model.drag,w=model.wheels[c.index];if(!w)return;
   w.r=clamp(Math.round(Math.hypot(p.x-c.cx,p.y-c.cy)),0,1000);
   if(model.source==='fitted'&&model.coeffs[c.index])model.coeffs[c.index]={...w};
-  model.errorPixels=null; // Do not show an outdated precision readout mid-drag.
-  model.forecastDirty=true;model.trail=[];
+  model.errorPixels=null;
+  model.forecastDirty=true;model.trail=[];circlePlan.dirty=true;
   renderWheelEditor();render();
  }
  event.preventDefault();
 });
-function finishPointer(){
+function finishPointer(event,canceled=false){
+ if(model.activePointerId===null||event.pointerId!==model.activePointerId)return;
+ model.activePointerId=null;
  if(model.drawing){
+  if(!canceled)appendStrokePoint(event);
   model.drawing=false;
   $('generateBtn').disabled=model.stroke.length<3;
-  if(model.stroke.length>=3)generate(); // Auto-build and start after finger release.
+  if(canceled){
+   // Interrupted touch gestures should never analyze an incomplete sample.
+   model.stroke=[];$('generateBtn').disabled=true;note('手繪已中斷，請重新描繪');
+  }else if(model.stroke.length>=3)generate();
   else note('軌跡太短，請再畫一次');
  }
  if(model.drag){
@@ -495,9 +512,9 @@ function finishPointer(){
  }
  render();
 }
-canvas.addEventListener('pointerup',finishPointer);
-canvas.addEventListener('pointercancel',finishPointer);
-canvas.addEventListener('lostpointercapture',finishPointer);
+canvas.addEventListener('pointerup',event=>finishPointer(event));
+canvas.addEventListener('pointercancel',event=>finishPointer(event,true));
+canvas.addEventListener('lostpointercapture',event=>finishPointer(event,true));
 $('freeMode').addEventListener('click',()=>setMode('free'));
 $('drawMode').addEventListener('click',()=>setMode('draw'));
 $('playBtn').addEventListener('click',togglePlay);
