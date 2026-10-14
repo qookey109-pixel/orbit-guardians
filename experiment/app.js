@@ -7,7 +7,7 @@ const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const defaultWheels=()=>[{r:110,f:1,phase:0},{r:45,f:-2,phase:0},{r:27,f:3,phase:0}];
 const model={
  mode:'free',source:'manual',playing:false,t:0,speed:1,
- wheels:defaultWheels(),coeffs:[],selected:0,
+ wheels:defaultWheels(),coeffs:[],selected:0,autoCount:0,closedPath:true,errorPixels:null,
  stroke:[],reference:[],showRings:true,showForecast:true,showOriginal:true,
  drawing:false,drag:null,forecast:[],forecastDirty:true,
  width:0,height:0,dpr:1,scale:1,last:0,trail:[],error:null,
@@ -40,7 +40,7 @@ function nextWheel(i){return{r:Math.max(4,Math.round(45/(1+i*.23))),f:(i%2?-1:1)
 function setCount(value){
  const n=clamp(Math.floor(Number(value)||1),1,2048);
  if(model.source==='fitted'&&model.coeffs.length){
-  while(model.coeffs.length<n)model.coeffs.push(nextWheel(model.coeffs.length));
+  // The complete FFT spectrum stays available; never synthesize unrelated circles.
   model.wheels=model.coeffs.slice(0,n).map(w=>({...w}));
  }else{
   while(model.wheels.length<n)model.wheels.push(nextWheel(model.wheels.length));
@@ -100,9 +100,19 @@ function resampleClosed(points,count){
  }
  return sampled;
 }
+function pathIsClosed(points){
+ const first=points[0],last=points[points.length-1];
+ let length=0;
+ for(let i=1;i<points.length;i++)length+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);
+ return Math.hypot(last.x-first.x,last.y-first.y)<=Math.max(10/model.scale,Math.min(30/model.scale,length*.02));
+}
 function fitPath(points,count){
- const size=Math.min(2048,Math.max(512,2**Math.ceil(Math.log2(Math.max(2,count)))));
- const samples=resampleClosed(points,size);
+ // Use all Fourier coefficients regardless of the initial UI circle count.
+ // An open stroke is mirrored back to the start instead of joining endpoints
+ // with a fake straight segment (one complete revolution = out and back).
+ const size=2048,closed=pathIsClosed(points);
+ const periodic=closed?points:points.concat(points.slice(1,-1).reverse());
+ const samples=resampleClosed(periodic,size);
  if(samples.length!==size)return null;
  const re=samples.map(p=>p.x),im=samples.map(p=>p.y);
  complexFFT(re,im);
@@ -114,7 +124,7 @@ function fitPath(points,count){
  const base=coefficients.shift(); // DC term anchors the drawn path's center.
  coefficients.sort((a,b)=>b.r-a.r);
  model.perf.fftCalls++;
- return{coeffs:[base,...coefficients],samples};
+ return{coeffs:[base,...coefficients],samples,closed};
 }
 function fitError(samples){
  if(!samples.length)return null;
@@ -126,38 +136,69 @@ function fitError(samples){
  }
  return Math.sqrt(sum/n);
 }
+function chooseCircleCount(coeffs,samples){
+ // Parseval's identity gives exact sampled RMS residual for omitted harmonics.
+ // Then check the maximum visual deviation so sharp corners aren't ignored.
+ const target=2.0/model.scale,maxDeviation=7/model.scale;
+ let energy=coeffs.slice(1).reduce((sum,c)=>sum+c.r*c.r,0);
+ let n=1;
+ while(n<Math.min(512,coeffs.length)){
+  energy=Math.max(0,energy-coeffs[n].r**2);n++;
+  if(n>=12&&Math.sqrt(energy)<=target)break;
+ }
+ while(n<Math.min(512,coeffs.length)){
+  const wheels=coeffs.slice(0,n);
+  let worst=0;
+  for(let j=0;j<128;j++){
+   const i=Math.floor(j*samples.length/128);
+   const p=wheelPosition(i/samples.length,wheels),q=samples[i];
+   worst=Math.max(worst,Math.hypot(p.x-q.x,p.y-q.y));
+  }
+  if(worst<=maxDeviation)break;
+  n=Math.min(512,n+16);
+ }
+ return Math.max(12,n);
+}
 function generate(){
  if(model.stroke.length<3){note('請先在畫布上畫一條軌跡');return false}
- const n=clamp(Number($('countInput').value)||3,1,2048);
- const result=fitPath(model.stroke,n);
+ const result=fitPath(model.stroke,2048);
  if(!result){note('線條太短，請畫一條更完整的軌跡');return false}
  model.coeffs=result.coeffs;
  model.reference=result.samples;
+ model.closedPath=result.closed;
  model.source='fitted';
  model.selected=0;
+ model.autoCount=chooseCircleCount(result.coeffs,result.samples);
  model.t=0;model.trail=[];model.playing=!matchMedia('(prefers-reduced-motion: reduce)').matches;model.last=0;
  model.mode='free';
- setCount(n);
+ model.showForecast=false; // Solid animated stroke is the main result, not a pre-drawn golden outline.
+ $('showForecast').checked=false;
+ setCount(model.autoCount);
  model.error=fitError(model.reference);
+ model.errorPixels=model.error*model.scale;
+ model.trail=[wheelPosition(0)];
+ $('generateBtn').textContent='重新生成圓周';
  syncMode();syncPlay();
- note('已生成 '+n+' 個圓 · 誤差約 '+model.error.toFixed(1)+' 單位');
- $('canvasHint').textContent='成功重建 · 可以繼續調整圓周數或微調設定';
+ const label=model.closedPath?'循環描繪':'來回描繪';
+ note('自動生成 '+model.autoCount+' 個圓 · 沿手繪線'+label+' · 誤差約 '+model.errorPixels.toFixed(1)+'px');
+ $('canvasHint').textContent='金色端點沿著手繪路徑移動，並逐步畫出實線軌跡';
+ render();
  return true;
 }
 function clearStroke(){
- model.stroke=[];model.reference=[];model.error=null;
+ model.stroke=[];model.reference=[];model.error=null;model.errorPixels=null;model.autoCount=0;
  $('generateBtn').disabled=true;
- if(model.source==='fitted'){model.source='manual';model.coeffs=[]}
+ if(model.source==='fitted'){model.source='manual';model.coeffs=[];model.wheels=defaultWheels();$('countInput').value=3;renderWheelEditor()}
  $('canvasHint').textContent='在畫布上畫一條路徑，完成後按「依手繪生成圓周」';
  note('手繪路徑已清空');render();
 }
 function resetAll(){
  model.mode='free';model.source='manual';model.playing=false;model.t=0;
  model.speed=1;model.selected=0;model.stroke=[];model.reference=[];
- model.coeffs=[];model.wheels=defaultWheels();model.trail=[];model.error=null;
+ model.coeffs=[];model.wheels=defaultWheels();model.trail=[];model.error=null;model.errorPixels=null;model.autoCount=0;model.closedPath=true;model.showForecast=true;$('showForecast').checked=true;
  model.forecastDirty=true;model.drawing=false;model.drag=null;
  $('countInput').value=3;$('speedSlider').value=100;$('speedOut').textContent='1.0×';
- $('generateBtn').disabled=true;
+ $('generateBtn').disabled=true;$('generateBtn').textContent='依手繪生成圓周';
  $('canvasHint').textContent='切換到「手繪軌跡」，在畫布上用手指或滑鼠畫線';
  syncMode();syncPlay();renderWheelEditor();note('調整圓周，觀察路徑');render();
 }
@@ -166,7 +207,7 @@ function setMode(mode){
  model.mode=mode;
  if(mode==='draw'){model.playing=false;model.drawing=false;model.drag=null;model.trail=[];note('用手指或滑鼠畫出你的軌跡')}
  else note(model.source==='fitted'?'可以微調重建後的圓周':'自由調整圓周，觀察即時路徑');
- $('canvasHint').textContent=mode==='draw'?'用手指或滑鼠畫線，完成後按「依手繪生成圓周」':model.source==='fitted'?'保留手繪線作為參考，調整圓周看差異':'可直接拖曳圓周端點，也能打開右上角設定';
+ $('canvasHint').textContent=mode==='draw'?'用手指或滑鼠畫線，放開就會自動生成並播放':model.source==='fitted'?'保留手繪線作為參考，調整圓周看差異':'可直接拖曳圓周端點，也能打開右上角設定';
  syncMode();syncPlay();render();
 }
 function syncMode(){
@@ -175,6 +216,7 @@ function syncMode(){
  $('freeMode').setAttribute('aria-pressed',String(model.mode==='free'));
  $('drawMode').setAttribute('aria-pressed',String(model.mode==='draw'));
  $('generateBtn').disabled=model.stroke.length<3;
+ $('.workspace').dataset.mode=model.mode;
  canvas.style.cursor=model.mode==='draw'?'crosshair':'grab';
 }
 function syncPlay(){
@@ -375,6 +417,6 @@ window.addEventListener('keydown',e=>{
 });
 const observer=new ResizeObserver(resize);observer.observe(stage);
 window.addEventListener('pageshow',e=>{if(e.persisted)resize()});
-window.__ORBIT_EXPERIMENT_DEBUG__={model,wheelPosition,resampleClosed,complexFFT,fitPath,generate,setCount,setMode,resize,render};
+window.__ORBIT_EXPERIMENT_DEBUG__={model,wheelPosition,resampleClosed,pathIsClosed,complexFFT,fitPath,chooseCircleCount,generate,setCount,setMode,resize,render};
 resize();renderWheelEditor();syncMode();syncPlay();requestAnimationFrame(frame);
 })();
