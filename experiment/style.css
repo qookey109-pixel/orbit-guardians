@@ -176,3 +176,20 @@
  .status{display:none}
  .instrument-corner{display:none}
 }
+
+/* V1.22 — precision visual focus / primary touch affordances. */
+.stage canvas{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.switches label{cursor:pointer}
+@media(pointer:coarse){
+ .count button{min-width:44px;min-height:44px}
+ .secondarycontrols button{min-height:44px}
+ .advanced .close{min-width:44px;min-height:44px}
+ .advanced select,.advanced input[type=number]{min-height:44px}
+ .advanced .switches label{min-height:44px}
+ .advanced input[type=range]{min-height:38px}
+}
+@media(max-width:410px) and (pointer:coarse){
+ .primarycontrols{gap:5px;padding:5px}
+ .secondarycontrols{padding:4px 6px}
+ .count button{width:44px}
+}
