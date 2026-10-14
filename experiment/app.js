@@ -277,6 +277,7 @@ function resetAll(){
  model.speed=1;model.selected=0;model.stroke=[];model.reference=[];
  model.coeffs=[];model.wheels=defaultWheels();model.trail=[];model.error=null;model.errorPixels=null;model.autoCount=0;model.closedPath=true;model.showForecast=true;$('showForecast').checked=true;
  model.forecastDirty=true;circlePlan.dirty=true;model.drawing=false;model.drag=null;model.activePointerId=null;
+ model.showGrid=true;$('showGrid').checked=true;
  $('countInput').value=3;$('speedSlider').value=100;$('speedOut').textContent='1.0×';
  $('generateBtn').disabled=true;$('generateBtn').textContent='依手繪生成圓周';
  $('canvasHint').textContent='切換到「手繪軌跡」，在畫布上用手指或滑鼠畫線';
