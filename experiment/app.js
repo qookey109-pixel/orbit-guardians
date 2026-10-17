@@ -11,7 +11,7 @@ const model={
  stroke:[],reference:[],showRings:true,showGrid:true,showForecast:true,showOriginal:true,
  drawing:false,drag:null,activePointerId:null,forecast:[],forecastDirty:true,
  width:0,height:0,dpr:1,scale:1,last:0,trail:[],error:null,
- perf:{fftCalls:0,forecastBuilds:0,frames:0,gridBuilds:0,ringPlans:0}
+ perf:{fftCalls:0,forecastBuilds:0,frames:0,gridBuilds:0,ringPlans:0,referencePathBuilds:0,referencePathHits:0,trailPathBuilds:0,trailPathHits:0,backgroundBuilds:0,backgroundHits:0,idleFrameSkips:0,visibleRingObjects:0}
 };
 const wheelColor=['#a8e7e0','#e8d19b','#aabdeb','#eba9ad'];
 const telemetryCache={};
@@ -110,6 +110,22 @@ function wheelCenters(t){
   x=nx;y=ny;
  }
  return result;
+}
+function visibleWheelCenters(t){
+ // Calculate every harmonic for exact chain motion, but allocate only the few
+ // highlighted ring objects that the user can actually see.
+ const display=visibleCircleIndices(),result=[];
+ let x=0,y=0,j=0;
+ for(let i=0;i<model.wheels.length;i++){
+  const w=model.wheels[i],a=TAU*w.f*t+w.phase;
+  const nx=x+w.r*Math.cos(a),ny=y+w.r*Math.sin(a);
+  if(j<display.length&&i===display[j]){
+   result.push({index:i,cx:x,cy:y,x:nx,y:ny,r:w.r});j++;
+  }
+  x=nx;y=ny;
+ }
+ model.perf.visibleRingObjects+=result.length;
+ return {circles:result,endpoint:{x,y}};
 }
 function nextWheel(i){return{r:Math.max(4,Math.round(45/(1+i*.23))),f:(i%2?-1:1)*(Math.floor(i/2)+1),phase:0}}
 function setCount(value){
@@ -371,14 +387,60 @@ function strokeLine(pts,color,width,dashed=false){
  context.setLineDash(dashed?[5,6]:[]);
  context.lineJoin='round';context.lineCap='round';context.stroke();context.setLineDash([]);
 }
+// A retained Canvas Path2D is extended only by newly sampled points. It lets
+// Safari draw a 2,048-sample reference and a growing trace without allocating
+// thousands of short-lived pixel objects on every animation frame.
+const paintCache={
+ reference:{source:null,path:null,count:0,width:0,height:0,scale:0},
+ trail:{source:null,path:null,count:0,width:0,height:0,scale:0}
+};
+function samplePath(name,points){
+ const entry=paintCache[name];
+ const reset=entry.source!==points||entry.count>points.length||
+  entry.width!==model.width||entry.height!==model.height||entry.scale!==model.scale;
+ if(reset){
+  entry.source=points;entry.path=new Path2D();entry.count=0;
+  entry.width=model.width;entry.height=model.height;entry.scale=model.scale;
+  model.perf[name==='trail'?'trailPathBuilds':'referencePathBuilds']++;
+ }else if(entry.count===points.length){
+  model.perf[name==='trail'?'trailPathHits':'referencePathHits']++;
+  return entry.path;
+ }
+ for(let i=entry.count;i<points.length;i++){
+  const p=pixel(points[i]);
+  if(i===0)entry.path.moveTo(p.x,p.y);
+  else entry.path.lineTo(p.x,p.y);
+ }
+ entry.count=points.length;
+ return entry.path;
+}
+let cachedBackground=null;
+function fieldBackground(){
+ if(cachedBackground&&cachedBackground.width===model.width&&cachedBackground.height===model.height){
+  model.perf.backgroundHits++;return cachedBackground.gradient;
+ }
+ const w=model.width,h=model.height;
+ const gradient=context.createRadialGradient(w*.51,h*.43,0,w*.51,h*.43,Math.max(w,h)*.72);
+ gradient.addColorStop(0,'rgba(29,62,83,.30)');
+ gradient.addColorStop(1,'rgba(7,18,30,0)');
+ cachedBackground={width:w,height:h,gradient};
+ model.perf.backgroundBuilds++;return gradient;
+}
+function drawSamplePath(name,points,color,width,dashed=false){
+ if(points.length<2)return;
+ const path=samplePath(name,points);
+ context.save();
+ context.strokeStyle=color;context.lineWidth=width;
+ context.setLineDash(dashed?[5,6]:[]);
+ context.lineJoin='round';context.lineCap='round';context.stroke(path);
+ context.restore();
+}
 function render(){
  syncTelemetry();
  if(!model.width||!model.height)return;
  const ctx=context,w=model.width,h=model.height;
  ctx.fillStyle='#071522';ctx.fillRect(0,0,w,h);
- const radial=ctx.createRadialGradient(w*.51,h*.43,0,w*.51,h*.43,Math.max(w,h)*.72);
- radial.addColorStop(0,'rgba(29,62,83,.30)');radial.addColorStop(1,'rgba(7,18,30,0)');
- ctx.fillStyle=radial;ctx.fillRect(0,0,w,h);
+ ctx.fillStyle=fieldBackground();ctx.fillRect(0,0,w,h);
  if(model.showGrid)drawMeasurementGrid(ctx);
  // Lightweight static reference axis; sparse enough to keep visual focus on the orbit.
  const center=pixel({x:0,y:0});
@@ -386,7 +448,7 @@ function render(){
  ctx.beginPath();ctx.moveTo(center.x-13,center.y);ctx.lineTo(center.x+13,center.y);
  ctx.moveTo(center.x,center.y-13);ctx.lineTo(center.x,center.y+13);ctx.stroke();
  const raw=(model.mode==='draw'?model.stroke:model.reference.length?model.reference:model.stroke);
- if(model.showOriginal&&raw.length>1)strokeLine(raw.map(pixel),'rgba(127,229,209,.63)',1.8,true);
+ if(model.showOriginal&&raw.length>1)drawSamplePath('reference',raw,'rgba(127,229,209,.63)',1.8,true);
  if(model.mode==='draw'){
   if(model.stroke.length>0){const p=pixel(model.stroke[model.stroke.length-1]);ctx.fillStyle='#b9f7ee';ctx.beginPath();ctx.arc(p.x,p.y,3.5,0,TAU);ctx.fill()}
   model.perf.frames++;return;
@@ -395,30 +457,31 @@ function render(){
  if(model.trail.length>1){
   // The line is generated from the actual rotating endpoint, not painted from
   // the reference stroke. Its length grows as the orbit advances.
-  strokeLine(model.trail.map(pixel),'rgba(244,226,190,.96)',2.8);
+  drawSamplePath('trail',model.trail,'rgba(244,226,190,.96)',2.8);
  }
+ let chainEndpoint=null;
  if(model.showRings){
-  const circles=wheelCenters(model.t),many=circles.length>36;
-  for(const i of visibleCircleIndices()){
-   const c=circles[i],wheel=model.wheels[i],selected=i===model.selected;
+  const {circles,endpoint}=visibleWheelCenters(model.t),many=model.wheels.length>36;
+  chainEndpoint=endpoint;
+  for(const c of circles){
+   const i=c.index,wheel=model.wheels[i],selected=i===model.selected;
    if(c.r<.25&&!selected)continue;
    const p=pixel({x:c.cx,y:c.cy}),end=pixel({x:c.x,y:c.y}),color=wheelColor[i%wheelColor.length];
    ctx.save();
    ctx.strokeStyle=color;ctx.fillStyle=color;
    ctx.globalAlpha=selected?1:many?.34:.57;
    ctx.lineWidth=selected?2.15:1.05;
-   // Frequency zero is a DC translation, not a rotating circle.
    if(wheel.f!==0&&c.r>=.25){
     ctx.beginPath();ctx.arc(p.x,p.y,c.r*model.scale,0,TAU);ctx.stroke();
    }
    ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(end.x,end.y);ctx.stroke();
-   if(selected||(!many&&circles.length<=20)){
+   if(selected||(!many&&model.wheels.length<=20)){
     ctx.beginPath();ctx.arc(end.x,end.y,selected?5:2.5,0,TAU);ctx.fill();
    }
    ctx.restore();
   }
  }
- const position=pixel(wheelPosition(model.t));
+ const position=pixel(chainEndpoint||wheelPosition(model.t));
  ctx.fillStyle='#f7e4b8';ctx.strokeStyle='#544a3b';ctx.lineWidth=2;
  ctx.shadowColor='rgba(255,225,174,.58)';ctx.shadowBlur=9;
  ctx.beginPath();ctx.arc(position.x,position.y,5,0,TAU);ctx.fill();ctx.shadowBlur=0;ctx.stroke();
@@ -435,12 +498,19 @@ function advanceTrace(seconds){
  for(let k=1;k<=steps;k++)model.trail.push(wheelPosition(start+(model.t-start)*k/steps));
  if(model.trail.length>1800)model.trail.splice(0,model.trail.length-1800);
 }
-function frame(now){
- if(model.playing&&model.mode!=='draw'){
+function frameStep(now){
+ if(model.playing&&model.mode!=='draw'&&!document.hidden){
   if(model.last)advanceTrace((now-model.last)/1000);
   model.last=now;
- }else model.last=0;
- render();requestAnimationFrame(frame);
+  render();return true;
+ }
+ model.last=0;
+ model.perf.idleFrameSkips++;
+ return false;
+}
+function frame(now){
+ frameStep(now);
+ requestAnimationFrame(frame);
 }
 function pointerCoord(event){
  const b=canvas.getBoundingClientRect();
@@ -544,7 +614,8 @@ window.addEventListener('keydown',e=>{
  }
 });
 const observer=new ResizeObserver(resize);observer.observe(stage);
-window.addEventListener('pageshow',e=>{if(e.persisted)resize()});
-window.__ORBIT_EXPERIMENT_DEBUG__={model,wheelPosition,resampleClosed,pathIsClosed,complexFFT,fitPath,chooseCircleCount,generate,setCount,setMode,resize,render,advanceTrace,syncTelemetry,visibleCircleIndices};
+window.addEventListener('pageshow',e=>{if(e.persisted)resize();model.last=0});
+document.addEventListener('visibilitychange',()=>{model.last=0});
+window.__ORBIT_EXPERIMENT_DEBUG__={model,wheelPosition,resampleClosed,pathIsClosed,complexFFT,fitPath,chooseCircleCount,generate,setCount,setMode,resize,render,advanceTrace,syncTelemetry,visibleCircleIndices,visibleWheelCenters,frameStep,paintCache};
 resize();renderWheelEditor();syncMode();syncPlay();requestAnimationFrame(frame);
 })();

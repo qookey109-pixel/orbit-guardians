@@ -26,6 +26,19 @@ for(const [name,engine] of engines){
  });
  assert.ok(gridAudit.before>=1,'Laboratory measurement grid never generated');
  assert.equal(gridAudit.after,gridAudit.before,'Grid geometry should not rebuild each animation frame');
+ const idlePaintAudit=await page.evaluate(()=>{
+  const d=window.__ORBIT_EXPERIMENT_DEBUG__,m=d.model;
+  const frames=m.perf.frames,skips=m.perf.idleFrameSkips;
+  const stopped=[d.frameStep(performance.now()),d.frameStep(performance.now()+16)];
+  const after=m.perf.frames;
+  d.render();d.render();
+  return {frames,after,skips:m.perf.idleFrameSkips-skips,stopped,
+   backgroundBuilds:m.perf.backgroundBuilds,backgroundHits:m.perf.backgroundHits};
+ });
+ assert.deepEqual(idlePaintAudit.stopped,[false,false],'Stopped orbit must not paint in background rAF');
+ assert.equal(idlePaintAudit.frames,idlePaintAudit.after,'Idle frames should not clear and redraw Canvas');
+ assert.ok(idlePaintAudit.skips>=2&&idlePaintAudit.backgroundHits>0,'Idle frame and background cache counters not updated');
+ assert.equal(idlePaintAudit.backgroundBuilds,1,'Static viewport radial gradient should build once');
  await page.locator('#settingsBtn').click();
  await page.locator('#showGrid').uncheck();
  assert.equal(await page.evaluate(()=>window.__ORBIT_EXPERIMENT_DEBUG__.model.showGrid),false);
@@ -152,6 +165,29 @@ for(const [name,engine] of engines){
  });
  assert.ok(motion.endpointDeviation<1e-7,'Trace tip is not attached to the rotating-circle chain');
  assert.ok(motion.t>0&&motion.trail>2,'Generated orbit did not progressively draw a moving trace: '+JSON.stringify(motion));
+ const retainedInk=await page.evaluate(()=>{
+  const d=window.__ORBIT_EXPERIMENT_DEBUG__,m=d.model;
+  d.render();
+  const trace=d.paintCache.trail.path,reference=d.paintCache.reference.path;
+  const before={...m.perf};
+  for(let i=0;i<6;i++)d.render();
+  const steady={...m.perf};
+  d.advanceTrace(.06);d.render();
+  return {referencePresent:!!reference,tracePresent:!!trace,
+   referenceReused:reference===d.paintCache.reference.path,
+   traceIncremental:trace===d.paintCache.trail.path,
+   referenceNewBuilds:steady.referencePathBuilds-before.referencePathBuilds,
+   trailNewBuilds:steady.trailPathBuilds-before.trailPathBuilds,
+   referenceHits:steady.referencePathHits-before.referencePathHits,
+   trailHits:steady.trailPathHits-before.trailPathHits,
+   backgroundHits:steady.backgroundHits-before.backgroundHits};
+ });
+ assert.ok(retainedInk.referencePresent&&retainedInk.tracePresent,'Expected Path2D trace and original drawing');
+ assert.ok(retainedInk.referenceReused&&retainedInk.traceIncremental,'Path2D sources should reuse objects as ink grows');
+ assert.equal(retainedInk.referenceNewBuilds,0,'Immutable original samples must not rebuild');
+ assert.equal(retainedInk.trailNewBuilds,0,'Trace must not rebuild every frame');
+ assert.ok(retainedInk.referenceHits>=6&&retainedInk.trailHits>=6&&retainedInk.backgroundHits>=6,
+  'Static path/gradient reuse not observable: '+JSON.stringify(retainedInk));
  // Circle-count edits must add true Fourier harmonics, not arbitrary default circles.
  await page.locator('#countInput').fill('20');
  await page.locator('#countInput').press('Tab');
@@ -205,6 +241,19 @@ for(const [name,engine] of engines){
  assert.ok(focusPlan.selectedVisible&&focusPlan.lastVisible,'Selected ring and last ring must remain visible: '+JSON.stringify(focusPlan));
  assert.ok(focusPlan.visible<=32,'Crowded high-count orbit skeleton '+JSON.stringify(focusPlan));
  assert.equal(focusPlan.nextBuilds,focusPlan.builds,'Ring index plan should be stable between frames');
+ const sparseGeometry=await page.evaluate(()=>{
+  const d=window.__ORBIT_EXPERIMENT_DEBUG__,m=d.model;
+  const before=m.perf.visibleRingObjects;
+  const geom=d.visibleWheelCenters(m.t),exact=d.wheelPosition(m.t);
+  const discrepancy=Math.hypot(geom.endpoint.x-exact.x,geom.endpoint.y-exact.y);
+  for(let i=0;i<4;i++)d.render();
+  return {discrepancy,count:geom.circles.length,created:m.perf.visibleRingObjects-before,
+   harmonics:m.wheels.length,selected:geom.circles.some(x=>x.index===m.selected)};
+ });
+ assert.ok(sparseGeometry.discrepancy<1e-9,'Sparse rendering changed Fourier endpoint: '+JSON.stringify(sparseGeometry));
+ assert.ok(sparseGeometry.selected&&sparseGeometry.count<=32,'Sparse orbit omitted selected ring');
+ assert.ok(sparseGeometry.created<=160,'Rendering should allocate only visible circles: '+JSON.stringify(sparseGeometry));
+ assert.ok(sparseGeometry.harmonics===256,'Sparse visual display must not drop any actual Fourier harmonic');
  await page.locator('#closeSettings').click();
  await page.locator('#playBtn').click();
  assert.equal(await page.locator('#playBtn').getAttribute('aria-pressed'),'false');

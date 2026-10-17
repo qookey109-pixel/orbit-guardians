@@ -1,4 +1,4 @@
-name: ORBIT LAB V1.22 Precision and Touch QA
+name: ORBIT LAB V1.23 Flight Paint Performance QA
 on:
   pull_request:
     paths:
@@ -39,7 +39,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orbit-lab-v122-precision-touch-chromium-webkit
+          name: orbit-lab-v123-flight-paint-chromium-webkit
           path: |
             experiment-chromium-mobile.png
             experiment-chromium-desktop.png
