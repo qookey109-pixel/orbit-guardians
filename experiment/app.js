@@ -11,7 +11,7 @@ const model={
  stroke:[],reference:[],showRings:true,showGrid:true,showForecast:true,showOriginal:true,
  drawing:false,drag:null,activePointerId:null,forecast:[],forecastDirty:true,
  width:0,height:0,dpr:1,scale:1,last:0,trail:[],error:null,
- perf:{fftCalls:0,forecastBuilds:0,frames:0,gridBuilds:0,ringPlans:0,referencePathBuilds:0,referencePathHits:0,trailPathBuilds:0,trailPathHits:0,idleFrameSkips:0,visibleRingObjects:0}
+ perf:{fftCalls:0,forecastBuilds:0,frames:0,gridBuilds:0,ringPlans:0,referencePathBuilds:0,referencePathHits:0,trailPathBuilds:0,trailPathHits:0,backgroundBuilds:0,backgroundHits:0,idleFrameSkips:0,visibleRingObjects:0}
 };
 const wheelColor=['#a8e7e0','#e8d19b','#aabdeb','#eba9ad'];
 const telemetryCache={};
@@ -414,6 +414,18 @@ function samplePath(name,points){
  entry.count=points.length;
  return entry.path;
 }
+let cachedBackground=null;
+function fieldBackground(){
+ if(cachedBackground&&cachedBackground.width===model.width&&cachedBackground.height===model.height){
+  model.perf.backgroundHits++;return cachedBackground.gradient;
+ }
+ const w=model.width,h=model.height;
+ const gradient=context.createRadialGradient(w*.51,h*.43,0,w*.51,h*.43,Math.max(w,h)*.72);
+ gradient.addColorStop(0,'rgba(29,62,83,.30)');
+ gradient.addColorStop(1,'rgba(7,18,30,0)');
+ cachedBackground={width:w,height:h,gradient};
+ model.perf.backgroundBuilds++;return gradient;
+}
 function drawSamplePath(name,points,color,width,dashed=false){
  if(points.length<2)return;
  const path=samplePath(name,points);
@@ -428,9 +440,7 @@ function render(){
  if(!model.width||!model.height)return;
  const ctx=context,w=model.width,h=model.height;
  ctx.fillStyle='#071522';ctx.fillRect(0,0,w,h);
- const radial=ctx.createRadialGradient(w*.51,h*.43,0,w*.51,h*.43,Math.max(w,h)*.72);
- radial.addColorStop(0,'rgba(29,62,83,.30)');radial.addColorStop(1,'rgba(7,18,30,0)');
- ctx.fillStyle=radial;ctx.fillRect(0,0,w,h);
+ ctx.fillStyle=fieldBackground();ctx.fillRect(0,0,w,h);
  if(model.showGrid)drawMeasurementGrid(ctx);
  // Lightweight static reference axis; sparse enough to keep visual focus on the orbit.
  const center=pixel({x:0,y:0});
